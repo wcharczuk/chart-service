@@ -98,6 +98,7 @@ func stockHandler(rc *web.RequestContext) web.ControllerResult {
 	}
 	canvas.Polyline(x, y, "fill:none;stroke:#0074d9;stroke-width:3")
 	canvas.End()
+
 	return rc.Raw(buffer.Bytes())
 }
 
