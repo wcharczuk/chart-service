@@ -2,9 +2,13 @@ package server
 
 import (
 	"bytes"
+	"image"
+	"image/color"
+	"image/png"
 	"time"
 
 	"github.com/ajstarks/svgo"
+	"github.com/llgcode/draw2d/draw2dimg"
 	"github.com/wcharczuk/chart-service/server/core"
 	"github.com/wcharczuk/chart-service/server/yahoo"
 	"github.com/wcharczuk/go-web"
@@ -70,6 +74,21 @@ func stockHandler(rc *web.RequestContext) web.ControllerResult {
 		padding = paddingValue
 	}
 
+	format := "svg"
+	if formatValue, err := rc.QueryParam("format"); err == nil {
+		format = formatValue
+	}
+	switch format {
+	case "svg":
+		return drawSVG(rc, prices, width, height, padding)
+	case "png":
+		return drawPNG(rc, prices, width, height, padding)
+	default:
+		return rc.API().BadRequest("invalid format type")
+	}
+}
+
+func drawSVG(rc *web.RequestContext, prices []yahoo.HistoricalPrice, width, height, padding int) web.ControllerResult {
 	effectiveWidth := width - padding<<1
 	effectiveHeight := height - padding<<1
 
@@ -99,6 +118,45 @@ func stockHandler(rc *web.RequestContext) web.ControllerResult {
 	canvas.Polyline(x, y, "fill:none;stroke:#0074d9;stroke-width:3")
 	canvas.End()
 
+	return rc.Raw(buffer.Bytes())
+}
+
+func drawPNG(rc *web.RequestContext, prices []yahoo.HistoricalPrice, width, height, padding int) web.ControllerResult {
+	rc.Response.Header().Set("Content-Type", "image/png")
+
+	dest := image.NewRGBA(image.Rect(0, 0, width, height))
+	gc := draw2dimg.NewGraphicContext(dest)
+
+	effectiveWidth := width - padding<<1
+	effectiveHeight := height - padding<<1
+
+	var xvalues []time.Time
+	var yvalues []float64
+
+	for _, day := range prices {
+		xvalues = append(xvalues, day.Date)
+		yvalues = append(yvalues, day.Close)
+	}
+
+	xRange := core.NewRangeOfTime(effectiveWidth, padding, xvalues...)
+	yRange := core.NewRange(effectiveHeight, padding, yvalues...)
+
+	var x []int
+	var y []int
+	for _, day := range prices {
+		x = append(x, xRange.Translate(day.Date))
+		y = append(y, yRange.Translate(day.Close))
+	}
+	gc.SetFillColor(color.RGBA{R: 0, G: 116, B: 217, A: 255})
+	gc.SetLineWidth(3.0)
+	gc.MoveTo(float64(x[0]), float64(y[0]))
+	for index := 0; index < len(prices); index++ {
+		gc.LineTo(float64(x[index]), float64(y[index]))
+	}
+	gc.Close()
+	gc.FillStroke()
+	buffer := bytes.NewBuffer([]byte{})
+	png.Encode(buffer, dest)
 	return rc.Raw(buffer.Bytes())
 }
 
