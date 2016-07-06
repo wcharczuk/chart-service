@@ -56,8 +56,19 @@ func stockHandler(rc *web.RequestContext) web.ControllerResult {
 
 	width := 600
 	height := 200
-
 	padding := 10
+
+	if widthValue, err := rc.QueryParamInt("width"); err == nil {
+		width = widthValue
+	}
+
+	if heightValue, err := rc.QueryParamInt("height"); err == nil {
+		height = heightValue
+	}
+
+	if paddingValue, err := rc.QueryParamInt("padding"); err == nil {
+		padding = paddingValue
+	}
 
 	effectiveWidth := width - padding<<1
 	effectiveHeight := height - padding<<1
