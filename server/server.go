@@ -147,13 +147,12 @@ func drawPNG(rc *web.RequestContext, prices []yahoo.HistoricalPrice, width, heig
 		x = append(x, xRange.Translate(day.Date))
 		y = append(y, yRange.Translate(day.Close))
 	}
-	gc.SetFillColor(color.RGBA{R: 0, G: 116, B: 217, A: 255})
+	gc.SetStrokeColor(color.RGBA{R: 0, G: 116, B: 217, A: 255})
 	gc.SetLineWidth(3.0)
 	gc.MoveTo(float64(x[0]), float64(y[0]))
 	for index := 0; index < len(prices); index++ {
 		gc.LineTo(float64(x[index]), float64(y[index]))
 	}
-	gc.Close()
 	gc.FillStroke()
 	buffer := bytes.NewBuffer([]byte{})
 	png.Encode(buffer, dest)
