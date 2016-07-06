@@ -207,9 +207,7 @@ func generateFieldIndexMap() map[string]int {
 	return fields
 }
 
-// GenerateInfoFormatFieldIndexMap generates a lookup for where
-// to find certain tokens in the result csv.
-func GenerateInfoFormatFieldIndexMap() map[string]int {
+func generateInfoFormatFieldIndexMap() map[string]int {
 	fields := map[string]int{}
 	si := StockInfo{}
 	siType := reflect.TypeOf(si)
@@ -224,8 +222,8 @@ func GenerateInfoFormatFieldIndexMap() map[string]int {
 	return fields
 }
 
-// StockPrice returns stock price info from Yahoo for the given tickers.
-func StockPrice(tickers []string) ([]StockInfo, error) {
+// GetStockPrice returns stock price info from Yahoo for the given tickers.
+func GetStockPrice(tickers []string) ([]StockInfo, error) {
 	if len(tickers) == 0 {
 		return []StockInfo{}, nil
 	}

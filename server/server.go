@@ -21,6 +21,21 @@ func rootHandler(rc *web.RequestContext) web.ControllerResult {
 }
 
 func stockHandler(rc *web.RequestContext) web.ControllerResult {
+	ticker, err := rc.RouteParameter("ticker")
+	if err != nil {
+		return rc.API().BadRequest(err.Error())
+	}
+
+	stockInfos, err := yahoo.GetStockPrice([]string{ticker})
+	if err != nil {
+		return rc.API().InternalError(err)
+	}
+	if len(stockInfos) == 0 || stockInfos[0].IsZero() {
+		return rc.Raw([]byte{})
+	}
+
+	stock := stockInfos[0]
+
 	return rc.Raw([]byte{})
 }
 
