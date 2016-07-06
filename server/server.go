@@ -1,6 +1,7 @@
 package server
 
 import (
+	"bytes"
 	"time"
 
 	"github.com/ajstarks/svgo"
@@ -56,15 +57,37 @@ func stockHandler(rc *web.RequestContext) web.ControllerResult {
 	width := 600
 	height := 200
 
+	padding := 10
+
+	effectiveWidth := width - padding<<1
+	effectiveHeight := height - padding<<1
+
 	rc.Response.Header().Set("Content-Type", "image/svg+xml")
-	canvas := svg.New(rc.Response)
+
+	buffer := bytes.NewBuffer([]byte{})
+	canvas := svg.New(buffer)
 	canvas.Start(width, height)
 
-	for _, day := range prices {
+	var xvalues []time.Time
+	var yvalues []float64
 
+	for _, day := range prices {
+		xvalues = append(xvalues, day.Date)
+		yvalues = append(yvalues, day.Close)
 	}
 
-	return rc.Raw([]byte{})
+	xRange := core.NewRangeOfTime(effectiveWidth, padding, xvalues...)
+	yRange := core.NewRange(effectiveHeight, padding, yvalues...)
+
+	var x []int
+	var y []int
+	for _, day := range prices {
+		x = append(x, xRange.Translate(day.Date))
+		y = append(y, yRange.Translate(day.Close))
+	}
+	canvas.Polyline(x, y, "fill:none;stroke:#0074d9;stroke-width:3")
+	canvas.End()
+	return rc.Raw(buffer.Bytes())
 }
 
 func apiStockPriceHistoricalHandler(rc *web.RequestContext) web.ControllerResult {
