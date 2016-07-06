@@ -40,16 +40,70 @@
 			"revisionTime": "2016-06-10T04:33:31Z"
 		},
 		{
+			"checksumSHA1": "aJ/kX/eCUlrCJBZ26Hwh/RXzAIw=",
+			"path": "github.com/golang/freetype/raster",
+			"revision": "38b4c392adc5eed94207994c4848fff99f4ac234",
+			"revisionTime": "2016-06-26T06:51:47Z"
+		},
+		{
+			"checksumSHA1": "OFDbVPtW4VoZtkjPUVzpOOWe22I=",
+			"path": "github.com/golang/freetype/truetype",
+			"revision": "38b4c392adc5eed94207994c4848fff99f4ac234",
+			"revisionTime": "2016-06-26T06:51:47Z"
+		},
+		{
 			"checksumSHA1": "mZK+4q1Xr8z0AwkCAgO+7Rb8xk8=",
 			"path": "github.com/julienschmidt/httprouter",
 			"revision": "77366a47451a56bb3ba682481eed85b64fea14e8",
 			"revisionTime": "2016-02-19T15:40:26Z"
 		},
 		{
+			"checksumSHA1": "aRDMOm3ibMxRFRTHFxBgHrf8NMg=",
+			"path": "github.com/llgcode/draw2d",
+			"revision": "3f01cfe277a813f87884f0ff9430d9998d058576",
+			"revisionTime": "2016-06-27T19:46:37Z"
+		},
+		{
+			"checksumSHA1": "i03xBENW+GtlNefPBKEZ/h+JLUk=",
+			"path": "github.com/llgcode/draw2d/draw2dbase",
+			"revision": "3f01cfe277a813f87884f0ff9430d9998d058576",
+			"revisionTime": "2016-06-27T19:46:37Z"
+		},
+		{
+			"checksumSHA1": "Zh3R0wjTVOoAYF/QueYsU4t1wmo=",
+			"path": "github.com/llgcode/draw2d/draw2dimg",
+			"revision": "3f01cfe277a813f87884f0ff9430d9998d058576",
+			"revisionTime": "2016-06-27T19:46:37Z"
+		},
+		{
 			"checksumSHA1": "nSlyZLRWLFIgPxxGIC8n3M2o9Ps=",
 			"path": "github.com/wcharczuk/go-web",
 			"revision": "f51ca4ed884ec74808ed668c696980dd9a4bbd1b",
 			"revisionTime": "2016-07-06T03:42:18Z"
+		},
+		{
+			"checksumSHA1": "7E3Y1HU/UbsQF/dxMRdjFmx9QDQ=",
+			"path": "golang.org/x/image/draw",
+			"revision": "8550bb53808b49e6f655a27cbb293b1f90c56a24",
+			"revisionTime": "2016-06-26T06:52:26Z"
+		},
+		{
+			"checksumSHA1": "ZG6tBwXNShvXeDlqXHQ+5z8JxZw=",
+			"path": "golang.org/x/image/font",
+			"revision": "8550bb53808b49e6f655a27cbb293b1f90c56a24",
+			"revisionTime": "2016-06-26T06:52:26Z"
+		},
+		{
+			"checksumSHA1": "o7VkCGBiKM5HXzVzrIci1YDlpvc=",
+			"path": "golang.org/x/image/math/f64",
+			"revision": "8550bb53808b49e6f655a27cbb293b1f90c56a24",
+			"revisionTime": "2016-06-26T06:52:26Z"
+		},
+		{
+			"checksumSHA1": "KDV8C7GLbL2QcT1yQysYlFlQ+a8=",
+			"path": "golang.org/x/image/math/fixed",
+			"revision": "8550bb53808b49e6f655a27cbb293b1f90c56a24",
+			"revisionTime": "2016-06-26T06:52:26Z"
 		}
 	],
 	"rootPath": "github.com/wcharczuk/chart-service"
