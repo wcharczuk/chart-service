@@ -1,0 +1,38 @@
+{
+	"comment": "",
+	"goVersion": "go1.6",
+	"heroku": {
+		"goVersion": "go1.6",
+		"install": [
+			"."
+		]
+	},
+	"ignore": "test",
+	"package": [
+		{
+			"checksumSHA1": "lAsqE8ZJ3titP59fFMt8jmx6BXY=",
+			"path": "github.com/blendlabs/go-exception",
+			"revision": "4f8219ce4d9bf0a7074e988fb5dc8d71d536db13",
+			"revisionTime": "2016-03-23T23:34:35Z"
+		},
+		{
+			"checksumSHA1": "gO7RbvXh/Cwpbtv61gs0sO4ZIFs=",
+			"path": "github.com/blendlabs/go-util",
+			"revision": "5b1aa355a232e003127a8e94667ab499062e5388",
+			"revisionTime": "2016-06-10T04:33:31Z"
+		},
+		{
+			"checksumSHA1": "mZK+4q1Xr8z0AwkCAgO+7Rb8xk8=",
+			"path": "github.com/julienschmidt/httprouter",
+			"revision": "77366a47451a56bb3ba682481eed85b64fea14e8",
+			"revisionTime": "2016-02-19T15:40:26Z"
+		},
+		{
+			"checksumSHA1": "nSlyZLRWLFIgPxxGIC8n3M2o9Ps=",
+			"path": "github.com/wcharczuk/go-web",
+			"revision": "f51ca4ed884ec74808ed668c696980dd9a4bbd1b",
+			"revisionTime": "2016-07-06T03:42:18Z"
+		}
+	],
+	"rootPath": "github.com/wcharczuk/chart-service"
+}
