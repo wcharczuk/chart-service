@@ -3,6 +3,7 @@ package server
 import (
 	"time"
 
+	"github.com/ajstarks/svgo"
 	"github.com/wcharczuk/chart-service/server/core"
 	"github.com/wcharczuk/chart-service/server/yahoo"
 	"github.com/wcharczuk/go-web"
@@ -35,6 +36,33 @@ func stockHandler(rc *web.RequestContext) web.ControllerResult {
 	}
 
 	stock := stockInfos[0]
+
+	from := time.Now().UTC().AddDate(0, -1, 0)
+	to := time.Now().UTC()
+
+	timeframe, err := rc.RouteParameter("timeframe")
+	if err == nil {
+		from, to, err = core.ParseTimeFrame(timeframe)
+		if err != nil {
+			return rc.API().BadRequest(err.Error())
+		}
+	}
+
+	prices, err := yahoo.GetHistoricalPrices(stock.Ticker, from, to)
+	if err != nil {
+		return rc.API().InternalError(err)
+	}
+
+	width := 600
+	height := 200
+
+	rc.Response.Header().Set("Content-Type", "image/svg+xml")
+	canvas := svg.New(rc.Response)
+	canvas.Start(width, height)
+
+	for _, day := range prices {
+
+	}
 
 	return rc.Raw([]byte{})
 }

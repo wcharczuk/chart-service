@@ -10,10 +10,28 @@
 	"ignore": "test",
 	"package": [
 		{
+			"checksumSHA1": "6qccqKKVnwL9ECLdP+lVzTegdwk=",
+			"path": "github.com/ajstarks/svgo",
+			"revision": "672fe547df4e49efc6db67a74391368bcb149b37",
+			"revisionTime": "2016-03-25T11:55:36Z"
+		},
+		{
+			"checksumSHA1": "VBwAtJoOqCuy19CVUPgtGHLqYvg=",
+			"path": "github.com/blendlabs/go-assert",
+			"revision": "818eedc5570589009f6d8804b4670b0a369fd9b4",
+			"revisionTime": "2016-03-23T23:33:47Z"
+		},
+		{
 			"checksumSHA1": "lAsqE8ZJ3titP59fFMt8jmx6BXY=",
 			"path": "github.com/blendlabs/go-exception",
 			"revision": "4f8219ce4d9bf0a7074e988fb5dc8d71d536db13",
 			"revisionTime": "2016-03-23T23:34:35Z"
+		},
+		{
+			"checksumSHA1": "oqDdDQF2OY2pzj4F3NdccjHyjh0=",
+			"path": "github.com/blendlabs/go-request",
+			"revision": "d99acfe45d6afdd681b86696523f66395e03af58",
+			"revisionTime": "2016-05-17T19:40:19Z"
 		},
 		{
 			"checksumSHA1": "gO7RbvXh/Cwpbtv61gs0sO4ZIFs=",
