@@ -2,15 +2,11 @@ package server
 
 import (
 	"bytes"
-	"image"
-	"image/color"
-	"image/png"
 	"time"
 
-	"github.com/ajstarks/svgo"
-	"github.com/llgcode/draw2d/draw2dimg"
 	"github.com/wcharczuk/chart-service/server/core"
 	"github.com/wcharczuk/chart-service/server/yahoo"
+	"github.com/wcharczuk/go-chart"
 	"github.com/wcharczuk/go-web"
 )
 
@@ -74,20 +70,46 @@ func stockHandler(rc *web.RequestContext) web.ControllerResult {
 		padding = paddingValue
 	}
 
-	format := "svg"
+	var xvalues []time.Time
+	var yvalues []float64
+
+	for _, day := range prices {
+		xvalues = append(xvalues, day.Date)
+		yvalues = append(yvalues, day.Close)
+	}
+
+	buffer := bytes.NewBuffer([]byte{})
+	graph := chart.Chart{
+		Width:    width,
+		Height:   height,
+		Padding:  padding,
+		AxisShow: true,
+		Series: []chart.Series{
+			chart.TimeSeries{
+				Name:    stock.Ticker,
+				XValues: xvalues,
+				YValues: yvalues,
+			},
+		},
+	}
+
+	format := "png"
 	if formatValue, err := rc.QueryParam("format"); err == nil {
 		format = formatValue
 	}
 	switch format {
 	case "svg":
-		return drawSVG(rc, prices, width, height, padding)
+		return rc.API().BadRequest("svg is not implemented yet")
 	case "png":
-		return drawPNG(rc, prices, width, height, padding)
+		rc.Response.Header().Set("Content-Type", "image/png")
+		graph.Render(chart.PNG, buffer)
 	default:
 		return rc.API().BadRequest("invalid format type")
 	}
+	return rc.Raw(buffer.Bytes())
 }
 
+/*
 func drawSVG(rc *web.RequestContext, prices []yahoo.HistoricalPrice, width, height, padding int) web.ControllerResult {
 	effectiveWidth := width - padding<<1
 	effectiveHeight := height - padding<<1
@@ -147,8 +169,8 @@ func drawPNG(rc *web.RequestContext, prices []yahoo.HistoricalPrice, width, heig
 		x = append(x, xRange.Translate(day.Date))
 		y = append(y, yRange.Translate(day.Close))
 	}
-	gc.SetStrokeColor(color.RGBA{R: 0, G: 116, B: 217, A: 255})
-	gc.SetLineWidth(3.0)
+	gc.SetStrokeColor(color.RGBA{R: 0, G: 217, B: 116, A: 255})
+	gc.SetLineWidth(2.0)
 	gc.MoveTo(float64(x[0]), float64(y[0]))
 	for index := 0; index < len(prices); index++ {
 		gc.LineTo(float64(x[index]), float64(y[index]))
@@ -158,6 +180,7 @@ func drawPNG(rc *web.RequestContext, prices []yahoo.HistoricalPrice, width, heig
 	png.Encode(buffer, dest)
 	return rc.Raw(buffer.Bytes())
 }
+*/
 
 func apiStockPriceHistoricalHandler(rc *web.RequestContext) web.ControllerResult {
 	ticker, err := rc.RouteParameter("ticker")

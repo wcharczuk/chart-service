@@ -76,6 +76,11 @@
 			"revisionTime": "2016-06-27T19:46:37Z"
 		},
 		{
+			"checksumSHA1": "AwmFg979vX20sQFjDgFv+2w8oLE=",
+			"path": "github.com/wcharczuk/go-chart",
+			"revision": ""
+		},
+		{
 			"checksumSHA1": "nSlyZLRWLFIgPxxGIC8n3M2o9Ps=",
 			"path": "github.com/wcharczuk/go-web",
 			"revision": "f51ca4ed884ec74808ed668c696980dd9a4bbd1b",
