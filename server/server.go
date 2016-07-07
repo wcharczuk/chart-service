@@ -54,8 +54,8 @@ func stockHandler(rc *web.RequestContext) web.ControllerResult {
 		return rc.API().InternalError(err)
 	}
 
-	width := 600
-	height := 200
+	width := 1024
+	height := 400
 	padding := 10
 
 	if widthValue, err := rc.QueryParamInt("width"); err == nil {
@@ -140,44 +140,6 @@ func drawSVG(rc *web.RequestContext, prices []yahoo.HistoricalPrice, width, heig
 	canvas.Polyline(x, y, "fill:none;stroke:#0074d9;stroke-width:3")
 	canvas.End()
 
-	return rc.Raw(buffer.Bytes())
-}
-
-func drawPNG(rc *web.RequestContext, prices []yahoo.HistoricalPrice, width, height, padding int) web.ControllerResult {
-	rc.Response.Header().Set("Content-Type", "image/png")
-
-	dest := image.NewRGBA(image.Rect(0, 0, width, height))
-	gc := draw2dimg.NewGraphicContext(dest)
-
-	effectiveWidth := width - padding<<1
-	effectiveHeight := height - padding<<1
-
-	var xvalues []time.Time
-	var yvalues []float64
-
-	for _, day := range prices {
-		xvalues = append(xvalues, day.Date)
-		yvalues = append(yvalues, day.Close)
-	}
-
-	xRange := core.NewRangeOfTime(effectiveWidth, padding, xvalues...)
-	yRange := core.NewRange(effectiveHeight, padding, yvalues...)
-
-	var x []int
-	var y []int
-	for _, day := range prices {
-		x = append(x, xRange.Translate(day.Date))
-		y = append(y, yRange.Translate(day.Close))
-	}
-	gc.SetStrokeColor(color.RGBA{R: 0, G: 217, B: 116, A: 255})
-	gc.SetLineWidth(2.0)
-	gc.MoveTo(float64(x[0]), float64(y[0]))
-	for index := 0; index < len(prices); index++ {
-		gc.LineTo(float64(x[index]), float64(y[index]))
-	}
-	gc.FillStroke()
-	buffer := bytes.NewBuffer([]byte{})
-	png.Encode(buffer, dest)
 	return rc.Raw(buffer.Bytes())
 }
 */
