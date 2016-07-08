@@ -108,7 +108,8 @@ func stockHandler(rc *web.RequestContext) web.ControllerResult {
 	}
 	switch format {
 	case "svg":
-		return rc.API().BadRequest("svg is not implemented yet")
+		rc.Response.Header().Set("Content-Type", "image/svg+xml")
+		graph.Render(chart.SVG, buffer)
 	case "png":
 		rc.Response.Header().Set("Content-Type", "image/png")
 		graph.Render(chart.PNG, buffer)
@@ -117,41 +118,6 @@ func stockHandler(rc *web.RequestContext) web.ControllerResult {
 	}
 	return rc.Raw(buffer.Bytes())
 }
-
-/*
-func drawSVG(rc *web.RequestContext, prices []yahoo.HistoricalPrice, width, height, padding int) web.ControllerResult {
-	effectiveWidth := width - padding<<1
-	effectiveHeight := height - padding<<1
-
-	rc.Response.Header().Set("Content-Type", "image/svg+xml")
-
-	buffer := bytes.NewBuffer([]byte{})
-	canvas := svg.New(buffer)
-	canvas.Start(width, height)
-
-	var xvalues []time.Time
-	var yvalues []float64
-
-	for _, day := range prices {
-		xvalues = append(xvalues, day.Date)
-		yvalues = append(yvalues, day.Close)
-	}
-
-	xRange := core.NewRangeOfTime(effectiveWidth, padding, xvalues...)
-	yRange := core.NewRange(effectiveHeight, padding, yvalues...)
-
-	var x []int
-	var y []int
-	for _, day := range prices {
-		x = append(x, xRange.Translate(day.Date))
-		y = append(y, yRange.Translate(day.Close))
-	}
-	canvas.Polyline(x, y, "fill:none;stroke:#0074d9;stroke-width:3")
-	canvas.End()
-
-	return rc.Raw(buffer.Bytes())
-}
-*/
 
 func apiStockPriceHistoricalHandler(rc *web.RequestContext) web.ControllerResult {
 	ticker, err := rc.RouteParameter("ticker")
