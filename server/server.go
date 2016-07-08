@@ -56,7 +56,7 @@ func stockHandler(rc *web.RequestContext) web.ControllerResult {
 
 	width := 1024
 	height := 400
-	padding := 10
+	padding := 60
 
 	if widthValue, err := rc.QueryParamInt("width"); err == nil {
 		width = widthValue
@@ -80,13 +80,31 @@ func stockHandler(rc *web.RequestContext) web.ControllerResult {
 
 	buffer := bytes.NewBuffer([]byte{})
 	graph := chart.Chart{
-		Width:    width,
-		Height:   height,
-		Padding:  padding,
-		AxisShow: true,
+		Title: stock.Name,
+		TitleStyle: chart.Style{
+			Show: true,
+		},
+		Width:  width,
+		Height: height,
+		Background: chart.Style{
+			Padding: chart.Box{
+				Right:  padding,
+				Bottom: padding,
+			},
+		},
+		Axes: chart.Style{
+			Show:        false,
+			StrokeWidth: 1.0,
+		},
+		FinalValueLabel: chart.Style{
+			Show: true,
+		},
 		Series: []chart.Series{
 			chart.TimeSeries{
-				Name:    stock.Ticker,
+				Name: stock.Ticker,
+				Style: chart.Style{
+					StrokeWidth: 1.0,
+				},
 				XValues: xvalues,
 				YValues: yvalues,
 			},

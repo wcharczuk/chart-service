@@ -43,8 +43,8 @@ func (rr *rasterRenderer) SetFillColor(c color.RGBA) {
 }
 
 // SetLineWidth implements the interface method.
-func (rr *rasterRenderer) SetLineWidth(width int) {
-	rr.gc.SetLineWidth(float64(width))
+func (rr *rasterRenderer) SetLineWidth(width float64) {
+	rr.gc.SetLineWidth(width)
 }
 
 // MoveTo implements the interface method.
@@ -65,6 +65,11 @@ func (rr *rasterRenderer) Close() {
 // Stroke implements the interface method.
 func (rr *rasterRenderer) Stroke() {
 	rr.gc.Stroke()
+}
+
+// Fill implements the interface method.
+func (rr *rasterRenderer) Fill() {
+	rr.gc.Fill()
 }
 
 // FillStroke implements the interface method.
@@ -100,12 +105,14 @@ func (rr *rasterRenderer) SetFontSize(size float64) {
 // SetFontColor implements the interface method.
 func (rr *rasterRenderer) SetFontColor(c color.RGBA) {
 	rr.fontColor = c
+	rr.gc.SetFillColor(c)
 	rr.gc.SetStrokeColor(c)
 }
 
 // Text implements the interface method.
 func (rr *rasterRenderer) Text(body string, x, y int) {
 	rr.gc.CreateStringPath(body, float64(x), float64(y))
+	rr.gc.Fill()
 }
 
 // MeasureText implements the interface method.
@@ -127,5 +134,6 @@ func (rr *rasterRenderer) MeasureText(body string) int {
 
 // Save implements the interface method.
 func (rr *rasterRenderer) Save(w io.Writer) error {
+
 	return png.Encode(w, rr.i)
 }
