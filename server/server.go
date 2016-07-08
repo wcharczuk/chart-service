@@ -83,12 +83,6 @@ func stockHandler(rc *web.RequestContext) web.ControllerResult {
 		},
 		Width:  width,
 		Height: height,
-		Background: chart.Style{
-			Padding: chart.Box{
-				Right:  60.0,
-				Bottom: 15.0,
-			},
-		},
 		Axes: chart.Style{
 			Show:        false,
 			StrokeWidth: 1.0,
