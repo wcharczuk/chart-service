@@ -90,7 +90,6 @@ func stockHandler(rc *web.RequestContext) web.ControllerResult {
 	}
 
 	xvalues, yvalues := marshalPrices(prices)
-	sx, sy := marshalPrices(spy)
 
 	graph := chart.Chart{
 		Title: stock.Name,
