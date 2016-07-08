@@ -60,7 +60,7 @@ func (c *Chart) Render(provider RendererProvider, w io.Writer) error {
 }
 
 func (c Chart) hasText() bool {
-	return c.TitleStyle.Show || c.Axes.Show
+	return c.TitleStyle.Show || c.Axes.Show || c.FinalValueLabel.Show
 }
 
 func (c Chart) calculateCanvasBox(r Renderer) Box {
@@ -100,7 +100,10 @@ func (c Chart) calculateFinalLabelWidth(r Renderer) int {
 	pl := c.FinalValueLabel.Padding.GetLeft(DefaultFinalLabelPadding.Left)
 	pr := c.FinalValueLabel.Padding.GetRight(DefaultFinalLabelPadding.Right)
 
-	asw := int(c.Axes.GetStrokeWidth(DefaultAxisLineWidth))
+	asw := 0
+	if c.Axes.Show {
+		asw = int(c.Axes.GetStrokeWidth(DefaultAxisLineWidth))
+	}
 	lsw := int(c.FinalValueLabel.GetStrokeWidth(DefaultAxisLineWidth))
 
 	return DefaultFinalLabelDeltaWidth +
@@ -246,7 +249,12 @@ func (c Chart) drawFinalValueLabel(r Renderer, canvasBox Box, index int, s Serie
 		textHeight := int(math.Floor(DefaultFinalLabelFontSize))
 		halfTextHeight := textHeight >> 1
 
-		cx := canvasBox.Right + int(c.Axes.GetStrokeWidth(DefaultAxisLineWidth))
+		asw := 0
+		if c.Axes.Show {
+			asw = int(c.Axes.GetStrokeWidth(DefaultAxisLineWidth))
+		}
+
+		cx := canvasBox.Right + asw
 
 		pt := c.FinalValueLabel.Padding.GetTop(DefaultFinalLabelPadding.Top)
 		pl := c.FinalValueLabel.Padding.GetLeft(DefaultFinalLabelPadding.Left)
