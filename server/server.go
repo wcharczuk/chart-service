@@ -4,6 +4,7 @@ import (
 	"bytes"
 	"time"
 
+	"github.com/blendlabs/go-util"
 	"github.com/wcharczuk/chart-service/server/core"
 	"github.com/wcharczuk/chart-service/server/yahoo"
 	"github.com/wcharczuk/go-chart"
@@ -56,6 +57,8 @@ func stockHandler(rc *web.RequestContext) web.ControllerResult {
 
 	width := 1024
 	height := 400
+	showAxes := true
+	showLastValue := true
 
 	if widthValue, err := rc.QueryParamInt("width"); err == nil {
 		width = widthValue
@@ -63,6 +66,14 @@ func stockHandler(rc *web.RequestContext) web.ControllerResult {
 
 	if heightValue, err := rc.QueryParamInt("height"); err == nil {
 		height = heightValue
+	}
+
+	if showAxesValue, err := rc.QueryParam("show_axes"); err == nil {
+		showAxes = util.CaseInsensitiveEquals(showAxesValue, "true")
+	}
+
+	if showLastValueValue, err := rc.QueryParam("show_last"); err == nil {
+		showLastValue = util.CaseInsensitiveEquals(showLastValueValue, "true")
 	}
 
 	xvalues := make([]time.Time, len(prices))
@@ -84,11 +95,11 @@ func stockHandler(rc *web.RequestContext) web.ControllerResult {
 		Width:  width,
 		Height: height,
 		Axes: chart.Style{
-			Show:        true,
+			Show:        showAxes,
 			StrokeWidth: 1.0,
 		},
 		FinalValueLabel: chart.Style{
-			Show: true,
+			Show: showLastValue,
 		},
 		Series: []chart.Series{
 			chart.TimeSeries{
