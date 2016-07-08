@@ -99,5 +99,12 @@
 			"revisionTime": "2016-06-26T06:52:26Z"
 		}
 	],
+	"goVersion": "go1.6",
+	"heroku": {
+		"goVersion": "go1.6",
+		"install": [
+			"."
+		]
+	},
 	"rootPath": "github.com/wcharczuk/chart-service"
 }
