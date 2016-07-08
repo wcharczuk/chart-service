@@ -1,20 +1,7 @@
 {
 	"comment": "",
-	"goVersion": "go1.6",
-	"heroku": {
-		"goVersion": "go1.6",
-		"install": [
-			"."
-		]
-	},
 	"ignore": "test",
 	"package": [
-		{
-			"checksumSHA1": "6qccqKKVnwL9ECLdP+lVzTegdwk=",
-			"path": "github.com/ajstarks/svgo",
-			"revision": "672fe547df4e49efc6db67a74391368bcb149b37",
-			"revisionTime": "2016-03-25T11:55:36Z"
-		},
 		{
 			"checksumSHA1": "VBwAtJoOqCuy19CVUPgtGHLqYvg=",
 			"path": "github.com/blendlabs/go-assert",
@@ -70,7 +57,7 @@
 			"revisionTime": "2016-06-27T19:46:37Z"
 		},
 		{
-			"checksumSHA1": "Zh3R0wjTVOoAYF/QueYsU4t1wmo=",
+			"checksumSHA1": "H0lqDQcTAwF8RS4Ck5ZNhh/XYKg=",
 			"path": "github.com/llgcode/draw2d/draw2dimg",
 			"revision": "3f01cfe277a813f87884f0ff9430d9998d058576",
 			"revisionTime": "2016-06-27T19:46:37Z"

@@ -70,10 +70,11 @@ func stockHandler(rc *web.RequestContext) web.ControllerResult {
 		padding = paddingValue
 	}
 
-	var xvalues []time.Time
-	var yvalues []float64
-
-	for _, day := range prices {
+	xvalues := make([]time.Time, len(prices))
+	yvalues := make([]float64, len(prices))
+	var day yahoo.HistoricalPrice
+	for index := len(prices) - 1; index >= 0; index-- {
+		day = prices[index]
 		xvalues = append(xvalues, day.Date)
 		yvalues = append(yvalues, day.Close)
 	}

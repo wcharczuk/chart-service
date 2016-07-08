@@ -186,8 +186,8 @@ func (gc *GraphicContext) CreateStringPath(s string, x, y float64) float64 {
 	}
 	startx := x
 	prev, hasPrev := truetype.Index(0), false
-	for _, rune := range s {
-		index := f.Index(rune)
+	for _, r := range s {
+		index := f.Index(r)
 		if hasPrev {
 			x += fUnitsToFloat64(f.Kern(fixed.Int26_6(gc.Current.Scale), prev, index))
 		}
