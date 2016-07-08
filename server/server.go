@@ -84,7 +84,7 @@ func stockHandler(rc *web.RequestContext) web.ControllerResult {
 		Width:  width,
 		Height: height,
 		Axes: chart.Style{
-			Show:        false,
+			Show:        true,
 			StrokeWidth: 1.0,
 		},
 		FinalValueLabel: chart.Style{
