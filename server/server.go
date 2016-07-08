@@ -84,7 +84,7 @@ func stockHandler(rc *web.RequestContext) web.ControllerResult {
 	graph := chart.Chart{
 		Title: stock.Name,
 		TitleStyle: chart.Style{
-			Show: true,
+			Show: false,
 		},
 		Width:  width,
 		Height: height,
