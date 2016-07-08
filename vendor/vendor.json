@@ -1,5 +1,12 @@
 {
 	"comment": "",
+	"goVersion": "go1.6",
+	"heroku": {
+		"goVersion": "go1.6",
+		"install": [
+			"."
+		]
+	},
 	"ignore": "test",
 	"package": [
 		{
@@ -63,10 +70,10 @@
 			"revisionTime": "2016-06-27T19:46:37Z"
 		},
 		{
-			"checksumSHA1": "S8KqE4BtjVUW8446RcxIsxzM7rE=",
+			"checksumSHA1": "+ouLpxd2hdmRog0mQ2afD3a9lAQ=",
 			"path": "github.com/wcharczuk/go-chart",
-			"revision": "b10ead7cc1cd5c1156513573394ecec093970a8f",
-			"revisionTime": "2016-07-08T00:50:16Z"
+			"revision": "5c8836f9bd0629fb34d63fb18cd7e932df1f457e",
+			"revisionTime": "2016-07-08T02:11:30Z"
 		},
 		{
 			"checksumSHA1": "nSlyZLRWLFIgPxxGIC8n3M2o9Ps=",
@@ -99,12 +106,5 @@
 			"revisionTime": "2016-06-26T06:52:26Z"
 		}
 	],
-	"goVersion": "go1.6",
-	"heroku": {
-		"goVersion": "go1.6",
-		"install": [
-			"."
-		]
-	},
 	"rootPath": "github.com/wcharczuk/chart-service"
 }
