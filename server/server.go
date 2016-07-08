@@ -56,7 +56,6 @@ func stockHandler(rc *web.RequestContext) web.ControllerResult {
 
 	width := 1024
 	height := 400
-	padding := 60
 
 	if widthValue, err := rc.QueryParamInt("width"); err == nil {
 		width = widthValue
@@ -64,10 +63,6 @@ func stockHandler(rc *web.RequestContext) web.ControllerResult {
 
 	if heightValue, err := rc.QueryParamInt("height"); err == nil {
 		height = heightValue
-	}
-
-	if paddingValue, err := rc.QueryParamInt("padding"); err == nil {
-		padding = paddingValue
 	}
 
 	xvalues := make([]time.Time, len(prices))
@@ -90,8 +85,8 @@ func stockHandler(rc *web.RequestContext) web.ControllerResult {
 		Height: height,
 		Background: chart.Style{
 			Padding: chart.Box{
-				Right:  padding,
-				Bottom: padding,
+				Right:  60.0,
+				Bottom: 15.0,
 			},
 		},
 		Axes: chart.Style{
