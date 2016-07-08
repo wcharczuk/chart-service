@@ -72,11 +72,12 @@ func stockHandler(rc *web.RequestContext) web.ControllerResult {
 
 	xvalues := make([]time.Time, len(prices))
 	yvalues := make([]float64, len(prices))
-	var day yahoo.HistoricalPrice
+	x := 0
 	for index := len(prices) - 1; index >= 0; index-- {
-		day = prices[index]
-		xvalues = append(xvalues, day.Date)
-		yvalues = append(yvalues, day.Close)
+		day := prices[index]
+		xvalues[x] = day.Date
+		yvalues[x] = day.Close
+		x++
 	}
 
 	buffer := bytes.NewBuffer([]byte{})
