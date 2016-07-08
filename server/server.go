@@ -63,11 +63,6 @@ func stockHandler(rc *web.RequestContext) web.ControllerResult {
 		}
 	}
 
-	spy, err := yahoo.GetHistoricalPrices("spy", from, to)
-	if err != nil {
-		return rc.API().InternalError(err)
-	}
-
 	prices, err := yahoo.GetHistoricalPrices(stock.Ticker, from, to)
 	if err != nil {
 		return rc.API().InternalError(err)
@@ -116,11 +111,6 @@ func stockHandler(rc *web.RequestContext) web.ControllerResult {
 				Name:    stock.Ticker,
 				XValues: xvalues,
 				YValues: yvalues,
-			},
-			chart.TimeSeries{
-				Name:    "spy",
-				XValues: sx,
-				YValues: sy,
 			},
 		},
 	}
