@@ -1,7 +1,7 @@
 package server
 
 import (
-	"bytes"
+	"net/http"
 	"time"
 
 	"github.com/blendlabs/go-util"
@@ -18,6 +18,19 @@ const (
 	//DateFormat is the default date format.
 	DateFormat = "2006-01-02"
 )
+
+func marshalPrices(prices []yahoo.HistoricalPrice) ([]time.Time, []float64) {
+	xvalues := make([]time.Time, len(prices))
+	yvalues := make([]float64, len(prices))
+	x := 0
+	for index := len(prices) - 1; index >= 0; index-- {
+		day := prices[index]
+		xvalues[x] = day.Date
+		yvalues[x] = day.Close
+		x++
+	}
+	return xvalues, yvalues
+}
 
 func rootHandler(rc *web.RequestContext) web.ControllerResult {
 	return rc.JSON(map[string]interface{}{"status": "ok!"})
@@ -50,6 +63,11 @@ func stockHandler(rc *web.RequestContext) web.ControllerResult {
 		}
 	}
 
+	spy, err := yahoo.GetHistoricalPrices("spy", from, to)
+	if err != nil {
+		return rc.API().InternalError(err)
+	}
+
 	prices, err := yahoo.GetHistoricalPrices(stock.Ticker, from, to)
 	if err != nil {
 		return rc.API().InternalError(err)
@@ -76,17 +94,9 @@ func stockHandler(rc *web.RequestContext) web.ControllerResult {
 		showLastValue = util.CaseInsensitiveEquals(showLastValueValue, "true")
 	}
 
-	xvalues := make([]time.Time, len(prices))
-	yvalues := make([]float64, len(prices))
-	x := 0
-	for index := len(prices) - 1; index >= 0; index-- {
-		day := prices[index]
-		xvalues[x] = day.Date
-		yvalues[x] = day.Close
-		x++
-	}
+	xvalues, yvalues := marshalPrices(prices)
+	sx, sy := marshalPrices(spy)
 
-	buffer := bytes.NewBuffer([]byte{})
 	graph := chart.Chart{
 		Title: stock.Name,
 		TitleStyle: chart.Style{
@@ -103,12 +113,14 @@ func stockHandler(rc *web.RequestContext) web.ControllerResult {
 		},
 		Series: []chart.Series{
 			chart.TimeSeries{
-				Name: stock.Ticker,
-				Style: chart.Style{
-					StrokeWidth: 1.0,
-				},
+				Name:    stock.Ticker,
 				XValues: xvalues,
 				YValues: yvalues,
+			},
+			chart.TimeSeries{
+				Name:    "spy",
+				XValues: sx,
+				YValues: sy,
 			},
 		},
 	}
@@ -120,14 +132,15 @@ func stockHandler(rc *web.RequestContext) web.ControllerResult {
 	switch format {
 	case "svg":
 		rc.Response.Header().Set("Content-Type", "image/svg+xml")
-		graph.Render(chart.SVG, buffer)
+		graph.Render(chart.SVG, rc.Response)
 	case "png":
 		rc.Response.Header().Set("Content-Type", "image/png")
-		graph.Render(chart.PNG, buffer)
+		graph.Render(chart.PNG, rc.Response)
 	default:
 		return rc.API().BadRequest("invalid format type")
 	}
-	return rc.Raw(buffer.Bytes())
+	rc.Response.WriteHeader(http.StatusOK)
+	return nil
 }
 
 func apiStockPriceHistoricalHandler(rc *web.RequestContext) web.ControllerResult {

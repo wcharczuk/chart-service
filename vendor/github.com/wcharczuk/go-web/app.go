@@ -477,10 +477,12 @@ func (a *App) pipelineInit(w ResponseWriter, r *http.Request, p RouteParameters)
 
 func (a *App) renderResult(action ControllerAction, context *RequestContext) {
 	result := action(context)
-	err := result.Render(context.Response, context.Request)
-	if err != nil {
-		if a.logger != nil {
-			a.logger.Error(err)
+	if result != nil {
+		err := result.Render(context.Response, context.Request)
+		if err != nil {
+			if a.logger != nil {
+				a.logger.Error(err)
+			}
 		}
 	}
 }
