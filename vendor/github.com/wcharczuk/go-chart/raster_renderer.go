@@ -5,7 +5,6 @@ import (
 	"image/color"
 	"image/png"
 	"io"
-	"math"
 
 	"github.com/golang/freetype/truetype"
 	"github.com/wcharczuk/go-chart/drawing"
@@ -30,7 +29,7 @@ type rasterRenderer struct {
 	gc *drawing.RasterGraphicContext
 
 	fontSize  float64
-	fontColor color.RGBA
+	fontColor color.Color
 	f         *truetype.Font
 }
 
@@ -40,12 +39,12 @@ func (rr *rasterRenderer) SetDPI(dpi float64) {
 }
 
 // SetStrokeColor implements the interface method.
-func (rr *rasterRenderer) SetStrokeColor(c color.RGBA) {
+func (rr *rasterRenderer) SetStrokeColor(c drawing.Color) {
 	rr.gc.SetStrokeColor(c)
 }
 
 // SetFillColor implements the interface method.
-func (rr *rasterRenderer) SetFillColor(c color.RGBA) {
+func (rr *rasterRenderer) SetFillColor(c drawing.Color) {
 	rr.gc.SetFillColor(c)
 }
 
@@ -110,7 +109,7 @@ func (rr *rasterRenderer) SetFontSize(size float64) {
 }
 
 // SetFontColor implements the interface method.
-func (rr *rasterRenderer) SetFontColor(c color.RGBA) {
+func (rr *rasterRenderer) SetFontColor(c drawing.Color) {
 	rr.fontColor = c
 	rr.gc.SetFillColor(c)
 	rr.gc.SetStrokeColor(c)
@@ -130,8 +129,8 @@ func (rr *rasterRenderer) MeasureText(body string) (width int, height int) {
 	}
 	dw := r - l
 	dh := b - t
-	width = int(math.Ceil(dw * (4.0 / 3.0)))
-	height = int(math.Ceil(dh * (4.0 / 3.0)))
+	width = int(drawing.PointsToPixels(rr.gc.GetDPI(), dw))
+	height = int(drawing.PointsToPixels(rr.gc.GetDPI(), dh))
 	return
 }
 

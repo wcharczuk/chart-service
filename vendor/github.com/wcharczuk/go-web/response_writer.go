@@ -12,6 +12,7 @@ type ResponseWriter interface {
 	Header() http.Header
 	Write([]byte) (int, error)
 	WriteHeader(int)
+	InnerWriter() http.ResponseWriter
 	Flush() error
 	StatusCode() int
 	ContentLength() int
@@ -50,7 +51,11 @@ func (rw *RawResponseWriter) Header() http.Header {
 // WriteHeader is actually a terrible name and this writes the status code.
 func (rw *RawResponseWriter) WriteHeader(code int) {
 	rw.statusCode = code
-	rw.HTTPResponse.WriteHeader(code)
+}
+
+// InnerWriter returns the backing writer.
+func (rw *RawResponseWriter) InnerWriter() http.ResponseWriter {
+	return rw.HTTPResponse
 }
 
 // Flush is a no op on raw response writers.
@@ -68,14 +73,14 @@ func (rw *RawResponseWriter) ContentLength() int {
 	return rw.contentLength
 }
 
+// --------------------------------------------------------------------------------
+// CompressedResponseWriter
+// --------------------------------------------------------------------------------
+
 // NewCompressedResponseWriter returns a new gzipped response writer.
 func NewCompressedResponseWriter(w http.ResponseWriter) *CompressedResponseWriter {
 	return &CompressedResponseWriter{HTTPResponse: w}
 }
-
-// --------------------------------------------------------------------------------
-// CompressedResponseWriter
-// --------------------------------------------------------------------------------
 
 // CompressedResponseWriter is a response writer that compresses output.
 type CompressedResponseWriter struct {
@@ -107,7 +112,11 @@ func (crw *CompressedResponseWriter) Header() http.Header {
 // WriteHeader writes a status code.
 func (crw *CompressedResponseWriter) WriteHeader(code int) {
 	crw.statusCode = code
-	crw.HTTPResponse.WriteHeader(code)
+}
+
+// InnerWriter returns the backing http response.
+func (crw *CompressedResponseWriter) InnerWriter() http.ResponseWriter {
+	return crw.HTTPResponse
 }
 
 // Flush pushes any buffered data out to the response.
@@ -171,6 +180,11 @@ func (res *MockResponseWriter) Header() http.Header {
 // WriteHeader sets the status code.
 func (res *MockResponseWriter) WriteHeader(statusCode int) {
 	res.statusCode = statusCode
+}
+
+// InnerWriter returns the backing httpresponse writer.
+func (res *MockResponseWriter) InnerWriter() http.ResponseWriter {
+	return res
 }
 
 // StatusCode returns the status code.

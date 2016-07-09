@@ -110,6 +110,9 @@ func stockHandler(rc *web.RequestContext) web.ControllerResult {
 				Name:    stock.Ticker,
 				XValues: xvalues,
 				YValues: yvalues,
+				Style: chart.Style{
+					FillColor: chart.DefaultSeriesStrokeColors[0].WithAlpha(64),
+				},
 			},
 		},
 	}

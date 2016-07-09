@@ -76,22 +76,22 @@
 			"revisionTime": "2016-06-27T19:46:37Z"
 		},
 		{
-			"checksumSHA1": "v+H8UNgqYKLOuJaRgvdD/uXAPpc=",
+			"checksumSHA1": "x9DKwGAtW4Eb7SXW7JzgoWSVkaI=",
 			"path": "github.com/wcharczuk/go-chart",
-			"revision": "8bc8b1087ca0a74ec6b5de852b709b4f27228b6b",
-			"revisionTime": "2016-07-09T00:57:14Z"
+			"revision": "59a5b2cbac4ff660ba80ec35d8501d58132f083e",
+			"revisionTime": "2016-07-09T18:26:28Z"
 		},
 		{
-			"checksumSHA1": "vZTeLyghSJaejY1dILNFtZCnm/Q=",
+			"checksumSHA1": "kr7poP15Gt5y/MNfNFXgvVxk198=",
 			"path": "github.com/wcharczuk/go-chart/drawing",
-			"revision": "8bc8b1087ca0a74ec6b5de852b709b4f27228b6b",
-			"revisionTime": "2016-07-09T00:57:14Z"
+			"revision": "59a5b2cbac4ff660ba80ec35d8501d58132f083e",
+			"revisionTime": "2016-07-09T18:26:28Z"
 		},
 		{
-			"checksumSHA1": "KbLZMJvh0NznNwqBMBBeD9Jtwa4=",
+			"checksumSHA1": "Nrs6MAjY7qNQ/6UU+V7hXNu2A3w=",
 			"path": "github.com/wcharczuk/go-web",
-			"revision": "0ae51c1a8ec66a883ecc9db49addea3314d16a3b",
-			"revisionTime": "2016-07-08T06:51:54Z"
+			"revision": "04f03da715454fc22014c4062d3ee55a3b748267",
+			"revisionTime": "2016-07-08T22:55:05Z"
 		},
 		{
 			"checksumSHA1": "7E3Y1HU/UbsQF/dxMRdjFmx9QDQ=",
