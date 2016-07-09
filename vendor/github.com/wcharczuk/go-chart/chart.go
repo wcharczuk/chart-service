@@ -15,6 +15,7 @@ type Chart struct {
 
 	Width  int
 	Height int
+	DPI    float64
 
 	Background      Style
 	Canvas          Style
@@ -28,6 +29,17 @@ type Chart struct {
 	Series []Series
 }
 
+// GetDPI returns the dpi for the chart.
+func (c Chart) GetDPI(defaults ...float64) float64 {
+	if c.DPI == 0 {
+		if len(defaults) > 0 {
+			return defaults[0]
+		}
+		return DefaultDPI
+	}
+	return c.DPI
+}
+
 // GetFont returns the text font.
 func (c Chart) GetFont() (*truetype.Font, error) {
 	if c.Font == nil {
@@ -35,7 +47,7 @@ func (c Chart) GetFont() (*truetype.Font, error) {
 		if err != nil {
 			return nil, err
 		}
-		c.Font = f
+		return f, nil
 	}
 	return c.Font, nil
 }
@@ -45,7 +57,10 @@ func (c *Chart) Render(provider RendererProvider, w io.Writer) error {
 	if len(c.Series) == 0 {
 		return errors.New("Please provide at least one series")
 	}
-	r := provider(c.Width, c.Height)
+	r, err := provider(c.Width, c.Height)
+	if err != nil {
+		return err
+	}
 	if c.hasText() {
 		font, err := c.GetFont()
 		if err != nil {
@@ -53,6 +68,7 @@ func (c *Chart) Render(provider RendererProvider, w io.Writer) error {
 		}
 		r.SetFont(font)
 	}
+	r.SetDPI(c.GetDPI(DefaultDPI))
 
 	canvasBox := c.calculateCanvasBox(r)
 	xrange, yrange := c.initRanges(canvasBox)
@@ -106,17 +122,23 @@ func (c Chart) calculateFinalLabelWidth(r Renderer) int {
 	if !c.FinalValueLabel.Show {
 		return 0
 	}
+
 	var finalLabelText string
 	for _, s := range c.Series {
 		_, lv := s.GetValue(s.Len() - 1)
-		ll := s.GetYFormatter()(lv)
+		var ll string
+		if c.YRange.Formatter != nil {
+			ll = c.YRange.Formatter(lv)
+		} else {
+			ll = s.GetYFormatter()(lv)
+		}
 		if len(finalLabelText) < len(ll) {
 			finalLabelText = ll
 		}
 	}
 
 	r.SetFontSize(c.FinalValueLabel.GetFontSize(DefaultFinalLabelFontSize))
-	textWidth := r.MeasureText(finalLabelText)
+	textWidth, _ := r.MeasureText(finalLabelText)
 	asw := c.getAxisWidth()
 
 	pl := c.FinalValueLabel.Padding.GetLeft(DefaultFinalLabelPadding.Left)
@@ -163,8 +185,12 @@ func (c Chart) initRanges(canvasBox Box) (xrange Range, yrange Range) {
 				didSetFirstValues = true
 			}
 		}
-		xrange.Formatter = s.GetXFormatter()
-		yrange.Formatter = s.GetYFormatter()
+		if xrange.Formatter == nil {
+			xrange.Formatter = s.GetXFormatter()
+		}
+		if yrange.Formatter == nil {
+			yrange.Formatter = s.GetYFormatter()
+		}
 	}
 
 	if c.XRange.IsZero() {
@@ -174,6 +200,12 @@ func (c Chart) initRanges(canvasBox Box) (xrange Range, yrange Range) {
 		xrange.Min = c.XRange.Min
 		xrange.Max = c.XRange.Max
 	}
+	if c.XRange.Formatter != nil {
+		xrange.Formatter = c.XRange.Formatter
+	}
+	if c.XRange.Ticks != nil {
+		xrange.Ticks = c.XRange.Ticks
+	}
 	xrange.Domain = canvasBox.Width
 
 	if c.YRange.IsZero() {
@@ -182,6 +214,12 @@ func (c Chart) initRanges(canvasBox Box) (xrange Range, yrange Range) {
 	} else {
 		yrange.Min = c.YRange.Min
 		yrange.Max = c.YRange.Max
+	}
+	if c.YRange.Formatter != nil {
+		yrange.Formatter = c.YRange.Formatter
+	}
+	if c.YRange.Ticks != nil {
+		yrange.Ticks = c.YRange.Ticks
 	}
 	yrange.Domain = canvasBox.Height
 
@@ -228,68 +266,69 @@ func (c Chart) drawAxes(r Renderer, canvasBox Box, xrange, yrange Range) {
 	}
 }
 
+func (c Chart) generateRangeTicks(r Range, tickCount int, offset float64) []Tick {
+	var ticks []Tick
+	rangeTicks := Slices(tickCount, r.Max-r.Min)
+	for _, rv := range rangeTicks {
+		ticks = append(ticks, Tick{
+			RangeValue: rv + offset,
+			Label:      r.Format(rv + offset),
+		})
+	}
+	return ticks
+}
+
 func (c Chart) drawYAxisLabels(r Renderer, canvasBox Box, yrange Range) {
 	tickFontSize := c.Axes.GetFontSize(DefaultAxisFontSize)
+	asw := c.getAxisWidth()
+	tx := canvasBox.Right + DefaultFinalLabelDeltaWidth + asw
 
 	r.SetFontColor(c.Axes.GetFontColor(DefaultAxisColor))
 	r.SetFontSize(tickFontSize)
 
-	minimumTickHeight := tickFontSize + DefaultMinimumTickVerticalSpacing
-	tickCount := int(math.Floor(float64(yrange.Domain) / float64(minimumTickHeight)))
+	ticks := yrange.Ticks
+	if ticks == nil {
+		minimumTickHeight := tickFontSize + DefaultMinimumTickVerticalSpacing
+		tickCount := int(math.Floor(float64(yrange.Domain) / float64(minimumTickHeight)))
 
-	if tickCount > DefaultMaxTickCount {
-		tickCount = DefaultMaxTickCount
+		if tickCount > DefaultMaxTickCount {
+			tickCount = DefaultMaxTickCount
+		}
+		ticks = c.generateRangeTicks(yrange, tickCount, yrange.Min)
 	}
 
-	rangeTicks := Slices(tickCount, yrange.Max-yrange.Min)
-	domainTicks := Slices(tickCount, float64(yrange.Domain))
-
-	asw := c.getAxisWidth()
-	tx := canvasBox.Right + DefaultFinalLabelDeltaWidth + asw
-
-	count := len(rangeTicks)
-	if len(domainTicks) < count {
-		count = len(domainTicks) //guard against mismatched array sizes.
-	}
-
-	for index := 0; index < count; index++ {
-		v := rangeTicks[index] + yrange.Min
-		y := domainTicks[index]
-		ty := canvasBox.Bottom - int(y)
-		r.Text(yrange.Format(v), tx, ty)
+	for _, t := range ticks {
+		v := t.RangeValue
+		y := yrange.Translate(v)
+		ty := int(y)
+		r.Text(t.Label, tx, ty)
 	}
 }
 
 func (c Chart) drawXAxisLabels(r Renderer, canvasBox Box, xrange Range) {
 	tickFontSize := c.Axes.GetFontSize(DefaultAxisFontSize)
+	ty := canvasBox.Bottom + DefaultXAxisMargin + int(tickFontSize)
 
 	r.SetFontColor(c.Axes.GetFontColor(DefaultAxisColor))
 	r.SetFontSize(tickFontSize)
 
-	maxLabelWidth := 60
+	ticks := xrange.Ticks
+	if ticks == nil {
+		maxLabelWidth := 60
+		minimumTickWidth := maxLabelWidth + DefaultMinimumTickHorizontalSpacing
+		tickCount := int(math.Floor(float64(xrange.Domain) / float64(minimumTickWidth)))
 
-	minimumTickWidth := maxLabelWidth + DefaultMinimumTickHorizontalSpacing
-	tickCount := int(math.Floor(float64(xrange.Domain) / float64(minimumTickWidth)))
-
-	if tickCount > DefaultMaxTickCount {
-		tickCount = DefaultMaxTickCount
+		if tickCount > DefaultMaxTickCount {
+			tickCount = DefaultMaxTickCount
+		}
+		ticks = c.generateRangeTicks(xrange, tickCount, xrange.Min)
 	}
 
-	rangeTicks := Slices(tickCount, xrange.Max-xrange.Min)
-	domainTicks := Slices(tickCount, float64(xrange.Domain))
-
-	ty := canvasBox.Bottom + DefaultXAxisMargin + int(tickFontSize)
-
-	count := len(rangeTicks)
-	if len(domainTicks) < count {
-		count = len(domainTicks) //guard against mismatched array sizes.
-	}
-
-	for index := 0; index < count; index++ {
-		v := rangeTicks[index] + xrange.Min
-		x := domainTicks[index]
+	for _, t := range ticks {
+		v := t.RangeValue
+		x := xrange.Translate(v)
 		tx := canvasBox.Left + int(x)
-		r.Text(xrange.Format(v), tx, ty)
+		r.Text(t.Label, tx, ty)
 	}
 }
 
@@ -326,13 +365,13 @@ func (c Chart) drawSeries(r Renderer, canvasBox Box, index int, s Series, xrange
 func (c Chart) drawFinalValueLabel(r Renderer, canvasBox Box, index int, s Series, yrange Range) {
 	if c.FinalValueLabel.Show {
 		_, lv := s.GetValue(s.Len() - 1)
-		ll := s.GetYFormatter()(lv)
+		ll := yrange.Format(lv)
 
 		py := canvasBox.Top
 		ly := yrange.Translate(lv) + py
 
 		r.SetFontSize(c.FinalValueLabel.GetFontSize(DefaultFinalLabelFontSize))
-		textWidth := r.MeasureText(ll)
+		textWidth, _ := r.MeasureText(ll)
 		textHeight := int(math.Floor(DefaultFinalLabelFontSize))
 		halfTextHeight := textHeight >> 1
 
@@ -386,7 +425,7 @@ func (c Chart) drawTitle(r Renderer) error {
 		r.SetFontColor(c.Canvas.GetFontColor(DefaultTextColor))
 		titleFontSize := c.Canvas.GetFontSize(DefaultTitleFontSize)
 		r.SetFontSize(titleFontSize)
-		textWidth := r.MeasureText(c.Title)
+		textWidth, _ := r.MeasureText(c.Title)
 		titleX := (c.Width >> 1) - (textWidth >> 1)
 		titleY := c.TitleStyle.Padding.GetTop(DefaultTitleTop) + int(titleFontSize)
 		r.Text(c.Title, titleX, titleY)

@@ -28,7 +28,7 @@ graph := chart.Chart{
     Width:  1024,
     Height: 400,
     Axes: chart.Style{
-        Show:        true,
+        Show: true,
     },
     FinalValueLabel: chart.Style{
         Show: true,
@@ -45,7 +45,31 @@ graph.Render(chart.PNG, buffer) //thats it!
 
 The key areas to note are that we have to explicitly turn on two features, the axes and the last value label. When calling `.Render(..)` we add a parameter, `chart.PNG` that tells the renderer to use a raster renderer (in this case, an awesome library called `draw2d`). 
 
-Coming in the near future will be the option to output to SVG.
+Another option is to use `chart.SVG` which will use the vector renderer and create an svg representation of the chart. 
+
+# Alternate Usage
+
+You can alternately turn a bunch of features off and constrain the proportions to something like a spark line:
+
+ ![](https://raw.githubusercontent.com/wcharczuk/go-chart/master/images/tvix_ltm.png)
+
+The code to produce the above would be:
+
+```go
+// note this assumes that xvalues and yvalues
+// have been pulled from a pricing service.
+graph := chart.Chart{
+    Width:  1024,
+    Height: 100,
+    Series: []chart.Series{
+        chart.TimeSeries{
+            XValues: xvalues,
+            YValues: yvalues,
+        },
+    },
+}
+graph.Render(chart.PNG, buffer)
+```
 
 # Design Philosophy
 
