@@ -82,6 +82,12 @@
 			"revisionTime": "2016-07-09T00:57:14Z"
 		},
 		{
+			"checksumSHA1": "vZTeLyghSJaejY1dILNFtZCnm/Q=",
+			"path": "github.com/wcharczuk/go-chart/drawing",
+			"revision": "8bc8b1087ca0a74ec6b5de852b709b4f27228b6b",
+			"revisionTime": "2016-07-09T00:57:14Z"
+		},
+		{
 			"checksumSHA1": "KbLZMJvh0NznNwqBMBBeD9Jtwa4=",
 			"path": "github.com/wcharczuk/go-web",
 			"revision": "0ae51c1a8ec66a883ecc9db49addea3314d16a3b",
