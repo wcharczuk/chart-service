@@ -71,7 +71,7 @@ func stockHandler(rc *web.RequestContext) web.ControllerResult {
 	width := 1024
 	height := 400
 	showAxes := true
-	showLastValue := true
+	//showLastValue := true
 
 	if widthValue, err := rc.QueryParamInt("width"); err == nil {
 		width = widthValue
@@ -85,9 +85,9 @@ func stockHandler(rc *web.RequestContext) web.ControllerResult {
 		showAxes = util.CaseInsensitiveEquals(showAxesValue, "true")
 	}
 
-	if showLastValueValue, err := rc.QueryParam("show_last"); err == nil {
+	/*if showLastValueValue, err := rc.QueryParam("show_last"); err == nil {
 		showLastValue = util.CaseInsensitiveEquals(showLastValueValue, "true")
-	}
+	}*/
 
 	xvalues, yvalues := marshalPrices(prices)
 
@@ -98,12 +98,15 @@ func stockHandler(rc *web.RequestContext) web.ControllerResult {
 		},
 		Width:  width,
 		Height: height,
-		Axes: chart.Style{
-			Show:        showAxes,
-			StrokeWidth: 1.0,
+		XAxis: chart.XAxis{
+			Style: chart.Style{
+				Show: showAxes,
+			},
 		},
-		FinalValueLabel: chart.Style{
-			Show: showLastValue,
+		YAxis: chart.YAxis{
+			Style: chart.Style{
+				Show: showAxes,
+			},
 		},
 		Series: []chart.Series{
 			chart.TimeSeries{
