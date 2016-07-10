@@ -1,6 +1,7 @@
 package server
 
 import (
+	"fmt"
 	"net/http"
 	"time"
 
@@ -71,7 +72,7 @@ func stockHandler(rc *web.RequestContext) web.ControllerResult {
 	width := 1024
 	height := 400
 	showAxes := true
-	//showLastValue := true
+	showLastValue := true
 
 	if widthValue, err := rc.QueryParamInt("width"); err == nil {
 		width = widthValue
@@ -85,9 +86,9 @@ func stockHandler(rc *web.RequestContext) web.ControllerResult {
 		showAxes = util.CaseInsensitiveEquals(showAxesValue, "true")
 	}
 
-	/*if showLastValueValue, err := rc.QueryParam("show_last"); err == nil {
+	if showLastValueValue, err := rc.QueryParam("show_last"); err == nil {
 		showLastValue = util.CaseInsensitiveEquals(showLastValueValue, "true")
-	}*/
+	}
 
 	xvalues, yvalues := marshalPrices(prices)
 
@@ -115,6 +116,20 @@ func stockHandler(rc *web.RequestContext) web.ControllerResult {
 				YValues: yvalues,
 				Style: chart.Style{
 					FillColor: chart.DefaultSeriesStrokeColors[0].WithAlpha(64),
+				},
+			},
+			chart.AnnotationSeries{
+				Name: fmt.Sprintf("%s - Last Value", stock.Ticker),
+				Style: chart.Style{
+					Show:        showLastValue,
+					StrokeColor: chart.DefaultSeriesStrokeColors[0],
+				},
+				Annotations: []chart.Annotation{
+					chart.Annotation{
+						X:     float64(xvalues[len(xvalues)-1].Unix()),
+						Y:     yvalues[len(yvalues)-1],
+						Label: chart.FloatValueFormatter(yvalues[len(yvalues)-1]),
+					},
 				},
 			},
 		},
