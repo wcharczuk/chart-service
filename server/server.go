@@ -115,7 +115,8 @@ func stockHandler(rc *web.RequestContext) web.ControllerResult {
 				XValues: xvalues,
 				YValues: yvalues,
 				Style: chart.Style{
-					FillColor: chart.DefaultSeriesStrokeColors[0].WithAlpha(64),
+					StrokeColor: chart.DefaultSeriesStrokeColors[0],
+					FillColor:   chart.DefaultSeriesStrokeColors[0].WithAlpha(64),
 				},
 			},
 			chart.AnnotationSeries{
@@ -133,6 +134,47 @@ func stockHandler(rc *web.RequestContext) web.ControllerResult {
 				},
 			},
 		},
+	}
+
+	if compareTicker, err := rc.QueryParam("compare"); err == nil {
+		comparePrices, err := yahoo.GetHistoricalPrices(compareTicker, from, to)
+		if err != nil {
+			return rc.API().InternalError(err)
+		}
+		cx, cy := marshalPrices(comparePrices)
+
+		graph.YAxisSecondary = chart.YAxis{
+			Style: chart.Style{
+				Show: showAxes,
+			},
+		}
+
+		graph.Series = append([]chart.Series{chart.TimeSeries{
+			Name:    compareTicker,
+			XValues: cx,
+			YValues: cy,
+			YAxis:   chart.YAxisSecondary,
+			Style: chart.Style{
+				StrokeColor: chart.DefaultSeriesStrokeColors[1],
+				FillColor:   chart.DefaultSeriesStrokeColors[1].WithAlpha(64),
+			},
+		}}, graph.Series...)
+
+		graph.Series = append(graph.Series, chart.AnnotationSeries{
+			Name: fmt.Sprintf("%s - Last Value", compareTicker),
+			Style: chart.Style{
+				Show:        showLastValue,
+				StrokeColor: chart.DefaultSeriesStrokeColors[1],
+			},
+			YAxis: chart.YAxisSecondary,
+			Annotations: []chart.Annotation{
+				chart.Annotation{
+					X:     float64(cx[len(cx)-1].Unix()),
+					Y:     cy[len(cy)-1],
+					Label: chart.FloatValueFormatter(cy[len(cy)-1]),
+				},
+			},
+		})
 	}
 
 	format := "png"
