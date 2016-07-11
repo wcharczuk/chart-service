@@ -129,7 +129,7 @@ func stockHandler(rc *web.RequestContext) web.ControllerResult {
 					chart.Annotation{
 						X:     float64(xvalues[len(xvalues)-1].Unix()),
 						Y:     yvalues[len(yvalues)-1],
-						Label: chart.FloatValueFormatter(yvalues[len(yvalues)-1]),
+						Label: fmt.Sprintf("%s - %s", stock.Ticker, chart.FloatValueFormatter(yvalues[len(yvalues)-1])),
 					},
 				},
 			},
@@ -171,7 +171,7 @@ func stockHandler(rc *web.RequestContext) web.ControllerResult {
 				chart.Annotation{
 					X:     float64(cx[len(cx)-1].Unix()),
 					Y:     cy[len(cy)-1],
-					Label: chart.FloatValueFormatter(cy[len(cy)-1]),
+					Label: fmt.Sprintf("%s - %s", compareTicker, chart.FloatValueFormatter(cy[len(cy)-1])),
 				},
 			},
 		})
