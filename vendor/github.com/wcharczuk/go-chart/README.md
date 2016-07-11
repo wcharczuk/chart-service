@@ -54,7 +54,7 @@ graph := chart.Chart{
             },
             Annotations: []chart.Annotation{
                 chart.Annotation{
-                    X:     float64(xvalues[len(xvalues)-1].Unix()), //todo: helpers for this.
+                    X:     chart.TimeToFloat64(xvalues[len(xvalues)-1]),
                     Y:     yvalues[len(yvalues)-1],
                     Label: chart.FloatValueFormatter(yvalues[len(yvalues)-1]),
                 },
@@ -90,6 +90,13 @@ graph := chart.Chart{
 }
 graph.Render(chart.PNG, buffer)
 ```
+
+# 2 Y-Axis Charts 
+
+ ![](https://raw.githubusercontent.com/wcharczuk/go-chart/master/images/two_axis.png)
+
+It is also possible to draw series against 2 separate y-axis with their own ranges (usually good for comparison charts).
+In order to map the series to an alternate axis make sure to set the `YAxis` property of the series to `YAxisSecondary`.
 
 # Design Philosophy
 
