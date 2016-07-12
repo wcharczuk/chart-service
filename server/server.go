@@ -155,6 +155,11 @@ func stockHandler(rc *web.RequestContext) web.ControllerResult {
 			},
 		}
 
+		compareFillColor := drawing.ColorTransparent
+		if showAxes {
+			compareFillColor = chart.DefaultSeriesStrokeColors[1].WithAlpha(64)
+		}
+
 		graph.Series = append([]chart.Series{chart.TimeSeries{
 			Name:    compareTicker,
 			XValues: cx,
@@ -162,7 +167,7 @@ func stockHandler(rc *web.RequestContext) web.ControllerResult {
 			YAxis:   chart.YAxisSecondary,
 			Style: chart.Style{
 				StrokeColor: chart.DefaultSeriesStrokeColors[1],
-				FillColor:   chart.DefaultSeriesStrokeColors[1].WithAlpha(64),
+				FillColor:   compareFillColor,
 			},
 		}}, graph.Series...)
 
