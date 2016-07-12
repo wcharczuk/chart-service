@@ -9,6 +9,7 @@ import (
 	"github.com/wcharczuk/chart-service/server/core"
 	"github.com/wcharczuk/chart-service/server/yahoo"
 	"github.com/wcharczuk/go-chart"
+	"github.com/wcharczuk/go-chart/drawing"
 	"github.com/wcharczuk/go-web"
 )
 
@@ -90,6 +91,11 @@ func stockHandler(rc *web.RequestContext) web.ControllerResult {
 		showLastValue = util.CaseInsensitiveEquals(showLastValueValue, "true")
 	}
 
+	fillColor := drawing.ColorTransparent
+	if showAxes {
+		fillColor = chart.GetDefaultSeriesStrokeColor(0).WithAlpha(64)
+	}
+
 	xvalues, yvalues := marshalPrices(prices)
 
 	graph := chart.Chart{
@@ -116,7 +122,7 @@ func stockHandler(rc *web.RequestContext) web.ControllerResult {
 				YValues: yvalues,
 				Style: chart.Style{
 					StrokeColor: chart.DefaultSeriesStrokeColors[0],
-					FillColor:   chart.DefaultSeriesStrokeColors[0].WithAlpha(64),
+					FillColor:   fillColor,
 				},
 			},
 			chart.AnnotationSeries{
