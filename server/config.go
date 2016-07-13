@@ -1,9 +1,11 @@
 package server
 
 import (
+	"fmt"
 	"os"
 
 	"github.com/blendlabs/go-util"
+	"github.com/blendlabs/spiffy"
 )
 
 const (
@@ -72,4 +74,65 @@ func (c *config) Environment() string {
 // IsProduction returns if the app is running in production mode.
 func (c *config) IsProduction() bool {
 	return util.CaseInsensitiveEquals(c.Environment(), "prod")
+}
+
+// DBConfig is the basic config object for db connections.
+type DBConfig struct {
+	Server   string
+	Schema   string
+	User     string
+	Password string
+
+	dsn string
+}
+
+// InitFromEnvironment initializes the db config from environment variables.
+func (db *DBConfig) InitFromEnvironment() {
+	dsn := os.Getenv("DATABASE_URL")
+	if len(dsn) != 0 {
+		db.InitFromDSN(dsn)
+	} else {
+		if len(os.Getenv("DB_HOST")) > 0 {
+			db.Server = os.Getenv("DB_HOST")
+		} else {
+			db.Server = "localhost"
+		}
+		db.Schema = os.Getenv("DB_SCHEMA")
+		db.User = os.Getenv("DB_USER")
+		db.Password = os.Getenv("DB_PASSWORD")
+	}
+}
+
+// InitFromDSN initializes the db config from a dsn.
+func (db *DBConfig) InitFromDSN(dsn string) {
+	db.dsn = dsn
+}
+
+// DSN returns the config as a postgres dsn.
+func (db DBConfig) DSN() string {
+	if len(db.dsn) != 0 {
+		return db.dsn
+	}
+	return fmt.Sprintf("postgres://%s:%s@%s/%s?sslmode=disable", db.User, db.Password, db.Server, db.Schema)
+}
+
+// SetupDatabaseContext writes the config to spiffy.
+func SetupDatabaseContext(config *DBConfig) error {
+	spiffy.CreateDbAlias("main", spiffy.NewDbConnectionFromDSN(config.DSN()))
+	spiffy.SetDefaultAlias("main")
+
+	_, dbError := spiffy.DefaultDb().Open()
+	if dbError != nil {
+		return dbError
+	}
+
+	spiffy.DefaultDb().Connection.SetMaxIdleConns(50)
+	return nil
+}
+
+// DBInit reads the config from the environment and sets up spiffy.
+func DBInit() error {
+	dbConfig := &DBConfig{}
+	dbConfig.InitFromEnvironment()
+	return SetupDatabaseContext(dbConfig)
 }

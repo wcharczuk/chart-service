@@ -45,6 +45,10 @@ type StockInfo struct {
 	ChangePercentRealtime string  `csv:"k2"`
 	Volume                int64   `csv:"v"`
 
+	LastTradeDate string `csv:"d1"`
+	TradeDate     string `csv:"d2"`
+	LastTradeTime string `csv:"t1"`
+
 	PriceEarningsRatio         float64 `csv:"r"`
 	PriceEarningsRatioRealtime float64 `csv:"r6"`
 }

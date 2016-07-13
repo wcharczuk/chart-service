@@ -22,6 +22,12 @@
 			"revisionTime": "2016-03-23T23:33:47Z"
 		},
 		{
+			"checksumSHA1": "J95C0/sheXuX7LzpWzQL/BAD89o=",
+			"path": "github.com/blendlabs/go-chronometer",
+			"revision": "e64cec84a42a5e4ba4a5bea9b8a400d0e104bfb6",
+			"revisionTime": "2016-07-13T22:33:59Z"
+		},
+		{
 			"checksumSHA1": "lAsqE8ZJ3titP59fFMt8jmx6BXY=",
 			"path": "github.com/blendlabs/go-exception",
 			"revision": "4f8219ce4d9bf0a7074e988fb5dc8d71d536db13",
@@ -40,6 +46,18 @@
 			"revisionTime": "2016-06-10T04:33:31Z"
 		},
 		{
+			"checksumSHA1": "aCb9XQkK4uIJRW6497iOsZRkzS0=",
+			"path": "github.com/blendlabs/spiffy",
+			"revision": "bdbc91b8d750960f81e40da002813aae1384d61e",
+			"revisionTime": "2016-05-26T22:17:38Z"
+		},
+		{
+			"checksumSHA1": "8nOeszKcq6lJ3rTniygcaQBkVhM=",
+			"path": "github.com/blendlabs/spiffy/migration",
+			"revision": "a09e7f7d6538403725af8296a8b37b2428ff9e55",
+			"revisionTime": "2016-07-13T19:30:08Z"
+		},
+		{
 			"checksumSHA1": "aJ/kX/eCUlrCJBZ26Hwh/RXzAIw=",
 			"path": "github.com/golang/freetype/raster",
 			"revision": "38b4c392adc5eed94207994c4848fff99f4ac234",
@@ -56,6 +74,18 @@
 			"path": "github.com/julienschmidt/httprouter",
 			"revision": "77366a47451a56bb3ba682481eed85b64fea14e8",
 			"revisionTime": "2016-02-19T15:40:26Z"
+		},
+		{
+			"checksumSHA1": "xB64naNkKuwFKUPkmdwdyY2mN6o=",
+			"path": "github.com/lib/pq",
+			"revision": "3cd0097429be7d611bb644ef85b42bfb102ceea4",
+			"revisionTime": "2016-03-14T19:42:24Z"
+		},
+		{
+			"checksumSHA1": "xppHi82MLqVx1eyQmbhTesAEjx8=",
+			"path": "github.com/lib/pq/oid",
+			"revision": "3cd0097429be7d611bb644ef85b42bfb102ceea4",
+			"revisionTime": "2016-03-14T19:42:24Z"
 		},
 		{
 			"checksumSHA1": "aRDMOm3ibMxRFRTHFxBgHrf8NMg=",
