@@ -46,6 +46,12 @@
 			"revisionTime": "2016-06-10T04:33:31Z"
 		},
 		{
+			"checksumSHA1": "cUQlxzU4bpI8L1MuL1EgaZV6gJo=",
+			"path": "github.com/blendlabs/go-util/collections",
+			"revision": "5b1aa355a232e003127a8e94667ab499062e5388",
+			"revisionTime": "2016-06-10T04:33:31Z"
+		},
+		{
 			"checksumSHA1": "aCb9XQkK4uIJRW6497iOsZRkzS0=",
 			"path": "github.com/blendlabs/spiffy",
 			"revision": "bdbc91b8d750960f81e40da002813aae1384d61e",
@@ -106,10 +112,10 @@
 			"revisionTime": "2016-06-27T19:46:37Z"
 		},
 		{
-			"checksumSHA1": "5TBK+BZ3r3SVEzHBIMhZiJMUQ1s=",
+			"checksumSHA1": "cK2Kak3D02RTvKPREq+LItvBtO4=",
 			"path": "github.com/wcharczuk/go-chart",
-			"revision": "c7170a2650b0a17dc618f93d798acac2160eae02",
-			"revisionTime": "2016-07-13T18:50:22Z"
+			"revision": "b15c99f695a25df05a29cde055e4bd014778d69a",
+			"revisionTime": "2016-07-13T22:46:51Z"
 		},
 		{
 			"checksumSHA1": "K2yGYp90GP6pQStn38bIWTGEwbg=",
