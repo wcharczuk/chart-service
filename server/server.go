@@ -21,6 +21,10 @@ const (
 	DateFormat = "2006-01-02"
 )
 
+func pctDiff(v1, v2 float64) float64 {
+	return (v2 - v1) / v1
+}
+
 func marshalPrices(prices []yahoo.HistoricalPrice, usePercentages bool) ([]time.Time, []float64) {
 	xvalues := make([]time.Time, len(prices))
 	yvalues := make([]float64, len(prices))
@@ -32,8 +36,9 @@ func marshalPrices(prices []yahoo.HistoricalPrice, usePercentages bool) ([]time.
 		if usePercentages {
 			if x == 0 {
 				firstValue = day.Close
+				println("firstValue", firstValue)
 			} else {
-				yvalues[x] = day.Close / firstValue
+				yvalues[x] = pctDiff(firstValue, day.Close) * 100.0
 			}
 		} else {
 			yvalues[x] = day.Close
@@ -159,7 +164,7 @@ func stockHandler(rc *web.RequestContext) web.ControllerResult {
 					chart.Annotation{
 						X:     float64(vx[len(vx)-1].Unix()),
 						Y:     vy[len(vy)-1],
-						Label: fmt.Sprintf("%s - %s", stock.Ticker, vf(vy[len(vy)-1])),
+						Label: fmt.Sprintf("%s %s", stock.Ticker, vf(vy[len(vy)-1])),
 					},
 				},
 			},
@@ -213,7 +218,7 @@ func stockHandler(rc *web.RequestContext) web.ControllerResult {
 				chart.Annotation{
 					X:     float64(cx[len(cx)-1].Unix()),
 					Y:     cy[len(cy)-1],
-					Label: fmt.Sprintf("%s - %s", compareTicker, vf(cy[len(cy)-1])),
+					Label: fmt.Sprintf("%s %s", compareTicker, vf(cy[len(cy)-1])),
 				},
 			},
 		})
