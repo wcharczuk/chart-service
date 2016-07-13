@@ -12,6 +12,10 @@ type XAxis struct {
 	ValueFormatter ValueFormatter
 	Range          Range
 	Ticks          []Tick
+
+	GridLines      []GridLine
+	GridMajorStyle Style
+	GridMinorStyle Style
 }
 
 // GetName returns the name.
@@ -62,11 +66,21 @@ func (xa XAxis) getTickCount(r Renderer, ra Range, vf ValueFormatter) int {
 	return count
 }
 
+// GetGridLines returns the gridlines for the axis.
+func (xa XAxis) GetGridLines(ticks []Tick) []GridLine {
+	if len(xa.GridLines) > 0 {
+		return xa.GridLines
+	}
+	return GenerateGridLines(ticks, true)
+}
+
 // Measure returns the bounds of the axis.
-func (xa XAxis) Measure(r Renderer, canvasBox Box, ra Range, ticks []Tick) Box {
-	defaultFont, _ := GetDefaultFont()
-	r.SetFont(xa.Style.GetFont(defaultFont))
-	r.SetFontSize(xa.Style.GetFontSize(DefaultFontSize))
+func (xa XAxis) Measure(r Renderer, canvasBox Box, ra Range, defaults Style, ticks []Tick) Box {
+	r.SetStrokeColor(xa.Style.GetStrokeColor(defaults.StrokeColor))
+	r.SetStrokeWidth(xa.Style.GetStrokeWidth(defaults.StrokeWidth))
+	r.SetFont(xa.Style.GetFont(defaults.GetFont()))
+	r.SetFontColor(xa.Style.GetFontColor(DefaultAxisColor))
+	r.SetFontSize(xa.Style.GetFontSize(defaults.GetFontSize()))
 
 	sort.Sort(Ticks(ticks))
 
@@ -94,18 +108,16 @@ func (xa XAxis) Measure(r Renderer, canvasBox Box, ra Range, ticks []Tick) Box {
 }
 
 // Render renders the axis
-func (xa XAxis) Render(r Renderer, canvasBox Box, ra Range, ticks []Tick) {
-	tickFontSize := xa.Style.GetFontSize(DefaultFontSize)
-
-	r.SetStrokeColor(xa.Style.GetStrokeColor(DefaultAxisColor))
-	r.SetStrokeWidth(xa.Style.GetStrokeWidth(DefaultAxisLineWidth))
+func (xa XAxis) Render(r Renderer, canvasBox Box, ra Range, defaults Style, ticks []Tick) {
+	r.SetStrokeColor(xa.Style.GetStrokeColor(defaults.StrokeColor))
+	r.SetStrokeWidth(xa.Style.GetStrokeWidth(defaults.StrokeWidth))
+	r.SetFont(xa.Style.GetFont(defaults.GetFont()))
+	r.SetFontColor(xa.Style.GetFontColor(DefaultAxisColor))
+	r.SetFontSize(xa.Style.GetFontSize(defaults.GetFontSize()))
 
 	r.MoveTo(canvasBox.Left, canvasBox.Bottom)
 	r.LineTo(canvasBox.Right, canvasBox.Bottom)
 	r.Stroke()
-
-	r.SetFontColor(xa.Style.GetFontColor(DefaultAxisColor))
-	r.SetFontSize(tickFontSize)
 
 	sort.Sort(Ticks(ticks))
 
@@ -120,5 +132,14 @@ func (xa XAxis) Render(r Renderer, canvasBox Box, ra Range, ticks []Tick) {
 		r.MoveTo(tx, canvasBox.Bottom)
 		r.LineTo(tx, canvasBox.Bottom+DefaultVerticalTickHeight)
 		r.Stroke()
+	}
+
+	if xa.GridMajorStyle.Show || xa.GridMinorStyle.Show {
+		for _, gl := range xa.GetGridLines(ticks) {
+			if (gl.IsMinor && xa.GridMinorStyle.Show) ||
+				(!gl.IsMinor && xa.GridMajorStyle.Show) {
+				gl.Render(r, canvasBox, ra)
+			}
+		}
 	}
 }

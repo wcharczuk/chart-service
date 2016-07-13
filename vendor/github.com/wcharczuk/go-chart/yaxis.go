@@ -18,6 +18,10 @@ type YAxis struct {
 	ValueFormatter ValueFormatter
 	Range          Range
 	Ticks          []Tick
+
+	GridLines      []GridLine
+	GridMajorStyle Style
+	GridMinorStyle Style
 }
 
 // GetName returns the name.
@@ -62,11 +66,21 @@ func (ya YAxis) getTickCount(r Renderer, ra Range, vf ValueFormatter) int {
 	return int(math.Ceil(float64(ra.Domain) / float64(tb.Height()+DefaultMinimumTickVerticalSpacing)))
 }
 
+// GetGridLines returns the gridlines for the axis.
+func (ya YAxis) GetGridLines(ticks []Tick) []GridLine {
+	if len(ya.GridLines) > 0 {
+		return ya.GridLines
+	}
+	return GenerateGridLines(ticks, false)
+}
+
 // Measure returns the bounds of the axis.
-func (ya YAxis) Measure(r Renderer, canvasBox Box, ra Range, ticks []Tick) Box {
-	defaultFont, _ := GetDefaultFont()
-	r.SetFont(ya.Style.GetFont(defaultFont))
-	r.SetFontSize(ya.Style.GetFontSize(DefaultFontSize))
+func (ya YAxis) Measure(r Renderer, canvasBox Box, ra Range, defaults Style, ticks []Tick) Box {
+	r.SetStrokeColor(ya.Style.GetStrokeColor(defaults.StrokeColor))
+	r.SetStrokeWidth(ya.Style.GetStrokeWidth(defaults.StrokeWidth))
+	r.SetFont(ya.Style.GetFont(defaults.GetFont()))
+	r.SetFontColor(ya.Style.GetFontColor(DefaultAxisColor))
+	r.SetFontSize(ya.Style.GetFontSize(defaults.GetFontSize()))
 
 	sort.Sort(Ticks(ticks))
 
@@ -108,14 +122,12 @@ func (ya YAxis) Measure(r Renderer, canvasBox Box, ra Range, ticks []Tick) Box {
 }
 
 // Render renders the axis.
-func (ya YAxis) Render(r Renderer, canvasBox Box, ra Range, ticks []Tick) {
-	r.SetStrokeColor(ya.Style.GetStrokeColor(DefaultAxisColor))
-	r.SetStrokeWidth(ya.Style.GetStrokeWidth(DefaultAxisLineWidth))
-
-	fontColor := ya.Style.GetFontColor(DefaultAxisColor)
-	r.SetFontColor(fontColor)
-	fontSize := ya.Style.GetFontSize(DefaultFontSize)
-	r.SetFontSize(fontSize)
+func (ya YAxis) Render(r Renderer, canvasBox Box, ra Range, defaults Style, ticks []Tick) {
+	r.SetStrokeColor(ya.Style.GetStrokeColor(defaults.StrokeColor))
+	r.SetStrokeWidth(ya.Style.GetStrokeWidth(defaults.StrokeWidth))
+	r.SetFont(ya.Style.GetFont(defaults.GetFont()))
+	r.SetFontColor(ya.Style.GetFontColor(DefaultAxisColor))
+	r.SetFontSize(ya.Style.GetFontSize(defaults.GetFontSize()))
 
 	sort.Sort(Ticks(ticks))
 
@@ -158,5 +170,14 @@ func (ya YAxis) Render(r Renderer, canvasBox Box, ra Range, ticks []Tick) {
 
 	if ya.Zero.Style.Show {
 		ya.Zero.Render(r, canvasBox, ra)
+	}
+
+	if ya.GridMajorStyle.Show || ya.GridMinorStyle.Show {
+		for _, gl := range ya.GetGridLines(ticks) {
+			if (gl.IsMinor && ya.GridMinorStyle.Show) ||
+				(!gl.IsMinor && ya.GridMajorStyle.Show) {
+				gl.Render(r, canvasBox, ra)
+			}
+		}
 	}
 }
