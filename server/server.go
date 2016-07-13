@@ -21,14 +21,24 @@ const (
 	DateFormat = "2006-01-02"
 )
 
-func marshalPrices(prices []yahoo.HistoricalPrice) ([]time.Time, []float64) {
+func marshalPrices(prices []yahoo.HistoricalPrice, usePercentages bool) ([]time.Time, []float64) {
 	xvalues := make([]time.Time, len(prices))
 	yvalues := make([]float64, len(prices))
 	x := 0
+	var firstValue float64
 	for index := len(prices) - 1; index >= 0; index-- {
 		day := prices[index]
 		xvalues[x] = day.Date
-		yvalues[x] = day.Close
+		if usePercentages {
+			if x == 0 {
+				firstValue = day.Close
+			} else {
+				yvalues[x] = day.Close / firstValue
+			}
+		} else {
+			yvalues[x] = day.Close
+		}
+
 		x++
 	}
 	return xvalues, yvalues
@@ -74,6 +84,7 @@ func stockHandler(rc *web.RequestContext) web.ControllerResult {
 	height := 400
 	showAxes := true
 	showLastValue := true
+	usePercentages := false
 
 	if widthValue, err := rc.QueryParamInt("width"); err == nil {
 		width = widthValue
@@ -91,12 +102,23 @@ func stockHandler(rc *web.RequestContext) web.ControllerResult {
 		showLastValue = util.CaseInsensitiveEquals(showLastValueValue, "true")
 	}
 
+	if usePercentagesValue, err := rc.QueryParam("use_pct"); err == nil {
+		usePercentages = util.CaseInsensitiveEquals(usePercentagesValue, "true")
+	}
+
 	fillColor := drawing.ColorTransparent
 	if showAxes {
 		fillColor = chart.GetDefaultSeriesStrokeColor(0).WithAlpha(64)
 	}
 
-	xvalues, yvalues := marshalPrices(prices)
+	vx, vy := marshalPrices(prices, usePercentages)
+
+	vf := chart.FloatValueFormatter
+	if usePercentages {
+		vf = func(v interface{}) string {
+			return fmt.Sprintf("%0.2f%%", v)
+		}
+	}
 
 	graph := chart.Chart{
 		Title: stock.Name,
@@ -111,6 +133,7 @@ func stockHandler(rc *web.RequestContext) web.ControllerResult {
 			},
 		},
 		YAxis: chart.YAxis{
+			ValueFormatter: vf,
 			Style: chart.Style{
 				Show: showAxes,
 			},
@@ -118,10 +141,11 @@ func stockHandler(rc *web.RequestContext) web.ControllerResult {
 		Series: []chart.Series{
 			chart.TimeSeries{
 				Name:    stock.Ticker,
-				XValues: xvalues,
-				YValues: yvalues,
+				XValues: vx,
+				YValues: vy,
 				Style: chart.Style{
-					StrokeColor: chart.DefaultSeriesStrokeColors[0],
+					Show:        true,
+					StrokeColor: chart.GetDefaultSeriesStrokeColor(0),
 					FillColor:   fillColor,
 				},
 			},
@@ -129,13 +153,13 @@ func stockHandler(rc *web.RequestContext) web.ControllerResult {
 				Name: fmt.Sprintf("%s - Last Value", stock.Ticker),
 				Style: chart.Style{
 					Show:        showLastValue,
-					StrokeColor: chart.DefaultSeriesStrokeColors[0],
+					StrokeColor: chart.GetDefaultSeriesStrokeColor(0),
 				},
 				Annotations: []chart.Annotation{
 					chart.Annotation{
-						X:     float64(xvalues[len(xvalues)-1].Unix()),
-						Y:     yvalues[len(yvalues)-1],
-						Label: fmt.Sprintf("%s - %s", stock.Ticker, chart.FloatValueFormatter(yvalues[len(yvalues)-1])),
+						X:     float64(vx[len(vx)-1].Unix()),
+						Y:     vy[len(vy)-1],
+						Label: fmt.Sprintf("%s - %s", stock.Ticker, vf(vy[len(vy)-1])),
 					},
 				},
 			},
@@ -147,26 +171,33 @@ func stockHandler(rc *web.RequestContext) web.ControllerResult {
 		if err != nil {
 			return rc.API().InternalError(err)
 		}
-		cx, cy := marshalPrices(comparePrices)
+		cx, cy := marshalPrices(comparePrices, usePercentages)
 
 		graph.YAxisSecondary = chart.YAxis{
+			ValueFormatter: vf,
 			Style: chart.Style{
-				Show: showAxes,
+				Show: showAxes && !usePercentages,
 			},
 		}
 
 		compareFillColor := drawing.ColorTransparent
 		if showAxes {
-			compareFillColor = chart.DefaultSeriesStrokeColors[1].WithAlpha(64)
+			compareFillColor = chart.GetDefaultSeriesStrokeColor(1).WithAlpha(64)
+		}
+
+		yaxis := chart.YAxisPrimary
+		if !usePercentages {
+			yaxis = chart.YAxisSecondary
 		}
 
 		graph.Series = append([]chart.Series{chart.TimeSeries{
 			Name:    compareTicker,
 			XValues: cx,
 			YValues: cy,
-			YAxis:   chart.YAxisSecondary,
+			YAxis:   yaxis,
 			Style: chart.Style{
-				StrokeColor: chart.DefaultSeriesStrokeColors[1],
+				Show:        true,
+				StrokeColor: chart.GetDefaultSeriesStrokeColor(1),
 				FillColor:   compareFillColor,
 			},
 		}}, graph.Series...)
@@ -175,14 +206,14 @@ func stockHandler(rc *web.RequestContext) web.ControllerResult {
 			Name: fmt.Sprintf("%s - Last Value", compareTicker),
 			Style: chart.Style{
 				Show:        showLastValue,
-				StrokeColor: chart.DefaultSeriesStrokeColors[1],
+				StrokeColor: chart.GetDefaultSeriesStrokeColor(1),
 			},
-			YAxis: chart.YAxisSecondary,
+			YAxis: yaxis,
 			Annotations: []chart.Annotation{
 				chart.Annotation{
 					X:     float64(cx[len(cx)-1].Unix()),
 					Y:     cy[len(cy)-1],
-					Label: fmt.Sprintf("%s - %s", compareTicker, chart.FloatValueFormatter(cy[len(cy)-1])),
+					Label: fmt.Sprintf("%s - %s", compareTicker, vf(cy[len(cy)-1])),
 				},
 			},
 		})
@@ -195,12 +226,15 @@ func stockHandler(rc *web.RequestContext) web.ControllerResult {
 	switch format {
 	case "svg":
 		rc.Response.Header().Set("Content-Type", "image/svg+xml")
-		graph.Render(chart.SVG, rc.Response)
+		err = graph.Render(chart.SVG, rc.Response)
 	case "png":
 		rc.Response.Header().Set("Content-Type", "image/png")
-		graph.Render(chart.PNG, rc.Response)
+		err = graph.Render(chart.PNG, rc.Response)
 	default:
 		return rc.API().BadRequest("invalid format type")
+	}
+	if err != nil {
+		return rc.API().InternalError(err)
 	}
 	rc.Response.WriteHeader(http.StatusOK)
 	return nil
