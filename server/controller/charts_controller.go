@@ -101,6 +101,11 @@ func (cc Charts) getChartAction(rc *web.RequestContext) web.ControllerResult {
 		}
 	}
 
+	lva := model.EquityPrices(equityPrices).LastValueAnnotation(stock.Ticker, vf)
+	if usePercentages {
+		lva = model.EquityPrices(equityPrices).LastValueAnnotationPercentChange(stock.Ticker, vf)
+	}
+
 	graph := chart.Chart{
 		Title: stock.Name,
 		TitleStyle: chart.Style{
@@ -136,9 +141,7 @@ func (cc Charts) getChartAction(rc *web.RequestContext) web.ControllerResult {
 					Show:        showLastValue,
 					StrokeColor: chart.GetDefaultSeriesStrokeColor(0),
 				},
-				Annotations: []chart.Annotation{
-					model.EquityPrices(equityPrices).LastValueAnnotation(stock.Ticker, vf),
-				},
+				Annotations: []chart.Annotation{lva},
 			},
 		},
 	}
@@ -186,16 +189,19 @@ func (cc Charts) getChartAction(rc *web.RequestContext) web.ControllerResult {
 			},
 		}}, graph.Series...)
 
+		clva := model.EquityPrices(compareEquityPrices).LastValueAnnotation(compareTicker, vf)
+		if usePercentages {
+			clva = model.EquityPrices(compareEquityPrices).LastValueAnnotationPercentChange(compareTicker, vf)
+		}
+
 		graph.Series = append(graph.Series, chart.AnnotationSeries{
 			Name: fmt.Sprintf("%s - Last Value", compareTicker),
 			Style: chart.Style{
 				Show:        showLastValue,
 				StrokeColor: chart.GetDefaultSeriesStrokeColor(1),
 			},
-			YAxis: yaxis,
-			Annotations: []chart.Annotation{
-				model.EquityPrices(compareEquityPrices).LastValueAnnotation(compareTicker, vf),
-			},
+			YAxis:       yaxis,
+			Annotations: []chart.Annotation{clva},
 		})
 	}
 

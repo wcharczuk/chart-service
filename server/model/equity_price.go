@@ -103,7 +103,7 @@ func (ep EquityPrices) PercentChange() ([]time.Time, []float64) {
 	for x := 0; x < len(ep); x++ {
 		xvalues[x] = ep[x].TimestampUTC
 		if x > 0 {
-			yvalues[x] = chart.PercentDifference(firstValue, ep[x].Price)
+			yvalues[x] = chart.PercentDifference(firstValue, ep[x].Price) * 100.0
 		}
 	}
 	return xvalues, yvalues
@@ -142,11 +142,12 @@ func (ep EquityPrices) LastValueAnnotationPercentChange(ticker string, vf chart.
 	if len(ep) == 0 {
 		return chart.Annotation{}
 	}
+	last := ep[len(ep)-1]
 	firstValue := ep[0].Price
-	lastValue := ep[len(ep)-1].Price
-	value := chart.PercentDifference(firstValue, lastValue)
+	lastValue := last.Price
+	value := chart.PercentDifference(firstValue, lastValue) * 100.0
 	return chart.Annotation{
-		X:     chart.TimeToFloat64(ep[len(ep)-1].TimestampUTC),
+		X:     chart.TimeToFloat64(last.TimestampUTC),
 		Y:     value,
 		Label: fmt.Sprintf("%s %s", ticker, vf(value)),
 	}
