@@ -4,6 +4,7 @@ import (
 	"sort"
 	"time"
 
+	"github.com/wcharczuk/chart-service/server/core"
 	"github.com/wcharczuk/chart-service/server/model"
 	"github.com/wcharczuk/chart-service/server/yahoo"
 )
@@ -22,6 +23,7 @@ func GetEquityPricesByDate(ticker string, start, end time.Time) ([]model.EquityP
 		if err != nil {
 			return union, err
 		}
+		db = model.EquityPrices(db).In(core.GetEasternTimezone())
 		union = append(union, db...)
 	}
 	hist, err := yahoo.GetHistoricalPrices(ticker, start, end)

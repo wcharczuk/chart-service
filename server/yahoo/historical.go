@@ -41,7 +41,8 @@ func (hp *HistoricalPrice) Populate(line string) error {
 	} else {
 		return err
 	}
-	hp.Date = time.Date(hp.Date.Year(), hp.Date.Month(), hp.Date.Day(), 20, 30, 00, 00, time.UTC)
+	// these days are edt/est at market close ...
+	hp.Date = time.Date(hp.Date.Year(), hp.Date.Month(), hp.Date.Day(), 20, 30, 4, 00, core.GetEasternTimezone())
 	hp.Open = util.ParseFloat64(parts[1])
 	hp.High = util.ParseFloat64(parts[2])
 	hp.Low = util.ParseFloat64(parts[3])

@@ -79,8 +79,21 @@ func GetEquityPricesByDate(ticker string, start, end time.Time, txs ...*sql.Tx) 
 // EquityPrices is an array of EquityPrice
 type EquityPrices []EquityPrice
 
+// In changes the timezone of the prices.
+func (ep EquityPrices) In(loc *time.Location) []EquityPrice {
+	newEP := make([]EquityPrice, len(ep))
+	for x := 0; x < len(ep); x++ {
+		p := ep[x]
+		p.TimestampUTC = p.TimestampUTC.In(loc)
+		newEP[x] = p
+	}
+	return newEP
+}
+
 // Prices returns the x,y ranges as []time.Time and []float64
+// NOTE: This changes the ep timestamp timezones to eastern.
 func (ep EquityPrices) Prices() ([]time.Time, []float64) {
+
 	xvalues := make([]time.Time, len(ep))
 	yvalues := make([]float64, len(ep))
 
@@ -91,8 +104,10 @@ func (ep EquityPrices) Prices() ([]time.Time, []float64) {
 	return xvalues, yvalues
 }
 
-// PercentChange returns the x,y ranges as []time.Time and []float64
+// PercentChange returns the x,y ranges as []time.Time and []float64.
+// NOTE: This changes the ep timestamp timezones to eastern.
 func (ep EquityPrices) PercentChange() ([]time.Time, []float64) {
+
 	xvalues := make([]time.Time, len(ep))
 	yvalues := make([]float64, len(ep))
 

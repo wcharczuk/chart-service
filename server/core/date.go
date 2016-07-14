@@ -3,6 +3,7 @@ package core
 import (
 	"fmt"
 	"strings"
+	"sync"
 	"time"
 
 	"github.com/wcharczuk/go-chart"
@@ -52,4 +53,21 @@ func ParseTimeFrame(value string) (from time.Time, to time.Time, xvf, yvf chart.
 		return
 	}
 	return time.Time{}, time.Time{}, nil, nil, fmt.Errorf("Invalid timeframe value")
+}
+
+var (
+	_easternLock sync.Mutex
+	_eastern     *time.Location
+)
+
+// GetEasternTimezone gets the eastern timezone.
+func GetEasternTimezone() *time.Location {
+	if _eastern == nil {
+		_easternLock.Lock()
+		defer _easternLock.Unlock()
+		if _eastern == nil {
+			_eastern, _ = time.LoadLocation("America/New_York")
+		}
+	}
+	return _eastern
 }
