@@ -43,12 +43,12 @@ func ParseTimeFrame(value string) (from time.Time, to time.Time, xvf, yvf chart.
 	case "3d":
 		from = time.Now().UTC().AddDate(0, 0, -3)
 		to = time.Now().UTC()
-		yvf = chart.TimeHourValueFormatter
+		xvf = chart.TimeHourValueFormatter
 		return
 	case "1d":
 		from = time.Now().UTC().AddDate(0, 0, -1)
 		to = time.Now().UTC()
-		yvf = chart.TimeHourValueFormatter
+		xvf = chart.TimeHourValueFormatter
 		return
 	}
 	return time.Time{}, time.Time{}, nil, nil, fmt.Errorf("Invalid timeframe value")
