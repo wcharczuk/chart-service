@@ -9,6 +9,7 @@ import (
 
 	"github.com/blendlabs/go-util"
 	"github.com/wcharczuk/chart-service/server/core"
+	"github.com/wcharczuk/chart-service/server/model"
 )
 
 // HistoricalPrice is a result from the historical price feed.
@@ -84,4 +85,20 @@ func GetHistoricalPrices(ticker string, start, end time.Time) ([]HistoricalPrice
 		results = append(results, *price)
 	}
 	return results, nil
+}
+
+// HistoricalPrices are an array of HistoricalPrice
+type HistoricalPrices []HistoricalPrice
+
+// Prices maps yahoo historical prices to price equity entries.
+func (hp HistoricalPrices) Prices() []model.EquityPrice {
+	values := make([]model.EquityPrice, len(hp))
+
+	for x := 0; x < len(hp); x++ {
+		day := hp[x]
+		values[x].TimestampUTC = day.Date
+		values[x].Price = day.Close
+		values[x].Volume = int64(day.Volume)
+	}
+	return values
 }

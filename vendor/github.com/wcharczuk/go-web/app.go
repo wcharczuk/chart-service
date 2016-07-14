@@ -200,6 +200,11 @@ func (a *App) PUT(path string, action ControllerAction, middleware ...Controller
 	a.router.PUT(path, a.renderAction(a.nestMiddleware(action, middleware...)))
 }
 
+// PATCH registers a PATCH request handler.
+func (a *App) PATCH(path string, action ControllerAction, middleware ...ControllerMiddleware) {
+	a.router.PATCH(path, a.renderAction(a.nestMiddleware(action, middleware...)))
+}
+
 // POST registers a POST request actions.
 func (a *App) POST(path string, action ControllerAction, middleware ...ControllerMiddleware) {
 	a.router.POST(path, a.renderAction(a.nestMiddleware(action, middleware...)))

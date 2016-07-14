@@ -5,12 +5,13 @@ import (
 
 	"github.com/blendlabs/go-chronometer"
 	"github.com/wcharczuk/chart-service/server"
+	"github.com/wcharczuk/chart-service/server/core"
 	"github.com/wcharczuk/chart-service/server/jobs"
 	"github.com/wcharczuk/chart-service/server/model"
 )
 
 func main() {
-	err := server.DBInit()
+	err := core.DBInit()
 	if err != nil {
 		log.Fatal(err)
 	}

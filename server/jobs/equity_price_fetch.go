@@ -125,16 +125,3 @@ func (epf *EquityPriceFetch) getNextMarketOpen(after time.Time) time.Time {
 func (epf *EquityPriceFetch) getMarketClose(after time.Time) time.Time {
 	return time.Date(after.Year(), after.Month(), after.Day(), 16, 0, 0, 0, epf.eastern)
 }
-
-/*
-func (epf *EquityPriceFetch) getNextMarketClose(after time.Time) time.Time {
-	for cursorDay := 1; cursorDay < 4; cursorDay++ {
-		newDay := after.AddDate(0, 0, cursorDay)
-		dayOfWeek := newDay.Weekday()
-		if chronometer.IsWeekDay(dayOfWeek) {
-			return time.Date(newDay.Year(), newDay.Month(), newDay.Day(), 16, 0, 0, 0, epf.eastern)
-		}
-	}
-	return chronometer.Epoch
-}
-*/

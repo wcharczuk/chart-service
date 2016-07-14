@@ -7,16 +7,23 @@ import (
 
 	"github.com/blendlabs/go-util"
 	"github.com/wcharczuk/chart-service/server/core"
+	"github.com/wcharczuk/chart-service/server/model"
+	"github.com/wcharczuk/chart-service/server/viewmodel"
 	"github.com/wcharczuk/chart-service/server/yahoo"
 	"github.com/wcharczuk/go-chart"
 	"github.com/wcharczuk/go-chart/drawing"
 	"github.com/wcharczuk/go-web"
 )
 
-// ChartsController is the controller that generates charts.
-type ChartsController struct{}
+const (
+	defaultChartWidth  = 1024
+	defaultChartHeight = 400
+)
 
-func (cc ChartsController) getChartAction(rc *web.RequestContext) web.ControllerResult {
+// Charts is the controller that generates charts.
+type Charts struct{}
+
+func (cc Charts) getChartAction(rc *web.RequestContext) web.ControllerResult {
 	ticker, err := rc.RouteParameter("ticker")
 	if err != nil {
 		return rc.API().BadRequest(err.Error())
@@ -27,7 +34,7 @@ func (cc ChartsController) getChartAction(rc *web.RequestContext) web.Controller
 		return rc.API().InternalError(err)
 	}
 	if len(stockInfos) == 0 || stockInfos[0].IsZero() {
-		return rc.Raw([]byte{})
+		return rc.API().BadRequest(fmt.Sprintf("Ticker `%s` could not be found.", ticker))
 	}
 
 	stock := stockInfos[0]
@@ -43,13 +50,13 @@ func (cc ChartsController) getChartAction(rc *web.RequestContext) web.Controller
 		}
 	}
 
-	prices, err := yahoo.GetHistoricalPrices(stock.Ticker, from, to)
+	equityPrices, err := viewmodel.GetEquityPrices(stock.Ticker, from, to)
 	if err != nil {
 		return rc.API().InternalError(err)
 	}
 
-	width := 1024
-	height := 400
+	width := defaultChartWidth
+	height := defaultChartHeight
 	showAxes := true
 	showLastValue := true
 	usePercentages := false
@@ -79,7 +86,13 @@ func (cc ChartsController) getChartAction(rc *web.RequestContext) web.Controller
 		fillColor = chart.GetDefaultSeriesStrokeColor(0).WithAlpha(64)
 	}
 
-	vx, vy := marshalPrices(prices, usePercentages)
+	var vx []time.Time
+	var vy []float64
+	if usePercentages {
+		vx, vy = model.EquityPrices(equityPrices).PercentChange()
+	} else {
+		vx, vy = model.EquityPrices(equityPrices).Prices()
+	}
 
 	vf := chart.FloatValueFormatter
 	if usePercentages {
@@ -124,22 +137,25 @@ func (cc ChartsController) getChartAction(rc *web.RequestContext) web.Controller
 					StrokeColor: chart.GetDefaultSeriesStrokeColor(0),
 				},
 				Annotations: []chart.Annotation{
-					chart.Annotation{
-						X:     float64(vx[len(vx)-1].Unix()),
-						Y:     vy[len(vy)-1],
-						Label: fmt.Sprintf("%s %s", stock.Ticker, vf(vy[len(vy)-1])),
-					},
+					model.EquityPrices(equityPrices).LastValueAnnotation(stock.Ticker, vf),
 				},
 			},
 		},
 	}
 
 	if compareTicker, err := rc.QueryParam("compare"); err == nil {
-		comparePrices, err := yahoo.GetHistoricalPrices(compareTicker, from, to)
+		compareEquityPrices, err := viewmodel.GetEquityPrices(compareTicker, from, to)
 		if err != nil {
 			return rc.API().InternalError(err)
 		}
-		cx, cy := marshalPrices(comparePrices, usePercentages)
+
+		var cx []time.Time
+		var cy []float64
+		if usePercentages {
+			cx, cy = model.EquityPrices(compareEquityPrices).PercentChange()
+		} else {
+			cx, cy = model.EquityPrices(compareEquityPrices).Prices()
+		}
 
 		graph.YAxisSecondary = chart.YAxis{
 			ValueFormatter: vf,
@@ -178,11 +194,7 @@ func (cc ChartsController) getChartAction(rc *web.RequestContext) web.Controller
 			},
 			YAxis: yaxis,
 			Annotations: []chart.Annotation{
-				chart.Annotation{
-					X:     float64(cx[len(cx)-1].Unix()),
-					Y:     cy[len(cy)-1],
-					Label: fmt.Sprintf("%s %s", compareTicker, vf(cy[len(cy)-1])),
-				},
+				model.EquityPrices(compareEquityPrices).LastValueAnnotation(compareTicker, vf),
 			},
 		})
 	}
@@ -206,4 +218,10 @@ func (cc ChartsController) getChartAction(rc *web.RequestContext) web.Controller
 	}
 	rc.Response.WriteHeader(http.StatusOK)
 	return nil
+}
+
+// Register registers the controller.
+func (cc Charts) Register(app *web.App) {
+	app.GET("/stock/chart/:ticker", cc.getChartAction)
+	app.GET("/stock/chart/:ticker/:timeframe", cc.getChartAction)
 }
