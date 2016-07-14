@@ -31,4 +31,14 @@ func TestEquityPriceFetchGetNextRunTime(t *testing.T) {
 	assert.Equal(weekend.Year(), next.Year())
 	assert.Equal(weekend.Month(), next.Month())
 	assert.Equal(weekend.Day()+2, next.Day())
+
+	lateNightRegression, err := time.Parse(time.RFC3339, "2016-07-14T08:49:19Z")
+	assert.Nil(err)
+	next = epf.GetNextRunTime(&lateNightRegression)
+
+	assert.Equal(lateNightRegression.Year(), next.Year())
+	assert.Equal(lateNightRegression.Month(), next.Month())
+	assert.Equal(lateNightRegression.Day(), next.Day())
+	assert.Equal(13, next.Hour())
+	assert.Equal(30, next.Minute())
 }

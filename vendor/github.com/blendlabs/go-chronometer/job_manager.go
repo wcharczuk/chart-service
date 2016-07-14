@@ -386,6 +386,12 @@ func (jm *JobManager) Status() []TaskStatus {
 	jm.runningTasksLock.RLock()
 	defer jm.runningTasksLock.RUnlock()
 
+	jm.nextRunTimesLock.RLock()
+	defer jm.nextRunTimesLock.RUnlock()
+
+	jm.lastRunTimesLock.RLock()
+	defer jm.lastRunTimesLock.RUnlock()
+
 	var statuses []TaskStatus
 	now := time.Now().UTC()
 	for jobName, job := range jm.loadedJobs {
@@ -401,8 +407,21 @@ func (jm *JobManager) Status() []TaskStatus {
 			status.State = StateEnabled
 		}
 
+		if lastRunTime, hasLastRunTime := jm.lastRunTimes[jobName]; hasLastRunTime {
+			status.LastRunTime = lastRunTime.Format(time.RFC3339)
+		}
+
+		if nextRunTime, hasNextRunTime := jm.nextRunTimes[jobName]; hasNextRunTime {
+			if nextRunTime != nil {
+				status.NextRunTime = nextRunTime.Format(time.RFC3339)
+			}
+		}
+
 		if statusProvider, isStatusProvider := job.(StatusProvider); isStatusProvider {
-			status.Status = statusProvider.Status()
+			providedStatus := statusProvider.Status()
+			if len(providedStatus) > 0 {
+				status.Status = providedStatus
+			}
 		}
 
 		statuses = append(statuses, status)

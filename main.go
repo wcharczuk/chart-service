@@ -26,6 +26,5 @@ func main() {
 		log.Fatal(err)
 	}
 	chronometer.Default().Start()
-
 	log.Fatal(server.Init().Start())
 }

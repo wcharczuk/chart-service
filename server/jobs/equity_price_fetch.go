@@ -107,6 +107,9 @@ func (epf *EquityPriceFetch) GetNextRunTime(after *time.Time) *time.Time {
 		}
 		return util.OptionalTime(epf.getNextMarketOpen(next).UTC())
 	}
+	if afterEastern.Before(open) {
+		return util.OptionalTime(open.UTC())
+	}
 	return util.OptionalTime(epf.getNextMarketOpen(afterEastern).UTC())
 }
 
