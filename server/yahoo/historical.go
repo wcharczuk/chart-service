@@ -36,6 +36,7 @@ func (hp *HistoricalPrice) Populate(line string) error {
 	} else {
 		return err
 	}
+	hp.Date = time.Date(hp.Date.Year(), hp.Date.Month(), hp.Date.Day(), 20, 30, 00, 00, time.UTC)
 	hp.Open = util.ParseFloat64(parts[1])
 	hp.High = util.ParseFloat64(parts[2])
 	hp.Low = util.ParseFloat64(parts[3])
