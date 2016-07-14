@@ -8,14 +8,22 @@ import (
 	"github.com/wcharczuk/chart-service/server/yahoo"
 )
 
+const (
+	secondsPerDay = 60 * 60 * 24
+)
+
 // GetEquityPricesByDate gets pricing data from both yahoo and the database.
 func GetEquityPricesByDate(ticker string, start, end time.Time) ([]model.EquityPrice, error) {
+	daysDelta := (end.Unix() - start.Unix()) / secondsPerDay
+
 	var union []model.EquityPrice
-	db, err := model.GetEquityPricesByDate(ticker, start, end)
-	if err != nil {
-		return union, err
+	if daysDelta < 15 {
+		db, err := model.GetEquityPricesByDate(ticker, start, end)
+		if err != nil {
+			return union, err
+		}
+		union = append(union, db...)
 	}
-	union = append(union, db...)
 	hist, err := yahoo.GetHistoricalPrices(ticker, start, end)
 	if err != nil {
 		return union, err
