@@ -13,6 +13,11 @@ func TimeValueFormatter(v interface{}) string {
 	return TimeValueFormatterWithFormat(v, DefaultDateFormat)
 }
 
+// TimeHourValueFormatter is a ValueFormatter for timestamps.
+func TimeHourValueFormatter(v interface{}) string {
+	return TimeValueFormatterWithFormat(v, DefaultDateHourFormat)
+}
+
 // TimeValueFormatterWithFormat is a ValueFormatter for timestamps with a given format.
 func TimeValueFormatterWithFormat(v interface{}, dateFormat string) string {
 	if typed, isTyped := v.(time.Time); isTyped {
@@ -29,7 +34,16 @@ func TimeValueFormatterWithFormat(v interface{}, dateFormat string) string {
 
 // FloatValueFormatter is a ValueFormatter for float64.
 func FloatValueFormatter(v interface{}) string {
-	return FloatValueFormatterWithFormat(v, "%.2f")
+	return FloatValueFormatterWithFormat(v, DefaultFloatFormat)
+}
+
+// PercentValueFormatter is a formatter for percent values.
+// NOTE: it normalizes the values, i.e. multiplies by 100.0.
+func PercentValueFormatter(v interface{}) string {
+	if typed, isTyped := v.(float64); isTyped {
+		return FloatValueFormatterWithFormat(typed*100.0, DefaultPercentValueFormat)
+	}
+	return ""
 }
 
 // FloatValueFormatterWithFormat is a ValueFormatter for float64 with a given format.

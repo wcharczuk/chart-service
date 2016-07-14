@@ -4,6 +4,8 @@ import (
 	"fmt"
 	"strings"
 	"time"
+
+	"github.com/wcharczuk/go-chart"
 )
 
 // ParseTimeFrame parses a value timeframe.
@@ -14,7 +16,9 @@ import (
 // - 1WK : last week (5 business days).
 // The following are to be implemented later:
 // - 1D : for the day (hourly).
-func ParseTimeFrame(value string) (from time.Time, to time.Time, err error) {
+func ParseTimeFrame(value string) (from time.Time, to time.Time, xvf, yvf chart.ValueFormatter, err error) {
+	xvf = chart.TimeValueFormatter
+	yvf = chart.FloatValueFormatter
 	switch strings.ToLower(value) {
 	case "ltm":
 		from = time.Now().UTC().AddDate(0, -12, 0)
@@ -39,11 +43,13 @@ func ParseTimeFrame(value string) (from time.Time, to time.Time, err error) {
 	case "3d":
 		from = time.Now().UTC().AddDate(0, 0, -3)
 		to = time.Now().UTC()
+		yvf = chart.TimeHourValueFormatter
 		return
 	case "1d":
 		from = time.Now().UTC().AddDate(0, 0, -1)
 		to = time.Now().UTC()
+		yvf = chart.TimeHourValueFormatter
 		return
 	}
-	return time.Time{}, time.Time{}, fmt.Errorf("Invalid timeframe value")
+	return time.Time{}, time.Time{}, nil, nil, fmt.Errorf("Invalid timeframe value")
 }

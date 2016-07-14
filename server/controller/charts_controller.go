@@ -42,24 +42,14 @@ func (cc Charts) getChartAction(rc *web.RequestContext) web.ControllerResult {
 	from := time.Now().UTC().AddDate(0, -1, 0)
 	to := time.Now().UTC()
 
-	timeframe, err := rc.RouteParameter("timeframe")
-	if err == nil {
-		from, to, err = core.ParseTimeFrame(timeframe)
-		if err != nil {
-			return rc.API().BadRequest(err.Error())
-		}
-	}
-
-	equityPrices, err := viewmodel.GetEquityPricesByDate(stock.Ticker, from, to)
-	if err != nil {
-		return rc.API().InternalError(err)
-	}
-
 	width := defaultChartWidth
 	height := defaultChartHeight
 	showAxes := true
 	showLastValue := true
 	usePercentages := false
+	useMovingAverages := false
+	xvf := chart.TimeValueFormatter
+	yvf := chart.FloatValueFormatter
 
 	if widthValue, err := rc.QueryParamInt("width"); err == nil {
 		width = widthValue
@@ -81,11 +71,31 @@ func (cc Charts) getChartAction(rc *web.RequestContext) web.ControllerResult {
 		usePercentages = util.CaseInsensitiveEquals(usePercentagesValue, "true")
 	}
 
+	if useMovingAveragesValue, err := rc.QueryParam("use_ma"); err == nil {
+		useMovingAverages = util.CaseInsensitiveEquals(useMovingAveragesValue, "true")
+	}
+
 	fillColor := drawing.ColorTransparent
 	if showAxes {
 		fillColor = chart.GetDefaultSeriesStrokeColor(0).WithAlpha(64)
 	}
 
+	timeframe, err := rc.RouteParameter("timeframe")
+	if err == nil {
+		from, to, xvf, yvf, err = core.ParseTimeFrame(timeframe)
+		if err != nil {
+			return rc.API().BadRequest(err.Error())
+		}
+	}
+
+	if usePercentages {
+		yvf = chart.PercentValueFormatter
+	}
+
+	equityPrices, err := viewmodel.GetEquityPricesByDate(stock.Ticker, from, to)
+	if err != nil {
+		return rc.API().InternalError(err)
+	}
 	var vx []time.Time
 	var vy []float64
 	if usePercentages {
@@ -94,16 +104,20 @@ func (cc Charts) getChartAction(rc *web.RequestContext) web.ControllerResult {
 		vx, vy = model.EquityPrices(equityPrices).Prices()
 	}
 
-	vf := chart.FloatValueFormatter
+	lva := model.EquityPrices(equityPrices).LastValueAnnotation(stock.Ticker, yvf)
 	if usePercentages {
-		vf = func(v interface{}) string {
-			return fmt.Sprintf("%0.2f%%", v)
-		}
+		lva = model.EquityPrices(equityPrices).LastValueAnnotationPercentChange(stock.Ticker, yvf)
 	}
 
-	lva := model.EquityPrices(equityPrices).LastValueAnnotation(stock.Ticker, vf)
-	if usePercentages {
-		lva = model.EquityPrices(equityPrices).LastValueAnnotationPercentChange(stock.Ticker, vf)
+	s1 := chart.TimeSeries{
+		Name:    stock.Ticker,
+		XValues: vx,
+		YValues: vy,
+		Style: chart.Style{
+			Show:        true,
+			StrokeColor: chart.GetDefaultSeriesStrokeColor(0),
+			FillColor:   fillColor,
+		},
 	}
 
 	graph := chart.Chart{
@@ -114,26 +128,27 @@ func (cc Charts) getChartAction(rc *web.RequestContext) web.ControllerResult {
 		Width:  width,
 		Height: height,
 		XAxis: chart.XAxis{
+			ValueFormatter: xvf,
 			Style: chart.Style{
 				Show: showAxes,
 			},
 		},
 		YAxis: chart.YAxis{
-			ValueFormatter: vf,
+			ValueFormatter: yvf,
 			Style: chart.Style{
 				Show: showAxes,
 			},
 		},
 		Series: []chart.Series{
-			chart.TimeSeries{
-				Name:    stock.Ticker,
-				XValues: vx,
-				YValues: vy,
+			s1,
+			&chart.MovingAverageSeries{
 				Style: chart.Style{
-					Show:        true,
-					StrokeColor: chart.GetDefaultSeriesStrokeColor(0),
-					FillColor:   fillColor,
+					Show:            useMovingAverages,
+					StrokeColor:     drawing.ColorRed,
+					StrokeDashArray: []float64{5, 5},
 				},
+				InnerSeries: s1,
+				WindowSize:  16,
 			},
 			chart.AnnotationSeries{
 				Name: fmt.Sprintf("%s - Last Value", stock.Ticker),
@@ -161,7 +176,7 @@ func (cc Charts) getChartAction(rc *web.RequestContext) web.ControllerResult {
 		}
 
 		graph.YAxisSecondary = chart.YAxis{
-			ValueFormatter: vf,
+			ValueFormatter: yvf,
 			Style: chart.Style{
 				Show: showAxes && !usePercentages,
 			},
@@ -189,9 +204,9 @@ func (cc Charts) getChartAction(rc *web.RequestContext) web.ControllerResult {
 			},
 		}}, graph.Series...)
 
-		clva := model.EquityPrices(compareEquityPrices).LastValueAnnotation(compareTicker, vf)
+		clva := model.EquityPrices(compareEquityPrices).LastValueAnnotation(compareTicker, yvf)
 		if usePercentages {
-			clva = model.EquityPrices(compareEquityPrices).LastValueAnnotationPercentChange(compareTicker, vf)
+			clva = model.EquityPrices(compareEquityPrices).LastValueAnnotationPercentChange(compareTicker, yvf)
 		}
 
 		graph.Series = append(graph.Series, chart.AnnotationSeries{
