@@ -32,6 +32,18 @@ func ParseTimeFrame(value string) (from time.Time, to time.Time, err error) {
 		from = time.Now().UTC().AddDate(0, 0, -7)
 		to = time.Now().UTC()
 		return
+	case "10d":
+		from = time.Now().UTC().AddDate(0, 0, -10)
+		to = time.Now().UTC()
+		return
+	case "3d":
+		from = time.Now().UTC().AddDate(0, 0, -3)
+		to = time.Now().UTC()
+		return
+	case "1d":
+		from = time.Now().UTC().AddDate(0, 0, -3)
+		to = time.Now().UTC()
+		return
 	}
 	return time.Time{}, time.Time{}, fmt.Errorf("Invalid timeframe value")
 }
