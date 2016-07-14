@@ -37,8 +37,10 @@ func Init() *web.App {
 
 	app.GET("/", rootHandler)
 	app.GET("/favicon.ico", faviconHandler)
+	app.Register(controller.Jobs{})
 	app.Register(controller.Charts{})
 	app.Register(controller.Equities{})
+	app.Register(controller.EquityPrices{})
 
 	return app
 }

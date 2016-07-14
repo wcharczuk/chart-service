@@ -1,6 +1,7 @@
 package jobs
 
 import (
+	"fmt"
 	"time"
 
 	"github.com/blendlabs/go-chronometer"
@@ -12,11 +13,10 @@ import (
 
 // EquityPriceFetch is the job that fetches stock data.
 type EquityPriceFetch struct {
-	baseJob
 	eastern *time.Location
 }
 
-// Name is the job name.
+// Name returns the job name.
 func (epf *EquityPriceFetch) Name() string {
 	return "equity_price_fetch"
 }
@@ -55,7 +55,12 @@ func (epf *EquityPriceFetch) Execute(ct *chronometer.CancellationToken) error {
 	//create prices for infos
 	for _, i := range infos {
 		if epf.tradeDayIsValid(i.LastTradeDate, timestamp.In(epf.eastern)) {
+			equity, err := model.GetEquityByTicker(i.Ticker)
+			if err != nil {
+				return err
+			}
 			err = spiffy.DefaultDb().Create(model.EquityPrice{
+				EquityID:     equity.ID,
 				TimestampUTC: timestamp,
 				Price:        i.LastPrice,
 				Volume:       i.Volume,
@@ -124,4 +129,29 @@ func (epf *EquityPriceFetch) getNextMarketOpen(after time.Time) time.Time {
 
 func (epf *EquityPriceFetch) getMarketClose(after time.Time) time.Time {
 	return time.Date(after.Year(), after.Month(), after.Day(), 16, 0, 0, 0, epf.eastern)
+}
+
+// OnStart runs before the job body.
+func (epf *EquityPriceFetch) OnStart() {
+	epf.logf("Job `%s` starting.", epf.Name())
+}
+
+// OnComplete runs after the job body.
+func (epf *EquityPriceFetch) OnComplete(err error) {
+	if err == nil {
+		epf.logf("Job `%s` complete.", epf.Name())
+	} else {
+		epf.logf("Job `%s` failed.", epf.Name())
+		epf.error(err)
+	}
+}
+
+func (epf *EquityPriceFetch) logf(format string, args ...interface{}) {
+	message := fmt.Sprintf(format, args...)
+	fmt.Printf("%s %s\n", util.Color(time.Now().UTC().Format(time.RFC3339), util.ColorGray), message)
+}
+
+func (epf *EquityPriceFetch) error(err error) {
+	message := fmt.Sprintf("%s:\n%v", util.Color("Exception", util.ColorRed), err)
+	fmt.Printf("%s %s\n", util.Color(time.Now().UTC().Format(time.RFC3339), util.ColorGray), message)
 }

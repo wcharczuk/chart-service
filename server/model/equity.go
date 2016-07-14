@@ -36,6 +36,7 @@ func (e Equity) Migration() m.Migration {
 			m.Body(
 				"CREATE TABLE equity (id serial not null, active bool not null, name varchar(255), ticker varchar(32) not null, exchange varchar(32) not null);",
 				"ALTER TABLE equity ADD CONSTRAINT pk_equity_id PRIMARY KEY (id);",
+				"ALTER TABLE equity ADD CONSTRAINT uk_equity_ticker_exchange UNIQUE (ticker,exchange)",
 			),
 			"equity",
 		),
@@ -44,6 +45,11 @@ func (e Equity) Migration() m.Migration {
 			m.Body("ALTER TABLE equity ADD exchange varchar(32) not null"),
 			"equity",
 			"exchange",
+		),
+		m.Step(
+			m.CreateConstraint,
+			m.Body("ALTER TABLE equity ADD CONSTRAINT uk_equity_ticker_exchange UNIQUE (ticker,exchange)"),
+			"uk_equity_ticker_exchange",
 		),
 	)
 }
@@ -58,6 +64,18 @@ func GetEquitiesActive(txs ...*sql.Tx) ([]Equity, error) {
 	query := `select * from equity where active = true`
 	var tickers []Equity
 	err := spiffy.DefaultDb().QueryInTransaction(query, tx).OutMany(&tickers)
+	return tickers, err
+}
+
+// SearchEquities searches equities.
+func SearchEquities(searchString string, txs ...*sql.Tx) ([]Equity, error) {
+	var tx *sql.Tx
+	if len(txs) > 0 {
+		tx = txs[0]
+	}
+	query := `select * from equity where name ilike '%'||$1||'%' or ticker ilike '%'||$1||'%';`
+	var tickers []Equity
+	err := spiffy.DefaultDb().QueryInTransaction(query, tx, searchString).OutMany(&tickers)
 	return tickers, err
 }
 

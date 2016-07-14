@@ -40,7 +40,25 @@ func (ep EquityPrice) Migration() m.Migration {
 }
 
 // GetEquityPrices gets equity prices in a date range.
-func GetEquityPrices(ticker string, start, end time.Time, txs ...*sql.Tx) ([]EquityPrice, error) {
+func GetEquityPrices(ticker string, txs ...*sql.Tx) ([]EquityPrice, error) {
+	var tx *sql.Tx
+	if len(txs) > 0 {
+		tx = txs[0]
+	}
+
+	query := `
+	select * from 
+		equity_price ep 
+		join equity e on e.id = ep.equity_id 
+	where
+		e.ticker ilike $1
+	`
+	var prices []EquityPrice
+	return prices, spiffy.DefaultDb().QueryInTransaction(query, tx, ticker).OutMany(&prices)
+}
+
+// GetEquityPricesByDate gets equity prices in a date range.
+func GetEquityPricesByDate(ticker string, start, end time.Time, txs ...*sql.Tx) ([]EquityPrice, error) {
 	var tx *sql.Tx
 	if len(txs) > 0 {
 		tx = txs[0]

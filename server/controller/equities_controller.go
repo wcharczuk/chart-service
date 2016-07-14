@@ -19,6 +19,18 @@ func (e Equities) getAllHandler(rc *web.RequestContext) web.ControllerResult {
 	return rc.API().JSON(all)
 }
 
+func (e Equities) searchHandler(rc *web.RequestContext) web.ControllerResult {
+	searchString, err := rc.RouteParameter("query")
+	if err != nil {
+		return rc.API().BadRequest(err.Error())
+	}
+	results, err := model.SearchEquities(searchString)
+	if err != nil {
+		return rc.API().InternalError(err)
+	}
+	return rc.API().JSON(results)
+}
+
 func (e Equities) getHandler(rc *web.RequestContext) web.ControllerResult {
 	id, err := rc.RouteParameterInt("id")
 	if err != nil {
@@ -134,6 +146,7 @@ func (e Equities) deleteHandler(rc *web.RequestContext) web.ControllerResult {
 // Register registers the controller.
 func (e Equities) Register(app *web.App) {
 	app.GET("/api/v1/equities", e.getAllHandler)
+	app.GET("/api/v1/equities/search/:query", e.searchHandler)
 	app.POST("/api/v1/equity", e.createHandler)
 	app.GET("/api/v1/equity/:id", e.getHandler)
 	app.PUT("/api/v1/equity/:id", e.updateHandler)

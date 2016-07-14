@@ -8,7 +8,7 @@ import (
 	"github.com/blendlabs/spiffy"
 )
 
-func TestGetEquityPrices(t *testing.T) {
+func TestGetEquityPricesByDate(t *testing.T) {
 	assert := assert.New(t)
 	tx, err := spiffy.DefaultDb().Begin()
 	assert.Nil(err)
@@ -28,7 +28,7 @@ func TestGetEquityPrices(t *testing.T) {
 	_, err = createTestEquityPrice(eq.ID, now.AddDate(0, 0, -4), tx)
 	assert.Nil(err)
 
-	prices, err := GetEquityPrices(eq.Ticker, now.AddDate(0, 0, -3).Add(-1*time.Hour), now, tx)
+	prices, err := GetEquityPricesByDate(eq.Ticker, now.AddDate(0, 0, -3).Add(-1*time.Hour), now, tx)
 	assert.Nil(err)
 	assert.Len(prices, 3)
 }

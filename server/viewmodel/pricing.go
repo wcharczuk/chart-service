@@ -8,10 +8,10 @@ import (
 	"github.com/wcharczuk/chart-service/server/yahoo"
 )
 
-// GetEquityPrices gets pricing data from both yahoo and the database.
-func GetEquityPrices(ticker string, start, end time.Time) ([]model.EquityPrice, error) {
+// GetEquityPricesByDate gets pricing data from both yahoo and the database.
+func GetEquityPricesByDate(ticker string, start, end time.Time) ([]model.EquityPrice, error) {
 	var union []model.EquityPrice
-	db, err := model.GetEquityPrices(ticker, start, end)
+	db, err := model.GetEquityPricesByDate(ticker, start, end)
 	if err != nil {
 		return union, err
 	}

@@ -50,7 +50,7 @@ func (cc Charts) getChartAction(rc *web.RequestContext) web.ControllerResult {
 		}
 	}
 
-	equityPrices, err := viewmodel.GetEquityPrices(stock.Ticker, from, to)
+	equityPrices, err := viewmodel.GetEquityPricesByDate(stock.Ticker, from, to)
 	if err != nil {
 		return rc.API().InternalError(err)
 	}
@@ -144,7 +144,7 @@ func (cc Charts) getChartAction(rc *web.RequestContext) web.ControllerResult {
 	}
 
 	if compareTicker, err := rc.QueryParam("compare"); err == nil {
-		compareEquityPrices, err := viewmodel.GetEquityPrices(compareTicker, from, to)
+		compareEquityPrices, err := viewmodel.GetEquityPricesByDate(compareTicker, from, to)
 		if err != nil {
 			return rc.API().InternalError(err)
 		}
