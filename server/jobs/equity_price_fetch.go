@@ -103,6 +103,12 @@ func (epf *EquityPriceFetch) GetNextRunTime(after *time.Time) *time.Time {
 
 	if afterEastern.After(open) && afterEastern.Before(close) {
 		next := afterEastern.Add(15 * time.Minute)
+
+		minuteRemainder := next.Minute() % 15
+		if minuteRemainder > 0 {
+			next = next.Add(-(time.Duration(minuteRemainder) * time.Minute))
+		}
+
 		if next.Before(close) {
 			return util.OptionalTime(next.UTC())
 		}
