@@ -41,7 +41,7 @@ func ParseTimeFrame(value string) (from time.Time, to time.Time, err error) {
 		to = time.Now().UTC()
 		return
 	case "1d":
-		from = time.Now().UTC().AddDate(0, 0, -3)
+		from = time.Now().UTC().AddDate(0, 0, -1)
 		to = time.Now().UTC()
 		return
 	}
