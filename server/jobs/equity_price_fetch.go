@@ -101,9 +101,12 @@ func (epf *EquityPriceFetch) GetNextRunTime(after *time.Time) *time.Time {
 	open := epf.getMarketOpen(afterEastern)
 	close := epf.getMarketClose(afterEastern)
 
+	if afterEastern.Before(open) {
+		return util.OptionalTime(open.UTC())
+	}
+
 	if afterEastern.After(open) && afterEastern.Before(close) {
 		next := afterEastern.Add(15 * time.Minute)
-
 		minuteRemainder := next.Minute() % 15
 		if minuteRemainder > 0 {
 			next = next.Add(-(time.Duration(minuteRemainder) * time.Minute))
@@ -113,9 +116,6 @@ func (epf *EquityPriceFetch) GetNextRunTime(after *time.Time) *time.Time {
 			return util.OptionalTime(next.UTC())
 		}
 		return util.OptionalTime(epf.getNextMarketOpen(next).UTC())
-	}
-	if afterEastern.Before(open) {
-		return util.OptionalTime(open.UTC())
 	}
 	return util.OptionalTime(epf.getNextMarketOpen(afterEastern).UTC())
 }
@@ -131,8 +131,6 @@ func (epf *EquityPriceFetch) getNextMarketOpen(after time.Time) time.Time {
 		if chronometer.IsWeekDay(dayOfWeek) {
 			return time.Date(newDay.Year(), newDay.Month(), newDay.Day(), 9, 30, 0, 0, epf.eastern)
 		}
-		println(newDay.Format(time.RFC3339), " is a weekend??", newDay.Weekday())
-
 	}
 	return chronometer.Epoch //no but really.
 }
