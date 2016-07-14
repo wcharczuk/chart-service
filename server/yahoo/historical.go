@@ -12,6 +12,11 @@ import (
 	"github.com/wcharczuk/chart-service/server/model"
 )
 
+const (
+	// DateFormat is the yahoo date format.
+	DateFormat = "1/02/2006"
+)
+
 // HistoricalPrice is a result from the historical price feed.
 type HistoricalPrice struct {
 	Date time.Time `json:"date"`
