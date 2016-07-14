@@ -149,10 +149,10 @@ func (cc Charts) getChartAction(rc *web.RequestContext) web.ControllerResult {
 	s1maas := chart.AnnotationSeries{
 		Name: fmt.Sprintf("%s - Moving Average Last Value", stock.Ticker),
 		Style: chart.Style{
-			Show:        showLastValue,
+			Show:        showLastValue && useMovingAverages,
 			StrokeColor: drawing.ColorRed,
 		},
-		Annotations: []chart.Annotation{lva},
+		Annotations: []chart.Annotation{lvma},
 	}
 
 	graph := chart.Chart{
