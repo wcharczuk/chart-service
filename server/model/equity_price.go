@@ -84,8 +84,13 @@ func (ep EquityPrices) In(loc *time.Location) []EquityPrice {
 	newEP := make([]EquityPrice, len(ep))
 	for x := 0; x < len(ep); x++ {
 		p := ep[x]
-		p.TimestampUTC = p.TimestampUTC.In(loc)
-		newEP[x] = p
+
+		newEP[x] = EquityPrice{
+			EquityID:     p.EquityID,
+			TimestampUTC: p.TimestampUTC.In(loc),
+			Price:        p.Price,
+			Volume:       p.Volume,
+		}
 	}
 	return newEP
 }
