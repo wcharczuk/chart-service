@@ -104,11 +104,6 @@ func (cc Charts) getChartAction(rc *web.RequestContext) web.ControllerResult {
 		vx, vy = model.EquityPrices(equityPrices).Prices()
 	}
 
-	lva := model.EquityPrices(equityPrices).LastValueAnnotation(stock.Ticker, yvf)
-	if usePercentages {
-		lva = model.EquityPrices(equityPrices).LastValueAnnotationPercentChange(stock.Ticker, yvf)
-	}
-
 	s1 := chart.TimeSeries{
 		Name:    stock.Ticker,
 		XValues: vx,
@@ -118,6 +113,46 @@ func (cc Charts) getChartAction(rc *web.RequestContext) web.ControllerResult {
 			StrokeColor: chart.GetDefaultSeriesStrokeColor(0),
 			FillColor:   fillColor,
 		},
+	}
+
+	s1ma := &chart.MovingAverageSeries{
+		Style: chart.Style{
+			Show:            useMovingAverages,
+			StrokeColor:     drawing.ColorRed,
+			StrokeDashArray: []float64{5, 5},
+		},
+		InnerSeries: s1,
+		WindowSize:  16,
+	}
+
+	lva := model.EquityPrices(equityPrices).LastValueAnnotation(stock.Ticker, yvf)
+	if usePercentages {
+		lva = model.EquityPrices(equityPrices).LastValueAnnotationPercentChange(stock.Ticker, yvf)
+	}
+
+	s1as := chart.AnnotationSeries{
+		Name: fmt.Sprintf("%s - Last Value", stock.Ticker),
+		Style: chart.Style{
+			Show:        showLastValue,
+			StrokeColor: chart.GetDefaultSeriesStrokeColor(0),
+		},
+		Annotations: []chart.Annotation{lva},
+	}
+
+	malvx, malvy := s1ma.GetLastValue()
+	lvma := chart.Annotation{
+		X:     malvx,
+		Y:     malvy,
+		Label: fmt.Sprintf("%s %s", stock.Ticker, yvf(malvy)),
+	}
+
+	s1maas := chart.AnnotationSeries{
+		Name: fmt.Sprintf("%s - Moving Average Last Value", stock.Ticker),
+		Style: chart.Style{
+			Show:        showLastValue,
+			StrokeColor: drawing.ColorRed,
+		},
+		Annotations: []chart.Annotation{lva},
 	}
 
 	graph := chart.Chart{
@@ -141,23 +176,9 @@ func (cc Charts) getChartAction(rc *web.RequestContext) web.ControllerResult {
 		},
 		Series: []chart.Series{
 			s1,
-			&chart.MovingAverageSeries{
-				Style: chart.Style{
-					Show:            useMovingAverages,
-					StrokeColor:     drawing.ColorRed,
-					StrokeDashArray: []float64{5, 5},
-				},
-				InnerSeries: s1,
-				WindowSize:  16,
-			},
-			chart.AnnotationSeries{
-				Name: fmt.Sprintf("%s - Last Value", stock.Ticker),
-				Style: chart.Style{
-					Show:        showLastValue,
-					StrokeColor: chart.GetDefaultSeriesStrokeColor(0),
-				},
-				Annotations: []chart.Annotation{lva},
-			},
+			s1ma,
+			s1as,
+			s1maas,
 		},
 	}
 
