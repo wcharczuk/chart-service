@@ -18,7 +18,7 @@ import (
 // The following are to be implemented later:
 // - 1D : for the day (hourly).
 func ParseTimeFrame(value string) (from time.Time, to time.Time, xvf, yvf chart.ValueFormatter, err error) {
-	xvf = chart.TimeValueFormatter
+	xvf = DateValueFormatter
 	yvf = chart.FloatValueFormatter
 	switch strings.ToLower(value) {
 	case "ltm":
@@ -44,15 +44,39 @@ func ParseTimeFrame(value string) (from time.Time, to time.Time, xvf, yvf chart.
 	case "3d":
 		from = time.Now().UTC().AddDate(0, 0, -3)
 		to = time.Now().UTC()
-		xvf = chart.TimeHourValueFormatter
+		xvf = DateHourValueFormatter
 		return
 	case "1d":
 		from = time.Now().UTC().AddDate(0, 0, -1)
 		to = time.Now().UTC()
-		xvf = chart.TimeHourValueFormatter
+		xvf = DateHourValueFormatter
 		return
 	}
 	return time.Time{}, time.Time{}, nil, nil, fmt.Errorf("Invalid timeframe value")
+}
+
+// DateValueFormatter is a value formatter that takes a date format.
+func DateValueFormatter(v interface{}) string {
+	return DateValueFormatterWithFormat(v, chart.DefaultDateFormat)
+}
+
+// DateHourValueFormatter is a value formatter that takes a date format.
+func DateHourValueFormatter(v interface{}) string {
+	return DateValueFormatterWithFormat(v, chart.DefaultDateHourFormat)
+}
+
+// DateValueFormatterWithFormat is a value formatter that takes a date format.
+func DateValueFormatterWithFormat(v interface{}, dateFormat string) string {
+	var d time.Time
+	if typed, isTyped := v.(time.Time); isTyped {
+		d = typed
+	} else if typed, isTyped := v.(int64); isTyped {
+		d = time.Unix(typed, 0)
+	} else if typed, isTyped := v.(float64); isTyped {
+		d = time.Unix(int64(typed), 0)
+	}
+	asEastern := d.In(GetEasternTimezone())
+	return asEastern.Format(dateFormat)
 }
 
 var (
