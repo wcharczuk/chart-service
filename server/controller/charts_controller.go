@@ -3,6 +3,7 @@ package controller
 import (
 	"fmt"
 	"net/http"
+	"strings"
 	"time"
 
 	"github.com/blendlabs/go-util"
@@ -38,6 +39,7 @@ func (cc Charts) getChartAction(rc *web.RequestContext) web.ControllerResult {
 	}
 
 	stock := stockInfos[0]
+	stockTicker := strings.ToUpper(stock.Ticker)
 
 	from := time.Now().UTC().AddDate(0, -1, 0)
 	to := time.Now().UTC()
@@ -97,7 +99,7 @@ func (cc Charts) getChartAction(rc *web.RequestContext) web.ControllerResult {
 		yvf = chart.PercentValueFormatter
 	}
 
-	equityPrices, err := viewmodel.GetEquityPricesByDate(stock.Ticker, from, to)
+	equityPrices, err := viewmodel.GetEquityPricesByDate(stockTicker, from, to)
 	if err != nil {
 		return rc.API().InternalError(err)
 	}
@@ -110,7 +112,7 @@ func (cc Charts) getChartAction(rc *web.RequestContext) web.ControllerResult {
 	}
 
 	s1 := chart.TimeSeries{
-		Name:    stock.Ticker,
+		Name:    stockTicker,
 		XValues: vx,
 		YValues: vy,
 		Style: chart.Style{
@@ -121,7 +123,7 @@ func (cc Charts) getChartAction(rc *web.RequestContext) web.ControllerResult {
 	}
 
 	s1ma := &chart.MovingAverageSeries{
-		Name: fmt.Sprintf("%s - Mov. Avg.", stock.Ticker),
+		Name: fmt.Sprintf("%s - Mov. Avg.", stockTicker),
 		Style: chart.Style{
 			Show:            useMovingAverages,
 			StrokeColor:     drawing.ColorRed,
@@ -131,13 +133,13 @@ func (cc Charts) getChartAction(rc *web.RequestContext) web.ControllerResult {
 		WindowSize:  16,
 	}
 
-	lva := model.EquityPrices(equityPrices).LastValueAnnotation(util.TernaryOfString(useLegend, "", stock.Ticker), yvf)
+	lva := model.EquityPrices(equityPrices).LastValueAnnotation(util.TernaryOfString(useLegend, "", stockTicker), yvf)
 	if usePercentages {
-		lva = model.EquityPrices(equityPrices).LastValueAnnotationPercentChange(util.TernaryOfString(useLegend, "", stock.Ticker), yvf)
+		lva = model.EquityPrices(equityPrices).LastValueAnnotationPercentChange(util.TernaryOfString(useLegend, "", stockTicker), yvf)
 	}
 
 	s1as := chart.AnnotationSeries{
-		Name: fmt.Sprintf("%s - LV", stock.Ticker),
+		Name: fmt.Sprintf("%s - LV", stockTicker),
 		Style: chart.Style{
 			Show:        showLastValue,
 			StrokeColor: chart.GetDefaultSeriesStrokeColor(0),
@@ -149,11 +151,11 @@ func (cc Charts) getChartAction(rc *web.RequestContext) web.ControllerResult {
 	lvma := chart.Annotation{
 		X:     malvx,
 		Y:     malvy,
-		Label: fmt.Sprintf("%s %s", util.TernaryOfString(useLegend, "", stock.Ticker), yvf(malvy)),
+		Label: fmt.Sprintf("%s %s", util.TernaryOfString(useLegend, "", stockTicker), yvf(malvy)),
 	}
 
 	s1maas := chart.AnnotationSeries{
-		Name: fmt.Sprintf("%s - Mov. Avg. LV", stock.Ticker),
+		Name: fmt.Sprintf("%s - Mov. Avg. LV", stockTicker),
 		Style: chart.Style{
 			Show:        showLastValue && useMovingAverages,
 			StrokeColor: drawing.ColorRed,
@@ -196,6 +198,7 @@ func (cc Charts) getChartAction(rc *web.RequestContext) web.ControllerResult {
 	}
 
 	if compareTicker, err := rc.QueryParam("compare"); err == nil {
+		compareTicker = strings.ToUpper(compareTicker)
 		compareEquityPrices, err := viewmodel.GetEquityPricesByDate(compareTicker, from, to)
 		if err != nil {
 			return rc.API().InternalError(err)
