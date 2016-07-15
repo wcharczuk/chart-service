@@ -131,9 +131,9 @@ func (cc Charts) getChartAction(rc *web.RequestContext) web.ControllerResult {
 		WindowSize:  16,
 	}
 
-	lva := model.EquityPrices(equityPrices).LastValueAnnotation(stock.Ticker, yvf)
+	lva := model.EquityPrices(equityPrices).LastValueAnnotation(util.TernaryOfString(useLegend, "", stock.Ticker), yvf)
 	if usePercentages {
-		lva = model.EquityPrices(equityPrices).LastValueAnnotationPercentChange(stock.Ticker, yvf)
+		lva = model.EquityPrices(equityPrices).LastValueAnnotationPercentChange(util.TernaryOfString(useLegend, "", stock.Ticker), yvf)
 	}
 
 	s1as := chart.AnnotationSeries{
@@ -149,7 +149,7 @@ func (cc Charts) getChartAction(rc *web.RequestContext) web.ControllerResult {
 	lvma := chart.Annotation{
 		X:     malvx,
 		Y:     malvy,
-		Label: fmt.Sprintf("%s %s", stock.Ticker, yvf(malvy)),
+		Label: fmt.Sprintf("%s %s", util.TernaryOfString(useLegend, "", stock.Ticker), yvf(malvy)),
 	}
 
 	s1maas := chart.AnnotationSeries{
@@ -236,9 +236,9 @@ func (cc Charts) getChartAction(rc *web.RequestContext) web.ControllerResult {
 			},
 		}}, graph.Series...)
 
-		clva := model.EquityPrices(compareEquityPrices).LastValueAnnotation(compareTicker, yvf)
+		clva := model.EquityPrices(compareEquityPrices).LastValueAnnotation(util.TernaryOfString(useLegend, "", compareTicker), yvf)
 		if usePercentages {
-			clva = model.EquityPrices(compareEquityPrices).LastValueAnnotationPercentChange(compareTicker, yvf)
+			clva = model.EquityPrices(compareEquityPrices).LastValueAnnotationPercentChange(util.TernaryOfString(useLegend, "", compareTicker), yvf)
 		}
 
 		graph.Series = append(graph.Series, chart.AnnotationSeries{
