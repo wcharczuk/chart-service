@@ -189,7 +189,7 @@ func (cc Charts) getChartAction(rc *web.RequestContext) web.ControllerResult {
 	}
 	if useLegend {
 		graph.Elements = []chart.Renderable{
-			createLegend(&graph),
+			chart.CreateLegend(&graph),
 		}
 	}
 
@@ -271,87 +271,6 @@ func (cc Charts) getChartAction(rc *web.RequestContext) web.ControllerResult {
 	}
 	rc.Response.WriteHeader(http.StatusOK)
 	return nil
-}
-
-func createLegend(c *chart.Chart) chart.Renderable {
-	return func(r chart.Renderer, cb chart.Box, defaults chart.Style) {
-
-		// DEFAULTS
-		legendPadding := 5
-		lineTextGap := 5
-		lineLengthMinimum := 25
-
-		var labels []string
-		var lines []chart.Style
-		for _, s := range c.Series {
-			if s.GetStyle().IsZero() || s.GetStyle().Show {
-				if _, isAnnotationSeries := s.(chart.AnnotationSeries); !isAnnotationSeries {
-					labels = append(labels, s.GetName())
-					lines = append(lines, s.GetStyle())
-				}
-			}
-		}
-
-		legend := chart.Box{
-			Top:  cb.Top, //padding
-			Left: cb.Left,
-		}
-
-		legendContent := chart.Box{
-			Top:  legend.Top + legendPadding,
-			Left: legend.Left + legendPadding,
-		}
-
-		r.SetFontColor(chart.DefaultTextColor)
-		r.SetFontSize(8.0)
-
-		// measure
-		for x := 0; x < len(labels); x++ {
-			if len(labels[x]) > 0 {
-				tb := r.MeasureText(labels[x])
-				legendContent.Bottom += (tb.Height() + chart.DefaultMinimumTickVerticalSpacing)
-				rowRight := tb.Width() + legendContent.Left + lineLengthMinimum + lineTextGap
-				legendContent.Right = chart.MaxInt(legendContent.Right, rowRight)
-			}
-		}
-
-		legend = legend.Grow(legendContent)
-		chart.DrawBox(r, legend, chart.Style{
-			FillColor:   drawing.ColorWhite,
-			StrokeColor: chart.DefaultAxisColor,
-			StrokeWidth: 1.0,
-		})
-
-		legendContent.Right = legend.Right - legendPadding
-		legendContent.Bottom = legend.Bottom - legendPadding
-
-		ycursor := legendContent.Top
-		tx := legendContent.Left
-		for x := 0; x < len(labels); x++ {
-			if len(labels[x]) > 0 {
-				tb := r.MeasureText(labels[x])
-				ycursor += tb.Height()
-
-				//r.SetFillColor(chart.DefaultTextColor)
-				r.Text(labels[x], tx, ycursor)
-				th2 := tb.Height() >> 1
-
-				lx := tx + tb.Width() + lineTextGap
-				ly := ycursor - th2
-				lx2 := legendContent.Right - legendPadding
-
-				r.SetStrokeColor(lines[x].GetStrokeColor())
-				r.SetStrokeWidth(lines[x].GetStrokeWidth())
-				r.SetStrokeDashArray(lines[x].GetStrokeDashArray())
-
-				r.MoveTo(lx, ly)
-				r.LineTo(lx2, ly)
-				r.Stroke()
-
-				ycursor += chart.DefaultMinimumTickVerticalSpacing
-			}
-		}
-	}
 }
 
 // Register registers the controller.
