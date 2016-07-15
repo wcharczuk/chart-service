@@ -142,8 +142,8 @@ func (cc Charts) getChartAction(rc *web.RequestContext) web.ControllerResult {
 		Name: fmt.Sprintf("%s - Bol. Bounds", stockTicker),
 		Style: chart.Style{
 			Show:        useBollingerBounds,
-			StrokeColor: chart.DefaultAxisColor.WithAlpha(128),
-			FillColor:   chart.DefaultAxisColor.WithAlpha(64),
+			StrokeColor: chart.DefaultAxisColor.WithAlpha(48),
+			FillColor:   chart.DefaultAxisColor.WithAlpha(32),
 		},
 		InnerSeries: s1,
 		K:           2.0,
