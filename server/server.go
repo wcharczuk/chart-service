@@ -41,6 +41,7 @@ func Init() *web.App {
 	app.Register(controller.Charts{})
 	app.Register(controller.Equities{})
 	app.Register(controller.EquityPrices{})
+	app.Register(controller.Yahoo{})
 
 	return app
 }
