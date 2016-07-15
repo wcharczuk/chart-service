@@ -84,7 +84,7 @@ func (cc Charts) getChartAction(rc *web.RequestContext) web.ControllerResult {
 	}
 
 	if useBollingerBandsValue, err := rc.QueryParam("use_bbs"); err == nil {
-		useBollingerBands = util.CaseInsensitiveEquals(useBollingerBoundsValue, "true")
+		useBollingerBands = util.CaseInsensitiveEquals(useBollingerBandsValue, "true")
 	}
 
 	fillColor := drawing.ColorTransparent
