@@ -51,7 +51,7 @@ func (cc Charts) getChartAction(rc *web.RequestContext) web.ControllerResult {
 	usePercentages := false
 	useMovingAverages := false
 	useLegend := false
-	useBollingerBounds := false
+	useBollingerBands := false
 	xvf := chart.TimeValueFormatter
 	yvf := chart.FloatValueFormatter
 
@@ -83,12 +83,12 @@ func (cc Charts) getChartAction(rc *web.RequestContext) web.ControllerResult {
 		useLegend = util.CaseInsensitiveEquals(useLegendValue, "true")
 	}
 
-	if useBollingerBoundsValue, err := rc.QueryParam("use_bbs"); err == nil {
-		useBollingerBounds = util.CaseInsensitiveEquals(useBollingerBoundsValue, "true")
+	if useBollingerBandsValue, err := rc.QueryParam("use_bbs"); err == nil {
+		useBollingerBands = util.CaseInsensitiveEquals(useBollingerBoundsValue, "true")
 	}
 
 	fillColor := drawing.ColorTransparent
-	if showAxes && !useBollingerBounds {
+	if showAxes && !useBollingerBands {
 		fillColor = chart.GetDefaultSeriesStrokeColor(0).WithAlpha(64)
 	}
 
@@ -139,9 +139,9 @@ func (cc Charts) getChartAction(rc *web.RequestContext) web.ControllerResult {
 	}
 
 	s1bbs := &chart.BollingerBandsSeries{
-		Name: fmt.Sprintf("%s - Bol. Bounds", stockTicker),
+		Name: fmt.Sprintf("%s - Bol. Bands", stockTicker),
 		Style: chart.Style{
-			Show:        useBollingerBounds,
+			Show:        useBollingerBands,
 			StrokeColor: chart.DefaultAxisColor.WithAlpha(48),
 			FillColor:   chart.DefaultAxisColor.WithAlpha(32),
 		},
@@ -238,7 +238,7 @@ func (cc Charts) getChartAction(rc *web.RequestContext) web.ControllerResult {
 		}
 
 		compareFillColor := drawing.ColorTransparent
-		if showAxes && !useBollingerBounds {
+		if showAxes && !useBollingerBands {
 			compareFillColor = chart.GetDefaultSeriesStrokeColor(1).WithAlpha(64)
 		}
 
