@@ -171,24 +171,14 @@ func (cc Charts) getChartAction(rc *web.RequestContext) web.ControllerResult {
 		XAxis: chart.XAxis{
 			ValueFormatter: xvf,
 			Style: chart.Style{
-				Show:        showAxes,
-				StrokeColor: drawing.ColorWhite,
-				FontColor:   drawing.ColorWhite,
+				Show: showAxes,
 			},
 		},
 		YAxis: chart.YAxis{
 			ValueFormatter: yvf,
 			Style: chart.Style{
-				Show:        showAxes,
-				StrokeColor: drawing.ColorWhite,
-				FontColor:   drawing.ColorWhite,
+				Show: showAxes,
 			},
-		},
-		Background: chart.Style{
-			FillColor: drawing.ColorBlack,
-		},
-		Canvas: chart.Style{
-			FillColor: drawing.ColorBlack,
 		},
 		Series: []chart.Series{
 			s1,
@@ -200,9 +190,7 @@ func (cc Charts) getChartAction(rc *web.RequestContext) web.ControllerResult {
 	if useLegend {
 		graph.Elements = []chart.Renderable{
 			chart.CreateLegend(&graph, chart.Style{
-				FontColor: drawing.ColorWhite,
-				FillColor: drawing.ColorBlack,
-				FontSize:  8.0,
+				FontSize: 8.0,
 			}),
 		}
 	}
@@ -224,9 +212,7 @@ func (cc Charts) getChartAction(rc *web.RequestContext) web.ControllerResult {
 		graph.YAxisSecondary = chart.YAxis{
 			ValueFormatter: yvf,
 			Style: chart.Style{
-				Show:        showAxes && !usePercentages,
-				StrokeColor: drawing.ColorWhite,
-				FontColor:   drawing.ColorWhite,
+				Show: showAxes && !usePercentages,
 			},
 		}
 
