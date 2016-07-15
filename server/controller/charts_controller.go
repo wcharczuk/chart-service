@@ -202,6 +202,7 @@ func (cc Charts) getChartAction(rc *web.RequestContext) web.ControllerResult {
 			chart.CreateLegend(&graph, chart.Style{
 				FontColor: drawing.ColorWhite,
 				FillColor: drawing.ColorBlack,
+				FontSize:  8.0,
 			}),
 		}
 	}
