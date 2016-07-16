@@ -58,6 +58,7 @@ func (cc Charts) getChartAction(rc *web.RequestContext) web.ControllerResult {
 
 	smaSize := 16
 	emaSigma := 0.1818
+	bbsk := 2.0
 
 	if widthValue, err := rc.QueryParamInt("width"); err == nil {
 		width = widthValue
@@ -101,6 +102,10 @@ func (cc Charts) getChartAction(rc *web.RequestContext) web.ControllerResult {
 
 	if emaSigmaValue, err := rc.QueryParamFloat64("sigma"); err == nil {
 		emaSigma = emaSigmaValue
+	}
+
+	if bbskValue, err := rc.QueryParamFloat64("k"); err == nil {
+		bbsk = bbskValue
 	}
 
 	fillColor := drawing.ColorTransparent
@@ -165,7 +170,7 @@ func (cc Charts) getChartAction(rc *web.RequestContext) web.ControllerResult {
 			StrokeDashArray: []float64{5, 5},
 		},
 		InnerSeries: s1,
-		WindowSize:  smak,
+		WindowSize:  smaSize,
 	}
 	smax, smay := s1sma.GetLastValue()
 	lvssma := chart.Annotation{
@@ -215,8 +220,8 @@ func (cc Charts) getChartAction(rc *web.RequestContext) web.ControllerResult {
 			FillColor:   chart.GetDefaultSeriesStrokeColor(0).WithAlpha(32),
 		},
 		InnerSeries: s1,
-		K:           2.0,
-		WindowSize:  16,
+		K:           bbsk,
+		WindowSize:  smaSize,
 	}
 
 	graph := chart.Chart{
