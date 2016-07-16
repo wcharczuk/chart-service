@@ -49,11 +49,15 @@ func (cc Charts) getChartAction(rc *web.RequestContext) web.ControllerResult {
 	showAxes := true
 	showLastValue := true
 	usePercentages := false
-	useMovingAverages := false
+	useSimpleMovingAverage := false
+	useExpMovingAverage := false
 	useLegend := false
 	useBollingerBands := false
 	xvf := chart.TimeValueFormatter
 	yvf := chart.FloatValueFormatter
+
+	smak := 16
+	emaSigma := 0.1818
 
 	if widthValue, err := rc.QueryParamInt("width"); err == nil {
 		width = widthValue
@@ -75,8 +79,12 @@ func (cc Charts) getChartAction(rc *web.RequestContext) web.ControllerResult {
 		usePercentages = util.CaseInsensitiveEquals(usePercentagesValue, "true")
 	}
 
-	if useMovingAveragesValue, err := rc.QueryParam("use_ma"); err == nil {
-		useMovingAverages = util.CaseInsensitiveEquals(useMovingAveragesValue, "true")
+	if useSimpleMovingAverageValue, err := rc.QueryParam("use_sma"); err == nil {
+		useSimpleMovingAverage = util.CaseInsensitiveEquals(useSimpleMovingAverageValue, "true")
+	}
+
+	if useExpMovingAverageValue, err := rc.QueryParam("use_ema"); err == nil {
+		useExpMovingAverage = util.CaseInsensitiveEquals(useExpMovingAverageValue, "true")
 	}
 
 	if useLegendValue, err := rc.QueryParam("use_legend"); err == nil {
@@ -85,6 +93,14 @@ func (cc Charts) getChartAction(rc *web.RequestContext) web.ControllerResult {
 
 	if useBollingerBandsValue, err := rc.QueryParam("use_bbs"); err == nil {
 		useBollingerBands = util.CaseInsensitiveEquals(useBollingerBandsValue, "true")
+	}
+
+	if smakValue, err := rc.QueryParamInt("k"); err == nil {
+		smak = smakValue
+	}
+
+	if emaSigmaValue, err := rc.QueryParamFloat64("sigma"); err == nil {
+		emaSigma = emaSigmaValue
 	}
 
 	fillColor := drawing.ColorTransparent
@@ -127,28 +143,6 @@ func (cc Charts) getChartAction(rc *web.RequestContext) web.ControllerResult {
 		},
 	}
 
-	s1ma := &chart.ExponentialMovingAverageSeries{
-		Name: fmt.Sprintf("%s - Mov. Avg.", stockTicker),
-		Style: chart.Style{
-			Show:            useMovingAverages,
-			StrokeColor:     drawing.ColorRed,
-			StrokeDashArray: []float64{5, 5},
-		},
-		InnerSeries: s1,
-	}
-
-	s1bbs := &chart.BollingerBandsSeries{
-		Name: fmt.Sprintf("%s - Bol. Bands", stockTicker),
-		Style: chart.Style{
-			Show:        useBollingerBands,
-			StrokeColor: chart.GetDefaultSeriesStrokeColor(0).WithAlpha(48),
-			FillColor:   chart.GetDefaultSeriesStrokeColor(0).WithAlpha(32),
-		},
-		InnerSeries: s1,
-		K:           2.0,
-		WindowSize:  16,
-	}
-
 	lva := model.EquityPrices(equityPrices).LastValueAnnotation(util.TernaryOfString(useLegend, "", stockTicker), yvf)
 	if usePercentages {
 		lva = model.EquityPrices(equityPrices).LastValueAnnotationPercentChange(util.TernaryOfString(useLegend, "", stockTicker), yvf)
@@ -163,19 +157,66 @@ func (cc Charts) getChartAction(rc *web.RequestContext) web.ControllerResult {
 		Annotations: []chart.Annotation{lva},
 	}
 
-	malvx, malvy := s1ma.GetLastValue()
-	lvma := chart.Annotation{
-		X:     malvx,
-		Y:     malvy,
-		Label: fmt.Sprintf("%s %s", util.TernaryOfString(useLegend, "", stockTicker), yvf(malvy)),
+	s1sma := &chart.SimpleMovingAverageSeries{
+		Name: fmt.Sprintf("%s - Mov. Avg.", stockTicker),
+		Style: chart.Style{
+			Show:            useSimpleMovingAverage,
+			StrokeColor:     drawing.ColorRed,
+			StrokeDashArray: []float64{5, 5},
+		},
+		InnerSeries: s1,
+		WindowSize:  smak,
 	}
-	s1maas := chart.AnnotationSeries{
+	smax, smay := s1sma.GetLastValue()
+	lvssma := chart.Annotation{
+		X:     smax,
+		Y:     smay,
+		Label: fmt.Sprintf("%s %s", util.TernaryOfString(useLegend, "", stockTicker), yvf(smay)),
+	}
+	s1smaas := chart.AnnotationSeries{
 		Name: fmt.Sprintf("%s - Mov. Avg. LV", stockTicker),
 		Style: chart.Style{
-			Show:        showLastValue && useMovingAverages,
+			Show:        showLastValue && useSimpleMovingAverage,
 			StrokeColor: drawing.ColorRed,
 		},
-		Annotations: []chart.Annotation{lvma},
+		Annotations: []chart.Annotation{lvssma},
+	}
+
+	s1ema := &chart.ExponentialMovingAverageSeries{
+		Name: fmt.Sprintf("%s - Mov. Avg.", stockTicker),
+		Style: chart.Style{
+			Show:            useExpMovingAverage,
+			StrokeColor:     drawing.ColorBlue,
+			StrokeDashArray: []float64{5, 5},
+		},
+		InnerSeries: s1,
+		Sigma:       emaSigma,
+	}
+	emax, emay := s1ema.GetLastValue()
+	lvsema := chart.Annotation{
+		X:     emax,
+		Y:     emay,
+		Label: fmt.Sprintf("%s %s", util.TernaryOfString(useLegend, "", stockTicker), yvf(emay)),
+	}
+	s1emaas := chart.AnnotationSeries{
+		Name: fmt.Sprintf("%s - Mov. Avg. LV", stockTicker),
+		Style: chart.Style{
+			Show:        showLastValue && useExpMovingAverage,
+			StrokeColor: drawing.ColorRed,
+		},
+		Annotations: []chart.Annotation{lvsema},
+	}
+
+	s1bbs := &chart.BollingerBandsSeries{
+		Name: fmt.Sprintf("%s - Bol. Bands", stockTicker),
+		Style: chart.Style{
+			Show:        useBollingerBands,
+			StrokeColor: chart.GetDefaultSeriesStrokeColor(0).WithAlpha(48),
+			FillColor:   chart.GetDefaultSeriesStrokeColor(0).WithAlpha(32),
+		},
+		InnerSeries: s1,
+		K:           2.0,
+		WindowSize:  16,
 	}
 
 	graph := chart.Chart{
@@ -200,9 +241,11 @@ func (cc Charts) getChartAction(rc *web.RequestContext) web.ControllerResult {
 		Series: []chart.Series{
 			s1bbs,
 			s1,
-			s1ma,
 			s1as,
-			s1maas,
+			s1sma,
+			s1smaas,
+			s1ema,
+			s1emaas,
 		},
 	}
 	if useLegend {
