@@ -127,7 +127,7 @@ func (cc Charts) getChartAction(rc *web.RequestContext) web.ControllerResult {
 		},
 	}
 
-	s1ma := &chart.MovingAverageSeries{
+	s1ma := &chart.ExponentialMovingAverageSeries{
 		Name: fmt.Sprintf("%s - Mov. Avg.", stockTicker),
 		Style: chart.Style{
 			Show:            useMovingAverages,
@@ -135,7 +135,6 @@ func (cc Charts) getChartAction(rc *web.RequestContext) web.ControllerResult {
 			StrokeDashArray: []float64{5, 5},
 		},
 		InnerSeries: s1,
-		WindowSize:  16,
 	}
 
 	s1bbs := &chart.BollingerBandsSeries{
@@ -170,7 +169,6 @@ func (cc Charts) getChartAction(rc *web.RequestContext) web.ControllerResult {
 		Y:     malvy,
 		Label: fmt.Sprintf("%s %s", util.TernaryOfString(useLegend, "", stockTicker), yvf(malvy)),
 	}
-
 	s1maas := chart.AnnotationSeries{
 		Name: fmt.Sprintf("%s - Mov. Avg. LV", stockTicker),
 		Style: chart.Style{
