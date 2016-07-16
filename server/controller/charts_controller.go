@@ -56,7 +56,7 @@ func (cc Charts) getChartAction(rc *web.RequestContext) web.ControllerResult {
 	xvf := chart.TimeValueFormatter
 	yvf := chart.FloatValueFormatter
 
-	smak := 16
+	smaSize := 16
 	emaSigma := 0.1818
 
 	if widthValue, err := rc.QueryParamInt("width"); err == nil {
@@ -95,8 +95,8 @@ func (cc Charts) getChartAction(rc *web.RequestContext) web.ControllerResult {
 		useBollingerBands = util.CaseInsensitiveEquals(useBollingerBandsValue, "true")
 	}
 
-	if smakValue, err := rc.QueryParamInt("k"); err == nil {
-		smak = smakValue
+	if smaSizeValue, err := rc.QueryParamInt("window"); err == nil {
+		smaSize = smaSizeValue
 	}
 
 	if emaSigmaValue, err := rc.QueryParamFloat64("sigma"); err == nil {
