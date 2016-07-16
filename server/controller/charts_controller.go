@@ -163,7 +163,7 @@ func (cc Charts) getChartAction(rc *web.RequestContext) web.ControllerResult {
 	}
 
 	s1sma := &chart.SimpleMovingAverageSeries{
-		Name: fmt.Sprintf("%s - Mov. Avg.", stockTicker),
+		Name: fmt.Sprintf("%s - SMA", stockTicker),
 		Style: chart.Style{
 			Show:            useSimpleMovingAverage,
 			StrokeColor:     drawing.ColorRed,
@@ -179,7 +179,7 @@ func (cc Charts) getChartAction(rc *web.RequestContext) web.ControllerResult {
 		Label: fmt.Sprintf("%s %s", util.TernaryOfString(useLegend, "", stockTicker), yvf(smay)),
 	}
 	s1smaas := chart.AnnotationSeries{
-		Name: fmt.Sprintf("%s - Mov. Avg. LV", stockTicker),
+		Name: fmt.Sprintf("%s - SMA LV", stockTicker),
 		Style: chart.Style{
 			Show:        showLastValue && useSimpleMovingAverage,
 			StrokeColor: drawing.ColorRed,
@@ -188,7 +188,7 @@ func (cc Charts) getChartAction(rc *web.RequestContext) web.ControllerResult {
 	}
 
 	s1ema := &chart.ExponentialMovingAverageSeries{
-		Name: fmt.Sprintf("%s - Mov. Avg.", stockTicker),
+		Name: fmt.Sprintf("%s - EMA", stockTicker),
 		Style: chart.Style{
 			Show:            useExpMovingAverage,
 			StrokeColor:     drawing.ColorBlue,
@@ -204,7 +204,7 @@ func (cc Charts) getChartAction(rc *web.RequestContext) web.ControllerResult {
 		Label: fmt.Sprintf("%s %s", util.TernaryOfString(useLegend, "", stockTicker), yvf(emay)),
 	}
 	s1emaas := chart.AnnotationSeries{
-		Name: fmt.Sprintf("%s - Mov. Avg. LV", stockTicker),
+		Name: fmt.Sprintf("%s - EMA LV", stockTicker),
 		Style: chart.Style{
 			Show:        showLastValue && useExpMovingAverage,
 			StrokeColor: drawing.ColorRed,
