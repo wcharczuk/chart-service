@@ -207,7 +207,7 @@ func (cc Charts) getChartAction(rc *web.RequestContext) web.ControllerResult {
 		Name: fmt.Sprintf("%s - EMA LV", stockTicker),
 		Style: chart.Style{
 			Show:        showLastValue && useExpMovingAverage,
-			StrokeColor: drawing.ColorRed,
+			StrokeColor: drawing.ColorBlue,
 		},
 		Annotations: []chart.Annotation{lvsema},
 	}
