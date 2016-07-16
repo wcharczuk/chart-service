@@ -142,8 +142,8 @@ func (cc Charts) getChartAction(rc *web.RequestContext) web.ControllerResult {
 		Name: fmt.Sprintf("%s - Bol. Bands", stockTicker),
 		Style: chart.Style{
 			Show:        useBollingerBands,
-			StrokeColor: chart.DefaultAxisColor.WithAlpha(48),
-			FillColor:   chart.DefaultAxisColor.WithAlpha(32),
+			StrokeColor: chart.GetDefaultSeriesStrokeColor(0).WithAlpha(48),
+			FillColor:   chart.GetDefaultSeriesStrokeColor(0).WithAlpha(32),
 		},
 		InnerSeries: s1,
 		K:           2.0,
