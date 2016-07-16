@@ -181,8 +181,9 @@ func (cc Charts) getChartAction(rc *web.RequestContext) web.ControllerResult {
 	s1smaas := chart.AnnotationSeries{
 		Name: fmt.Sprintf("%s - SMA LV", stockTicker),
 		Style: chart.Style{
-			Show:        showLastValue && useSimpleMovingAverage,
-			StrokeColor: drawing.ColorRed,
+			Show:            showLastValue && useSimpleMovingAverage,
+			StrokeColor:     drawing.ColorRed,
+			StrokeDashArray: []float64{5, 5},
 		},
 		Annotations: []chart.Annotation{lvssma},
 	}
@@ -206,8 +207,9 @@ func (cc Charts) getChartAction(rc *web.RequestContext) web.ControllerResult {
 	s1emaas := chart.AnnotationSeries{
 		Name: fmt.Sprintf("%s - EMA LV", stockTicker),
 		Style: chart.Style{
-			Show:        showLastValue && useExpMovingAverage,
-			StrokeColor: drawing.ColorBlue,
+			Show:            showLastValue && useExpMovingAverage,
+			StrokeColor:     drawing.ColorBlue,
+			StrokeDashArray: []float64{5, 5},
 		},
 		Annotations: []chart.Annotation{lvsema},
 	}
