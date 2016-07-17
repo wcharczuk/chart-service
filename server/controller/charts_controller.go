@@ -162,7 +162,7 @@ func (cc Charts) getChartAction(rc *web.RequestContext) web.ControllerResult {
 		Annotations: []chart.Annotation{lva},
 	}
 
-	s1sma := &chart.SimpleMovingAverageSeries{
+	s1sma := &chart.SMASeries{
 		Name: fmt.Sprintf("%s - SMA", stockTicker),
 		Style: chart.Style{
 			Show:            useSimpleMovingAverage,
@@ -170,7 +170,7 @@ func (cc Charts) getChartAction(rc *web.RequestContext) web.ControllerResult {
 			StrokeDashArray: []float64{5, 5},
 		},
 		InnerSeries: s1,
-		WindowSize:  smaSize,
+		Period:      smaSize,
 	}
 	smax, smay := s1sma.GetLastValue()
 	lvssma := chart.Annotation{
@@ -188,7 +188,7 @@ func (cc Charts) getChartAction(rc *web.RequestContext) web.ControllerResult {
 		Annotations: []chart.Annotation{lvssma},
 	}
 
-	s1ema := &chart.ExponentialMovingAverageSeries{
+	s1ema := &chart.EMASeries{
 		Name: fmt.Sprintf("%s - EMA", stockTicker),
 		Style: chart.Style{
 			Show:            useExpMovingAverage,
@@ -226,6 +226,19 @@ func (cc Charts) getChartAction(rc *web.RequestContext) web.ControllerResult {
 		WindowSize:  smaSize,
 	}
 
+	s1macd := chart.HistogramSeries{
+		Name:  fmt.Sprintf("%s - MACD", stockTicker),
+		YAxis: chart.YAxisSecondary,
+		Style: chart.Style{
+			Show:        false,
+			StrokeColor: chart.GetDefaultSeriesStrokeColor(1),
+			FillColor:   chart.GetDefaultSeriesStrokeColor(1).WithAlpha(64),
+		},
+		InnerSeries: chart.MACDSeries{
+			InnerSeries: s1,
+		},
+	}
+
 	graph := chart.Chart{
 		Title: stock.Name,
 		TitleStyle: chart.Style{
@@ -245,6 +258,12 @@ func (cc Charts) getChartAction(rc *web.RequestContext) web.ControllerResult {
 				Show: showAxes,
 			},
 		},
+		YAxisSecondary: chart.YAxis{
+			ValueFormatter: yvf,
+			Style: chart.Style{
+				Show: true,
+			},
+		},
 		Series: []chart.Series{
 			s1bbs,
 			s1,
@@ -253,6 +272,7 @@ func (cc Charts) getChartAction(rc *web.RequestContext) web.ControllerResult {
 			s1smaas,
 			s1ema,
 			s1emaas,
+			s1macd,
 		},
 	}
 	if useLegend {
