@@ -118,11 +118,10 @@ func (c Chart) Render(rp RendererProvider, w io.Writer) error {
 	}
 
 	c.drawCanvas(r, canvasBox)
-	c.drawAxes(r, canvasBox, xr, yr, yra, xt, yt, yta)
-
 	for index, series := range c.Series {
 		c.drawSeries(r, canvasBox, xr, yr, yra, series, index)
 	}
+	c.drawAxes(r, canvasBox, xr, yr, yra, xt, yt, yta)
 	c.drawTitle(r)
 
 	for _, a := range c.Elements {
@@ -136,6 +135,8 @@ func (c Chart) getRanges() (xrange, yrange, yrangeAlt Range) {
 	var minx, maxx float64 = math.MaxFloat64, 0
 	var miny, maxy float64 = math.MaxFloat64, 0
 	var minya, maxya float64 = math.MaxFloat64, 0
+
+	hasSecondaryAxis := false
 
 	// note: a possible future optimization is to not scan the series values if
 	// all axis are represented by either custom ticks or custom ranges.
@@ -160,6 +161,7 @@ func (c Chart) getRanges() (xrange, yrange, yrangeAlt Range) {
 						minya = math.Min(minya, vy2)
 						maxya = math.Max(maxya, vy1)
 						maxya = math.Max(maxya, vy2)
+						hasSecondaryAxis = true
 					}
 				}
 			} else if vp, isValueProvider := s.(ValueProvider); isValueProvider {
@@ -176,6 +178,7 @@ func (c Chart) getRanges() (xrange, yrange, yrangeAlt Range) {
 					} else if seriesAxis == YAxisSecondary {
 						minya = math.Min(minya, vy)
 						maxya = math.Max(maxya, vy)
+						hasSecondaryAxis = true
 					}
 				}
 			}
@@ -226,7 +229,7 @@ func (c Chart) getRanges() (xrange, yrange, yrangeAlt Range) {
 	} else if !c.YAxisSecondary.Range.IsZero() {
 		yrangeAlt.Min = c.YAxisSecondary.Range.Min
 		yrangeAlt.Max = c.YAxisSecondary.Range.Max
-	} else {
+	} else if hasSecondaryAxis {
 		yrangeAlt.Min = minya
 		yrangeAlt.Max = maxya
 		yrangeAlt.Min, yrangeAlt.Max = yrangeAlt.GetRoundedRangeBounds()
@@ -253,17 +256,7 @@ func (c Chart) checkRanges(xr, yr, yra Range) error {
 }
 
 func (c Chart) getDefaultCanvasBox() Box {
-	dpt := c.Background.Padding.GetTop(DefaultBackgroundPadding.Top)
-	dpl := c.Background.Padding.GetLeft(DefaultBackgroundPadding.Left)
-	dpr := c.Background.Padding.GetRight(DefaultBackgroundPadding.Right)
-	dpb := c.Background.Padding.GetBottom(DefaultBackgroundPadding.Bottom)
-
-	return Box{
-		Top:    dpt,
-		Left:   dpl,
-		Right:  c.GetWidth() - dpr,
-		Bottom: c.GetHeight() - dpb,
-	}
+	return c.Box()
 }
 
 func (c Chart) getValueFormatters() (x, y, ya ValueFormatter) {
@@ -382,7 +375,10 @@ func (c Chart) getBackgroundStyle() Style {
 }
 
 func (c Chart) drawBackground(r Renderer) {
-	DrawBox(r, c.Box(), c.getBackgroundStyle())
+	DrawBox(r, Box{
+		Right:  c.GetWidth(),
+		Bottom: c.GetHeight(),
+	}, c.getBackgroundStyle())
 }
 
 func (c Chart) getCanvasStyle() Style {
@@ -477,5 +473,13 @@ func (c Chart) styleDefaultsElements() Style {
 
 // Box returns the chart bounds as a box.
 func (c Chart) Box() Box {
-	return Box{Right: c.GetWidth(), Bottom: c.GetHeight()}
+	dpr := c.Background.Padding.GetRight(DefaultBackgroundPadding.Right)
+	dpb := c.Background.Padding.GetBottom(DefaultBackgroundPadding.Bottom)
+
+	return Box{
+		Top:    c.Background.Padding.GetTop(DefaultBackgroundPadding.Top),
+		Left:   c.Background.Padding.GetLeft(DefaultBackgroundPadding.Left),
+		Right:  c.GetWidth() - dpr,
+		Bottom: c.GetHeight() - dpb,
+	}
 }

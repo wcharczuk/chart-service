@@ -57,7 +57,6 @@ func (cc Charts) getChartAction(rc *web.RequestContext) web.ControllerResult {
 	yvf := chart.FloatValueFormatter
 
 	smaSize := 16
-	emaSigma := 0.1818
 	bbsk := 2.0
 
 	if widthValue, err := rc.QueryParamInt("width"); err == nil {
@@ -98,10 +97,6 @@ func (cc Charts) getChartAction(rc *web.RequestContext) web.ControllerResult {
 
 	if smaSizeValue, err := rc.QueryParamInt("window"); err == nil {
 		smaSize = smaSizeValue
-	}
-
-	if emaSigmaValue, err := rc.QueryParamFloat64("sigma"); err == nil {
-		emaSigma = emaSigmaValue
 	}
 
 	if bbskValue, err := rc.QueryParamFloat64("k"); err == nil {
@@ -196,7 +191,7 @@ func (cc Charts) getChartAction(rc *web.RequestContext) web.ControllerResult {
 			StrokeDashArray: []float64{5, 5},
 		},
 		InnerSeries: s1,
-		Sigma:       emaSigma,
+		Period:      chart.DefaultMACDPeriodSecondary,
 	}
 	emax, emay := s1ema.GetLastValue()
 	lvsema := chart.Annotation{

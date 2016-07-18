@@ -11,6 +11,18 @@ import (
 // Yahoo is the yahoo controller.
 type Yahoo struct{}
 
+func (y Yahoo) getQuoteAction(rc *web.RequestContext) web.ControllerResult {
+	ticker, err := rc.RouteParameter("ticker")
+	if err != nil {
+		return rc.API().BadRequest(err.Error())
+	}
+	quote, err := yahoo.GetStockPrice([]string{ticker})
+	if err != nil {
+		return rc.API().InternalError(err)
+	}
+	return rc.API().JSON(quote)
+}
+
 func (y Yahoo) getPricesAction(rc *web.RequestContext) web.ControllerResult {
 	ticker, err := rc.RouteParameter("ticker")
 	if err != nil {
@@ -38,6 +50,7 @@ func (y Yahoo) getPricesAction(rc *web.RequestContext) web.ControllerResult {
 
 // Register registers the controllers routes with the app.
 func (y Yahoo) Register(app *web.App) {
+	app.GET("/api/v1/yahoo.quote/:ticker", y.getQuoteAction)
 	app.GET("/api/v1/yahoo.prices/:ticker", y.getPricesAction)
 	app.GET("/api/v1/yahoo.prices/:ticker/:timeframe", y.getPricesAction)
 }

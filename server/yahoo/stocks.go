@@ -38,19 +38,16 @@ type StockInfo struct {
 	Name   string `csv:"n"`
 	Notes  string `csv:"n4"`
 
-	LastPrice             float64 `csv:"l1"`
-	Change                float64 `csv:"c1"`
-	ChangeRealtime        float64 `csv:"c6"`
-	ChangePercent         string  `csv:"p2"`
-	ChangePercentRealtime string  `csv:"k2"`
-	Volume                int64   `csv:"v"`
+	LastPrice     float64 `csv:"l1"`
+	Change        float64 `csv:"c1"`
+	ChangePercent string  `csv:"p2"`
+	Volume        int64   `csv:"v"`
 
 	LastTradeDate string `csv:"d1"`
 	TradeDate     string `csv:"d2"`
 	LastTradeTime string `csv:"t1"`
 
-	PriceEarningsRatio         float64 `csv:"r"`
-	PriceEarningsRatioRealtime float64 `csv:"r6"`
+	PriceEarningsRatio float64 `csv:"r"`
 }
 
 // IsZero returns if the object has been set or not.
@@ -72,8 +69,9 @@ func (si *StockInfo) Parse(line string) error {
 	}()
 	lookup := reverseIndexMap()
 	fieldLookup := fieldIndexMap()
-	parts := strings.Split(line, ",")
+	parts := core.StringSplitQuoteAware(line, rune(','))
 	if len(parts) != len(lookup) {
+		fmt.Printf("%#v vs. %#v\n", parts, lookup)
 		return errors.New("mismatched line components to lookup map, cannot continue")
 	}
 
@@ -245,7 +243,6 @@ func GetStockPrice(tickers []string) ([]StockInfo, error) {
 	if meta.StatusCode != http.StatusOK {
 		return []StockInfo{}, exception.New("Non (200) response from pricing provider.")
 	}
-
 	var results []StockInfo
 
 	scanner := bufio.NewScanner(strings.NewReader(rawResults))
@@ -259,7 +256,10 @@ func GetStockPrice(tickers []string) ([]StockInfo, error) {
 		si.RawResults = line
 
 		err = si.Parse(line)
-		if err == nil && !si.IsZero() {
+		if err != nil {
+			return []StockInfo{}, err
+		}
+		if !si.IsZero() {
 			results = append(results, *si)
 		}
 	}
