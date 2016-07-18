@@ -71,9 +71,9 @@ func DateValueFormatterWithFormat(v interface{}, dateFormat string) string {
 	if typed, isTyped := v.(time.Time); isTyped {
 		d = typed
 	} else if typed, isTyped := v.(int64); isTyped {
-		d = time.Unix(typed, 0)
+		d = time.Unix(0, typed)
 	} else if typed, isTyped := v.(float64); isTyped {
-		d = time.Unix(int64(typed), 0)
+		d = time.Unix(0, int64(typed))
 	}
 	asEastern := d.In(GetEasternTimezone())
 	return asEastern.Format(dateFormat)
