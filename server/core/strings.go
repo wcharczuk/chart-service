@@ -24,7 +24,3 @@ func StringSplitQuoteAware(line string, separator rune) []string {
 	}
 	return strings.FieldsFunc(line, f)
 }
-
-func isQuote(r rune) bool {
-	return string(r) == "\"" || string(r) == "'"
-}

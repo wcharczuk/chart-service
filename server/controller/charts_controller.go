@@ -270,6 +270,7 @@ func (cc Charts) getChartAction(rc *web.RequestContext) web.ControllerResult {
 			s1macd,
 		},
 	}
+
 	if useLegend {
 		graph.Elements = []chart.Renderable{
 			chart.CreateLegend(&graph, chart.Style{
