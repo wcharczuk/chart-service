@@ -71,7 +71,6 @@ func (si *StockInfo) Parse(line string) error {
 	fieldLookup := fieldIndexMap()
 	parts := core.StringSplitQuoteAware(line, rune(','))
 	if len(parts) != len(lookup) {
-		fmt.Printf("%#v vs. %#v\n", parts, lookup)
 		return errors.New("mismatched line components to lookup map, cannot continue")
 	}
 
@@ -256,10 +255,7 @@ func GetStockPrice(tickers []string) ([]StockInfo, error) {
 		si.RawResults = line
 
 		err = si.Parse(line)
-		if err != nil {
-			return []StockInfo{}, err
-		}
-		if !si.IsZero() {
+		if err == nil && !si.IsZero() {
 			results = append(results, *si)
 		}
 	}
