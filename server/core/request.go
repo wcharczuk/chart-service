@@ -2,6 +2,7 @@ package core
 
 import (
 	"fmt"
+	"net/http"
 	"time"
 
 	"github.com/blendlabs/go-request"
@@ -16,6 +17,18 @@ func NewRequest() *request.HTTPRequest {
 			util.Color(req.Verb, util.ColorBlue),
 			req.URL.String(),
 		)
+	}).OnResponse(func(meta *request.HTTPResponseMeta, content []byte) {
+		statusText := util.Color(fmt.Sprintf("%d", meta.StatusCode), util.ColorGreen)
+		if meta.StatusCode >= http.StatusInternalServerError {
+			statusText = util.Color(fmt.Sprintf("%d", meta.StatusCode), util.ColorRed)
+		} else if meta.StatusCode > http.StatusBadRequest {
+			statusText = util.Color(fmt.Sprintf("%d", meta.StatusCode), util.ColorYellow)
+		}
+		fmt.Printf("%s Outgoing Response %s\n",
+			util.Color(time.Now().UTC().Format(time.RFC3339), util.ColorGray),
+			statusText,
+		)
+
 	}) /*.OnResponse(func(meta *request.HTTPResponseMeta, content []byte) {
 		statusText := util.Color(fmt.Sprintf("%d", meta.StatusCode), util.ColorGreen)
 		if meta.StatusCode >= http.StatusInternalServerError {

@@ -399,8 +399,8 @@ func (c *Chart) getBoundedLastValueSeries(ticker string, priceSeries chart.FullB
 	}
 }
 
-func (c *Chart) getSMASeries(ticker string, priceSeries chart.ValueProvider) chart.SMASeries {
-	return chart.SMASeries{
+func (c *Chart) getSMASeries(ticker string, priceSeries chart.ValueProvider) *chart.SMASeries {
+	return &chart.SMASeries{
 		Name: fmt.Sprintf("%s SMA", ticker),
 		Style: chart.Style{
 			Show:            c.AddSimpleMovingAverage,
@@ -412,8 +412,8 @@ func (c *Chart) getSMASeries(ticker string, priceSeries chart.ValueProvider) cha
 	}
 }
 
-func (c *Chart) getEMASeries(ticker string, priceSeries chart.ValueProvider) chart.EMASeries {
-	return chart.EMASeries{
+func (c *Chart) getEMASeries(ticker string, priceSeries chart.ValueProvider) *chart.EMASeries {
+	return &chart.EMASeries{
 		Name: fmt.Sprintf("%s EMA", ticker),
 		Style: chart.Style{
 			Show:            c.AddExponentialMovingAverage,
@@ -447,14 +447,14 @@ func (c *Chart) getMACDHistogramSeries(ticker string, data []model.EquityPrice) 
 			FillColor:   drawing.ColorGreen,
 		},
 		YAxis: chart.YAxisSecondary,
-		InnerSeries: chart.MACDSeries{
+		InnerSeries: &chart.MACDSeries{
 			InnerSeries: c.getPriceSeries(ticker, data),
 		},
 	}
 }
 
-func (c *Chart) getMACDSignalSeries(ticker string, data []model.EquityPrice) chart.MACDSignalSeries {
-	return chart.MACDSignalSeries{
+func (c *Chart) getMACDSignalSeries(ticker string, data []model.EquityPrice) *chart.MACDSignalSeries {
+	return &chart.MACDSignalSeries{
 		Name: fmt.Sprintf("%s - MACD Signal", ticker),
 		Style: chart.Style{
 			Show:        c.showMACD(),
@@ -465,8 +465,8 @@ func (c *Chart) getMACDSignalSeries(ticker string, data []model.EquityPrice) cha
 	}
 }
 
-func (c *Chart) getMACDLineSeries(ticker string, data []model.EquityPrice) chart.MACDLineSeries {
-	return chart.MACDLineSeries{
+func (c *Chart) getMACDLineSeries(ticker string, data []model.EquityPrice) *chart.MACDLineSeries {
+	return &chart.MACDLineSeries{
 		Name: fmt.Sprintf("%s - MACD Line", ticker),
 		Style: chart.Style{
 			Show:        c.showMACD(),
