@@ -247,7 +247,18 @@ func (c *Chart) CreateChart() (chart.Chart, error) {
 
 func (c *Chart) getSeries() []chart.Series {
 	t0series := c.getPriceSeries(c.Ticker, c.tickerData)
-	series := []chart.Series{t0series}
+	series := []chart.Series{}
+
+	if c.AddBollingerBands {
+		bbs := c.getBBSeries(c.Ticker, c.tickerData)
+		series = append(series, bbs)
+
+		if c.ShowLastValue {
+			series = append(series, c.getBoundedLastValueSeries(c.Ticker, bbs))
+		}
+	}
+
+	series = append(series, t0series)
 	if c.ShowLastValue {
 		series = append(series, c.getLastValueSeries(c.Ticker, t0series))
 	}
@@ -273,15 +284,6 @@ func (c *Chart) getSeries() []chart.Series {
 		series = append(series, ema)
 		if c.ShowLastValue {
 			series = append(series, c.getLastValueSeries(c.Ticker, ema))
-		}
-	}
-
-	if c.AddBollingerBands {
-		bbs := c.getBBSeries(c.Ticker, c.tickerData)
-		series = append(series, bbs)
-
-		if c.ShowLastValue {
-			series = append(series, c.getBoundedLastValueSeries(c.Ticker, bbs))
 		}
 	}
 
