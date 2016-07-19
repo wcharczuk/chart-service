@@ -22,11 +22,10 @@ func AuthRequired(action web.ControllerAction) web.ControllerAction {
 		if Config.IsProduction() {
 			authKey := context.Param(AuthKeyParamName)
 
-			if len(authKey) > 0 {
-				if !hmac.Equal([]byte(authKey), []byte(Config.AuthKey())) {
-					return context.DefaultResultProvider().NotAuthorized()
-				}
+			if !hmac.Equal([]byte(authKey), []byte(Config.AuthKey())) {
+				return context.DefaultResultProvider().NotAuthorized()
 			}
+
 		}
 		return action(context)
 	}

@@ -19,15 +19,15 @@ func TestAuthRequiredProd(t *testing.T) {
 		return rc.API().OK()
 	}, AuthRequired, web.APIProviderAsDefault)
 
-	meta, err := app.Mock().WithHeader(AuthKeyParamName, "test_key").ExecuteWithMeta()
+	meta, err := app.Mock().WithPathf("/").WithHeader(AuthKeyParamName, "test_key").ExecuteWithMeta()
 	assert.Nil(err)
 	assert.Equal(http.StatusOK, meta.StatusCode)
 
-	meta, err = app.Mock().WithHeader(AuthKeyParamName, "not_test_key").ExecuteWithMeta()
+	meta, err = app.Mock().WithPathf("/").WithHeader(AuthKeyParamName, "not_test_key").ExecuteWithMeta()
 	assert.Nil(err)
 	assert.Equal(http.StatusForbidden, meta.StatusCode)
 
-	meta, err = app.Mock().ExecuteWithMeta()
+	meta, err = app.Mock().WithPathf("/").ExecuteWithMeta()
 	assert.Nil(err)
 	assert.Equal(http.StatusForbidden, meta.StatusCode)
 }
@@ -43,11 +43,11 @@ func TestAuthRequiredDev(t *testing.T) {
 		return rc.API().OK()
 	}, AuthRequired, web.APIProviderAsDefault)
 
-	meta, err := app.Mock().WithHeader(AuthKeyParamName, "test_key").ExecuteWithMeta()
+	meta, err := app.Mock().WithPathf("/").WithHeader(AuthKeyParamName, "test_key").ExecuteWithMeta()
 	assert.Nil(err)
 	assert.Equal(http.StatusOK, meta.StatusCode)
 
-	meta, err = app.Mock().WithHeader(AuthKeyParamName, "not_test_key").ExecuteWithMeta()
+	meta, err = app.Mock().WithPathf("/").WithHeader(AuthKeyParamName, "not_test_key").ExecuteWithMeta()
 	assert.Nil(err)
 	assert.Equal(http.StatusOK, meta.StatusCode)
 }
