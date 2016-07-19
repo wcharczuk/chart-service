@@ -157,22 +157,6 @@ func (ep EquityPrices) LastValueAnnotation(ticker string, vf chart.ValueFormatte
 	}
 }
 
-// LastValueAnnotationPercentChange returns a last value annotation for the prices.
-func (ep EquityPrices) LastValueAnnotationPercentChange(ticker string, vf chart.ValueFormatter) chart.Annotation {
-	if len(ep) == 0 {
-		return chart.Annotation{}
-	}
-	last := ep[len(ep)-1]
-	firstValue := ep[0].Price
-	lastValue := last.Price
-	value := chart.PercentDifference(firstValue, lastValue)
-	return chart.Annotation{
-		X:     chart.TimeToFloat64(last.TimestampUTC),
-		Y:     value,
-		Label: fmt.Sprintf("%s %s", ticker, vf(value)),
-	}
-}
-
 func createTestEquityPrice(equityID int, timestamp time.Time, tx *sql.Tx) (*EquityPrice, error) {
 	rp := rand.New(rand.NewSource(time.Now().Unix()))
 	ep := EquityPrice{

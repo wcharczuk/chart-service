@@ -14,11 +14,10 @@ const (
 )
 
 // GetEquityPricesByDate gets pricing data from both yahoo and the database.
-func GetEquityPricesByDate(ticker string, start, end time.Time) ([]model.EquityPrice, error) {
-	daysDelta := (end.Unix() - start.Unix()) / secondsPerDay
-
+func GetEquityPricesByDate(ticker string, start, end time.Time, useLocalData, useRemoteData bool) ([]model.EquityPrice, error) {
 	var union []model.EquityPrice
-	if daysDelta < 15 {
+
+	if useLocalData {
 		db, err := model.GetEquityPricesByDate(ticker, start, end)
 		if err != nil {
 			return union, err
@@ -26,12 +25,15 @@ func GetEquityPricesByDate(ticker string, start, end time.Time) ([]model.EquityP
 		db = model.EquityPrices(db).In(core.GetEasternTimezone())
 		union = append(union, db...)
 	}
-	hist, err := yahoo.GetHistoricalPrices(ticker, start, end)
-	if err != nil {
-		return union, err
+
+	if useRemoteData {
+		hist, err := yahoo.GetHistoricalPrices(ticker, start, end)
+		if err != nil {
+			return union, err
+		}
+		histPrices := yahoo.HistoricalPrices(hist).Prices()
+		union = append(union, histPrices...)
 	}
-	histPrices := yahoo.HistoricalPrices(hist).Prices()
-	union = append(union, histPrices...)
 	sort.Sort(model.EquityPrices(union))
 	return union, nil
 }

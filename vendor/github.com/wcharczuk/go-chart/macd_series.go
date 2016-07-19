@@ -76,13 +76,11 @@ func (macd MACDSeries) GetValue(index int) (x float64, y float64) {
 
 	x, _ = macd.InnerSeries.GetValue(index)
 
-	signal := EMASeries{
-		InnerSeries: MACDLineSeries{
-			InnerSeries:     macd.InnerSeries,
-			PrimaryPeriod:   w1,
-			SecondaryPeriod: w2,
-		},
-		Period: sig,
+	signal := MACDSignalSeries{
+		InnerSeries:     macd.InnerSeries,
+		PrimaryPeriod:   w1,
+		SecondaryPeriod: w2,
+		SignalPeriod:    sig,
 	}
 
 	macdl := MACDLineSeries{
@@ -233,17 +231,6 @@ func (macdl MACDLineSeries) Len() int {
 	}
 
 	return macdl.InnerSeries.Len()
-}
-
-// GetSigma returns the smoothing factor for the serise.
-func (macdl MACDLineSeries) GetSigma(defaults ...float64) float64 {
-	if macdl.Sigma == 0 {
-		if len(defaults) > 0 {
-			return defaults[0]
-		}
-		return DefaultEMASigma
-	}
-	return macdl.Sigma
 }
 
 // GetValue gets a value at a given index. For MACD it is the signal value.

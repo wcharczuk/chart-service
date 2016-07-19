@@ -1,8 +1,8 @@
 package chart
 
 const (
-	// DefaultEMASigma is the default exponential smoothing factor.
-	DefaultEMASigma = 0.25
+	// DefaultEMAPeriod is the default EMA period used in the sigma calculation.
+	DefaultEMAPeriod = 12
 )
 
 // EMASeries is a computed series.
@@ -31,12 +31,9 @@ func (ema EMASeries) GetYAxis() YAxisType {
 }
 
 // GetPeriod returns the window size.
-func (ema EMASeries) GetPeriod(defaults ...int) int {
+func (ema EMASeries) GetPeriod() int {
 	if ema.Period == 0 {
-		if len(defaults) > 0 {
-			return defaults[0]
-		}
-		return ema.InnerSeries.Len()
+		return DefaultEMAPeriod
 	}
 	return ema.Period
 }
@@ -48,11 +45,11 @@ func (ema EMASeries) Len() int {
 
 // GetSigma returns the smoothing factor for the serise.
 func (ema EMASeries) GetSigma() float64 {
-	return 2.0 / (float64(ema.Period) + 1)
+	return 2.0 / (float64(ema.GetPeriod()) + 1)
 }
 
 // GetValue gets a value at a given index.
-func (ema EMASeries) GetValue(index int) (x float64, y float64) {
+func (ema EMASeries) GetValue(index int) (x, y float64) {
 	if ema.InnerSeries == nil {
 		return
 	}
@@ -64,7 +61,7 @@ func (ema EMASeries) GetValue(index int) (x float64, y float64) {
 
 // GetLastValue computes the last moving average value but walking back window size samples,
 // and recomputing the last moving average chunk.
-func (ema EMASeries) GetLastValue() (x float64, y float64) {
+func (ema EMASeries) GetLastValue() (x, y float64) {
 	if ema.InnerSeries == nil {
 		return
 	}
