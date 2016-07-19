@@ -440,7 +440,7 @@ func (c *Chart) getBBSeries(ticker string, data []model.EquityPrice) *chart.Boll
 
 func (c *Chart) getMACDHistogramSeries(ticker string, data []model.EquityPrice) chart.HistogramSeries {
 	return chart.HistogramSeries{
-		Name: fmt.Sprintf("%s - MACD", ticker),
+		Name: fmt.Sprintf("%s - MACD Div.", ticker),
 		Style: chart.Style{
 			Show:        c.showMACD(),
 			StrokeColor: drawing.ColorGreen,
