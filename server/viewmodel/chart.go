@@ -167,12 +167,14 @@ func (c *Chart) FetchTickers() error {
 	if stockInfos[0].IsZero() {
 		return fmt.Errorf("No stock information returned for: %s", strings.ToUpper(c.Ticker))
 	}
+	c.Ticker = strings.ToUpper(c.Ticker)
 	c.TickerInfo = &stockInfos[0]
 
 	if len(stockInfos) > 1 {
 		if stockInfos[1].IsZero() {
 			return fmt.Errorf("No stock information returned for: %s", strings.ToUpper(c.TickerCompare))
 		}
+		c.TickerCompare = strings.ToUpper(c.TickerCompare)
 		c.TickerCompareInfo = &stockInfos[1]
 	}
 	return nil
@@ -181,6 +183,7 @@ func (c *Chart) FetchTickers() error {
 // FetchPriceData fetches price data.
 func (c *Chart) FetchPriceData() error {
 	var useLocal, useRemote bool
+
 	switch strings.ToLower(c.ChartTimeframe) {
 	case "ltm", "6m", "3m":
 		useLocal = false
@@ -189,11 +192,13 @@ func (c *Chart) FetchPriceData() error {
 		useLocal = true
 		useRemote = false
 	}
+
 	data, err := GetEquityPricesByDate(c.Ticker, c.Start, c.End, useLocal, useRemote)
 	if err != nil {
 		return err
 	}
 	c.tickerData = data
+
 	if c.hasCompare() {
 		compareData, err := GetEquityPricesByDate(c.TickerCompare, c.Start, c.End, useLocal, useRemote)
 		if err != nil {
@@ -201,6 +206,7 @@ func (c *Chart) FetchPriceData() error {
 		}
 		c.tickerCompareData = compareData
 	}
+
 	return nil
 }
 
@@ -245,6 +251,7 @@ func (c *Chart) getSeries() []chart.Series {
 	if c.ShowLastValue {
 		series = append(series, c.getLastValueSeries(c.Ticker, t0series))
 	}
+
 	if c.hasCompare() {
 		t1series := c.getPriceSeries(c.TickerCompare, c.tickerCompareData)
 		series = append(series, t1series)
@@ -252,6 +259,7 @@ func (c *Chart) getSeries() []chart.Series {
 			series = append(series, c.getLastValueSeries(c.TickerCompare, t1series))
 		}
 	}
+
 	if c.AddSimpleMovingAverage {
 		sma := c.getSMASeries(c.Ticker, t0series)
 		series = append(series, sma)
@@ -259,6 +267,7 @@ func (c *Chart) getSeries() []chart.Series {
 			series = append(series, c.getLastValueSeries(c.Ticker, sma))
 		}
 	}
+
 	if c.AddExponentialMovingAverage {
 		ema := c.getEMASeries(c.Ticker, t0series)
 		series = append(series, ema)
@@ -266,6 +275,7 @@ func (c *Chart) getSeries() []chart.Series {
 			series = append(series, c.getLastValueSeries(c.Ticker, ema))
 		}
 	}
+
 	if c.AddBollingerBands {
 		bbs := c.getBBSeries(c.Ticker, c.tickerData)
 		series = append(series, bbs)
@@ -274,6 +284,7 @@ func (c *Chart) getSeries() []chart.Series {
 			series = append(series, c.getBoundedLastValueSeries(c.Ticker, bbs))
 		}
 	}
+
 	if c.AddMACD {
 		series = append(series, c.getMACDHistogramSeries(c.Ticker, c.tickerData))
 		series = append(series, c.getMACDSignalSeries(c.Ticker, c.tickerData))
@@ -289,7 +300,7 @@ func (c *Chart) getPriceSeries(ticker string, data []model.EquityPrice) chart.Ti
 	yaxis := chart.YAxisPrimary
 
 	if c.UsePercentageDifferences {
-		xvalues, yvalues = model.EquityPrices(c.tickerData).PercentChange()
+		xvalues, yvalues = model.EquityPrices(data).PercentChange()
 	} else {
 		xvalues, yvalues = model.EquityPrices(data).Prices()
 	}
@@ -302,7 +313,7 @@ func (c *Chart) getPriceSeries(ticker string, data []model.EquityPrice) chart.Ti
 	}
 	stroke, fill := c.getPriceSeriesColors(index)
 	return chart.TimeSeries{
-		Name:  strings.ToUpper(ticker),
+		Name:  ticker,
 		YAxis: yaxis,
 		Style: chart.Style{
 			Show:        true,
@@ -340,11 +351,11 @@ func (c *Chart) getLastValueSeries(ticker string, priceSeries chart.FullValuePro
 
 	labelText := c.YValueFormatter(lvy)
 	if !c.ShowLegend {
-		labelText = strings.ToUpper(ticker) + " " + labelText
+		labelText = ticker + " " + labelText
 	}
 
 	return chart.AnnotationSeries{
-		Name:  fmt.Sprintf("%s - Last Value", strings.ToUpper(ticker)),
+		Name:  fmt.Sprintf("%s - Last Value", ticker),
 		YAxis: yaxis,
 		Style: style,
 		Annotations: []chart.Annotation{
@@ -369,17 +380,17 @@ func (c *Chart) getBoundedLastValueSeries(ticker string, priceSeries chart.FullB
 	style.Show = c.ShowLastValue
 	style.FillColor = drawing.ColorWhite
 
-	label1 := fmt.Sprintf("%s +%0.0fσ %s", strings.ToUpper(ticker), c.K, c.YValueFormatter(lvy1))
+	label1 := fmt.Sprintf("%s +%0.0fσ %s", ticker, c.K, c.YValueFormatter(lvy1))
 	if c.ShowLegend {
 		label1 = fmt.Sprintf("+%0.0fσ %s", c.K, c.YValueFormatter(lvy1))
 	}
-	label2 := fmt.Sprintf("%s -%0.0fσ %s", strings.ToUpper(ticker), c.K, c.YValueFormatter(lvy2))
+	label2 := fmt.Sprintf("%s -%0.0fσ %s", ticker, c.K, c.YValueFormatter(lvy2))
 	if c.ShowLegend {
 		label2 = fmt.Sprintf("-%0.0fσ %s", c.K, c.YValueFormatter(lvy2))
 	}
 
 	return chart.AnnotationSeries{
-		Name:  fmt.Sprintf("%s - Last Value", strings.ToUpper(ticker)),
+		Name:  fmt.Sprintf("%s - Last Value", ticker),
 		Style: style,
 		Annotations: []chart.Annotation{
 			{X: lvx, Y: lvy1, Label: label1},
@@ -435,6 +446,7 @@ func (c *Chart) getMACDHistogramSeries(ticker string, data []model.EquityPrice) 
 			StrokeColor: drawing.ColorGreen,
 			FillColor:   drawing.ColorGreen,
 		},
+		YAxis: chart.YAxisSecondary,
 		InnerSeries: chart.MACDSeries{
 			InnerSeries: c.getPriceSeries(ticker, data),
 		},
@@ -448,6 +460,7 @@ func (c *Chart) getMACDSignalSeries(ticker string, data []model.EquityPrice) cha
 			Show:        c.showMACD(),
 			StrokeColor: drawing.ColorBlue,
 		},
+		YAxis:       chart.YAxisSecondary,
 		InnerSeries: c.getPriceSeries(ticker, data),
 	}
 }
@@ -459,6 +472,7 @@ func (c *Chart) getMACDLineSeries(ticker string, data []model.EquityPrice) chart
 			Show:        c.showMACD(),
 			StrokeColor: drawing.ColorRed,
 		},
+		YAxis:       chart.YAxisSecondary,
 		InnerSeries: c.getPriceSeries(ticker, data),
 	}
 }
@@ -472,7 +486,7 @@ func (c *Chart) hasCompare() bool {
 }
 
 func (c *Chart) showSecondaryAxis() bool {
-	return c.ShowAxes && (c.hasCompare() || c.showMACD())
+	return c.ShowAxes && !c.UsePercentageDifferences && (c.hasCompare() || c.showMACD())
 }
 
 func (c *Chart) getPriceSeriesColors(index int) (stroke, fill drawing.Color) {
