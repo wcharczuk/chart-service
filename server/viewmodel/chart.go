@@ -455,10 +455,10 @@ func (c *Chart) getMACDHistogramSeries(ticker string, data []model.EquityPrice) 
 
 func (c *Chart) getMACDSignalSeries(ticker string, data []model.EquityPrice) *chart.MACDSignalSeries {
 	return &chart.MACDSignalSeries{
-		Name: fmt.Sprintf("%s - MACD Signal", ticker),
+		Name: fmt.Sprintf("%s - MACD EMA", ticker),
 		Style: chart.Style{
 			Show:        c.showMACD(),
-			StrokeColor: drawing.ColorBlue,
+			StrokeColor: drawing.ColorRed,
 		},
 		YAxis:       chart.YAxisSecondary,
 		InnerSeries: c.getPriceSeries(ticker, data),
@@ -467,10 +467,10 @@ func (c *Chart) getMACDSignalSeries(ticker string, data []model.EquityPrice) *ch
 
 func (c *Chart) getMACDLineSeries(ticker string, data []model.EquityPrice) *chart.MACDLineSeries {
 	return &chart.MACDLineSeries{
-		Name: fmt.Sprintf("%s - MACD Line", ticker),
+		Name: fmt.Sprintf("%s - MACD", ticker),
 		Style: chart.Style{
 			Show:        c.showMACD(),
-			StrokeColor: drawing.ColorRed,
+			StrokeColor: drawing.ColorBlue,
 		},
 		YAxis:       chart.YAxisSecondary,
 		InnerSeries: c.getPriceSeries(ticker, data),
