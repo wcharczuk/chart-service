@@ -212,6 +212,17 @@ func (c *Chart) FetchPriceData() error {
 
 // CreateChart creates a chart object for the parameters.
 func (c *Chart) CreateChart() (chart.Chart, error) {
+	var xrange chart.Range
+	switch strings.ToLower(c.ChartTimeframe) {
+	case "ltm", "6m", "3m":
+		xrange = &chart.ContinuousRange{}
+	case "1m", "1wk", "10d", "3d", "1d":
+		xrange = &chart.NYSEMarketHoursRange{
+			Min: c.tickerData[0].TimestampUTC,
+			Max: c.tickerData[len(c.tickerData)-1].TimestampUTC,
+		}
+	}
+
 	graph := chart.Chart{
 		Width:  c.Width,
 		Height: c.Height,
@@ -220,6 +231,7 @@ func (c *Chart) CreateChart() (chart.Chart, error) {
 			Style: chart.Style{
 				Show: c.ShowAxes,
 			},
+			Range: xrange,
 		},
 		YAxis: chart.YAxis{
 			ValueFormatter: c.YValueFormatter,
