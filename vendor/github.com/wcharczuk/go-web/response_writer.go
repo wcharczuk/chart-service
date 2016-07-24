@@ -50,6 +50,9 @@ func (rw *RawResponseWriter) Header() http.Header {
 
 // WriteHeader is actually a terrible name and this writes the status code.
 func (rw *RawResponseWriter) WriteHeader(code int) {
+	if rw.statusCode == 0 {
+		rw.HTTPResponse.WriteHeader(code)
+	}
 	rw.statusCode = code
 }
 
@@ -111,6 +114,9 @@ func (crw *CompressedResponseWriter) Header() http.Header {
 
 // WriteHeader writes a status code.
 func (crw *CompressedResponseWriter) WriteHeader(code int) {
+	if crw.statusCode == 0 {
+		crw.HTTPResponse.WriteHeader(code)
+	}
 	crw.statusCode = code
 }
 

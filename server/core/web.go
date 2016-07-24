@@ -1,9 +1,35 @@
 package core
 
 import (
+	"crypto/hmac"
+
 	"github.com/blendlabs/go-util"
 	"github.com/wcharczuk/go-web"
 )
+
+const (
+	//AuthKeyParamName is the param name for the auth key
+	AuthKeyParamName = "auth"
+)
+
+// AuthRequired is a special type of middleware that checks an `auth` header param.
+func AuthRequired(action web.ControllerAction) web.ControllerAction {
+	return func(context *web.RequestContext) web.ControllerResult {
+		if context.DefaultResultProvider() == nil {
+			panic("You must provide a content provider as middleware to use `AuthRequired`")
+		}
+
+		if Config.IsProduction() {
+			authKey := context.Param(AuthKeyParamName)
+
+			if !hmac.Equal([]byte(authKey), []byte(Config.AuthKey())) {
+				return context.DefaultResultProvider().NotAuthorized()
+			}
+
+		}
+		return action(context)
+	}
+}
 
 // ReadRouteValue reads a route value with a default.
 func ReadRouteValue(rc *web.RequestContext, key, defaultValue string) string {

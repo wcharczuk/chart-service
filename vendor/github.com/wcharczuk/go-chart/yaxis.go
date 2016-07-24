@@ -17,9 +17,10 @@ type YAxis struct {
 
 	ValueFormatter ValueFormatter
 	Range          Range
-	Ticks          []Tick
 
-	GridLines      []GridLine
+	Ticks     []Tick
+	GridLines []GridLine
+
 	GridMajorStyle Style
 	GridMinorStyle Style
 }
@@ -40,29 +41,11 @@ func (ya YAxis) GetTicks(r Renderer, ra Range, defaults Style, vf ValueFormatter
 	if len(ya.Ticks) > 0 {
 		return ya.Ticks
 	}
-	return ya.generateTicks(r, ra, defaults, vf)
-}
-
-func (ya YAxis) generateTicks(r Renderer, ra Range, defaults Style, vf ValueFormatter) []Tick {
-	step := ya.getTickStep(r, ra, defaults, vf)
-	ticks := GenerateTicksWithStep(ra, step, vf)
-	return ticks
-}
-
-func (ya YAxis) getTickStep(r Renderer, ra Range, defaults Style, vf ValueFormatter) float64 {
-	tickCount := ya.getTickCount(r, ra, defaults, vf)
-	step := ra.Delta() / float64(tickCount)
-	return step
-}
-
-func (ya YAxis) getTickCount(r Renderer, ra Range, defaults Style, vf ValueFormatter) int {
-	r.SetFont(ya.Style.GetFont(defaults.GetFont()))
-	r.SetFontSize(ya.Style.GetFontSize(defaults.GetFontSize(DefaultFontSize)))
-	//given the domain, figure out how many ticks we can draw ...
-	label := vf(ra.Min)
-	tb := r.MeasureText(label)
-	count := int(math.Ceil(float64(ra.Domain) / float64(tb.Height()+DefaultMinimumTickVerticalSpacing)))
-	return count
+	if tp, isTickProvider := ra.(TicksProvider); isTickProvider {
+		return tp.GetTicks(vf)
+	}
+	step := CalculateContinuousTickStep(r, ra, true, ya.Style.InheritFrom(defaults), vf)
+	return GenerateContinuousTicksWithStep(ra, step, vf)
 }
 
 // GetGridLines returns the gridlines for the axis.
@@ -75,11 +58,7 @@ func (ya YAxis) GetGridLines(ticks []Tick) []GridLine {
 
 // Measure returns the bounds of the axis.
 func (ya YAxis) Measure(r Renderer, canvasBox Box, ra Range, defaults Style, ticks []Tick) Box {
-	r.SetStrokeColor(ya.Style.GetStrokeColor(defaults.StrokeColor))
-	r.SetStrokeWidth(ya.Style.GetStrokeWidth(defaults.StrokeWidth))
-	r.SetFont(ya.Style.GetFont(defaults.GetFont()))
-	r.SetFontColor(ya.Style.GetFontColor(DefaultAxisColor))
-	r.SetFontSize(ya.Style.GetFontSize(defaults.GetFontSize()))
+	ya.Style.InheritFrom(defaults).PersistToRenderer(r)
 
 	sort.Sort(Ticks(ticks))
 
@@ -122,11 +101,7 @@ func (ya YAxis) Measure(r Renderer, canvasBox Box, ra Range, defaults Style, tic
 
 // Render renders the axis.
 func (ya YAxis) Render(r Renderer, canvasBox Box, ra Range, defaults Style, ticks []Tick) {
-	r.SetStrokeColor(ya.Style.GetStrokeColor(defaults.StrokeColor))
-	r.SetStrokeWidth(ya.Style.GetStrokeWidth(defaults.StrokeWidth))
-	r.SetFont(ya.Style.GetFont(defaults.GetFont()))
-	r.SetFontColor(ya.Style.GetFontColor(DefaultAxisColor))
-	r.SetFontSize(ya.Style.GetFontSize(defaults.GetFontSize(DefaultFontSize)))
+	ya.Style.InheritFrom(defaults).PersistToRenderer(r)
 
 	sort.Sort(Ticks(ticks))
 

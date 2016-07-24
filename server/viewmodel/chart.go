@@ -11,6 +11,7 @@ import (
 	"github.com/wcharczuk/chart-service/server/model"
 	"github.com/wcharczuk/chart-service/server/yahoo"
 	"github.com/wcharczuk/go-chart"
+	"github.com/wcharczuk/go-chart/date"
 	"github.com/wcharczuk/go-chart/drawing"
 	"github.com/wcharczuk/go-web"
 )
@@ -212,6 +213,20 @@ func (c *Chart) FetchPriceData() error {
 
 // CreateChart creates a chart object for the parameters.
 func (c *Chart) CreateChart() (chart.Chart, error) {
+	var xrange chart.Range
+	switch strings.ToLower(c.ChartTimeframe) {
+	case "ltm", "6m", "3m":
+		xrange = &chart.ContinuousRange{}
+	case "1m", "1wk", "10d", "3d", "1d":
+		xrange = &chart.MarketHoursRange{
+			Min:             c.tickerData[0].TimestampUTC,
+			Max:             c.tickerData[len(c.tickerData)-1].TimestampUTC,
+			MarketOpen:      date.NYSEOpen,
+			MarketClose:     date.NYSEClose,
+			HolidayProvider: date.IsNYSEHoliday,
+		}
+	}
+
 	graph := chart.Chart{
 		Width:  c.Width,
 		Height: c.Height,
@@ -220,6 +235,7 @@ func (c *Chart) CreateChart() (chart.Chart, error) {
 			Style: chart.Style{
 				Show: c.ShowAxes,
 			},
+			Range: xrange,
 		},
 		YAxis: chart.YAxis{
 			ValueFormatter: c.YValueFormatter,
@@ -247,7 +263,18 @@ func (c *Chart) CreateChart() (chart.Chart, error) {
 
 func (c *Chart) getSeries() []chart.Series {
 	t0series := c.getPriceSeries(c.Ticker, c.tickerData)
-	series := []chart.Series{t0series}
+	series := []chart.Series{}
+
+	if c.AddBollingerBands {
+		bbs := c.getBBSeries(c.Ticker, c.tickerData)
+		series = append(series, bbs)
+
+		if c.ShowLastValue {
+			series = append(series, c.getBoundedLastValueSeries(c.Ticker, bbs))
+		}
+	}
+
+	series = append(series, t0series)
 	if c.ShowLastValue {
 		series = append(series, c.getLastValueSeries(c.Ticker, t0series))
 	}
@@ -273,15 +300,6 @@ func (c *Chart) getSeries() []chart.Series {
 		series = append(series, ema)
 		if c.ShowLastValue {
 			series = append(series, c.getLastValueSeries(c.Ticker, ema))
-		}
-	}
-
-	if c.AddBollingerBands {
-		bbs := c.getBBSeries(c.Ticker, c.tickerData)
-		series = append(series, bbs)
-
-		if c.ShowLastValue {
-			series = append(series, c.getBoundedLastValueSeries(c.Ticker, bbs))
 		}
 	}
 
@@ -440,7 +458,7 @@ func (c *Chart) getBBSeries(ticker string, data []model.EquityPrice) *chart.Boll
 
 func (c *Chart) getMACDHistogramSeries(ticker string, data []model.EquityPrice) chart.HistogramSeries {
 	return chart.HistogramSeries{
-		Name: fmt.Sprintf("%s - MACD", ticker),
+		Name: fmt.Sprintf("%s - MACD Div.", ticker),
 		Style: chart.Style{
 			Show:        c.showMACD(),
 			StrokeColor: drawing.ColorGreen,

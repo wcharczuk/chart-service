@@ -40,10 +40,20 @@ func (cc Charts) getChartAction(rc *web.RequestContext) web.ControllerResult {
 
 	if util.CaseInsensitiveEquals(cv.Format, "png") {
 		rc.Response.Header().Set("Content-Type", "image/png")
-		graph.Render(chart.PNG, rc.Response)
+		err := graph.Render(chart.PNG, rc.Response)
+		if err != nil {
+			if rc.Logger() != nil {
+				rc.Logger().Errorf("render error: %s", err.Error())
+			}
+		}
 	} else if util.CaseInsensitiveEquals(cv.Format, "svg") {
 		rc.Response.Header().Set("Content-Type", "image/svg+xml")
-		graph.Render(chart.SVG, rc.Response)
+		err := graph.Render(chart.SVG, rc.Response)
+		if err != nil {
+			if rc.Logger() != nil {
+				rc.Logger().Errorf("render error: %s", err.Error())
+			}
+		}
 	}
 
 	return nil

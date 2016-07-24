@@ -22,9 +22,10 @@ var (
 )
 
 type config struct {
-	key  []byte
-	port string
-	env  string
+	key     []byte
+	port    string
+	env     string
+	authKey string
 }
 
 // Port is the port the server should listen on.
@@ -56,6 +57,13 @@ func (c *config) Key() []byte {
 		}
 	}
 	return c.key
+}
+
+func (c *config) AuthKey() string {
+	if len(c.authKey) == 0 {
+		c.authKey = os.Getenv("AUTH_KEY")
+	}
+	return c.authKey
 }
 
 // Environment returns the current environment.

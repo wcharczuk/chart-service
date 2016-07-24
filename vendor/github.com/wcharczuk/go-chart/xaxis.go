@@ -34,36 +34,11 @@ func (xa XAxis) GetTicks(r Renderer, ra Range, defaults Style, vf ValueFormatter
 	if len(xa.Ticks) > 0 {
 		return xa.Ticks
 	}
-	return xa.generateTicks(r, ra, defaults, vf)
-}
-
-func (xa XAxis) generateTicks(r Renderer, ra Range, defaults Style, vf ValueFormatter) []Tick {
-	step := xa.getTickStep(r, ra, defaults, vf)
-	return GenerateTicksWithStep(ra, step, vf)
-}
-
-func (xa XAxis) getTickStep(r Renderer, ra Range, defaults Style, vf ValueFormatter) float64 {
-	tickCount := xa.getTickCount(r, ra, defaults, vf)
-	step := ra.Delta() / float64(tickCount)
-	return step
-}
-
-func (xa XAxis) getTickCount(r Renderer, ra Range, defaults Style, vf ValueFormatter) int {
-	r.SetFont(xa.Style.GetFont(defaults.GetFont()))
-	r.SetFontSize(xa.Style.GetFontSize(defaults.GetFontSize(DefaultFontSize)))
-
-	// take a cut at determining the 'widest' value.
-	l0 := vf(ra.Min)
-	ln := vf(ra.Max)
-	ll := l0
-	if len(ln) > len(l0) {
-		ll = ln
+	if tp, isTickProvider := ra.(TicksProvider); isTickProvider {
+		return tp.GetTicks(vf)
 	}
-	llb := r.MeasureText(ll)
-	textWidth := llb.Width()
-	width := textWidth + DefaultMinimumTickHorizontalSpacing
-	count := int(math.Ceil(float64(ra.Domain) / float64(width)))
-	return count
+	step := CalculateContinuousTickStep(r, ra, false, xa.Style.InheritFrom(defaults), vf)
+	return GenerateContinuousTicksWithStep(ra, step, vf)
 }
 
 // GetGridLines returns the gridlines for the axis.
@@ -76,13 +51,7 @@ func (xa XAxis) GetGridLines(ticks []Tick) []GridLine {
 
 // Measure returns the bounds of the axis.
 func (xa XAxis) Measure(r Renderer, canvasBox Box, ra Range, defaults Style, ticks []Tick) Box {
-	r.SetStrokeColor(xa.Style.GetStrokeColor(defaults.StrokeColor))
-	r.SetStrokeWidth(xa.Style.GetStrokeWidth(defaults.StrokeWidth))
-	r.SetStrokeDashArray(xa.Style.GetStrokeDashArray())
-	r.SetFont(xa.Style.GetFont(defaults.GetFont()))
-	r.SetFontColor(xa.Style.GetFontColor(DefaultAxisColor))
-	r.SetFontSize(xa.Style.GetFontSize(defaults.GetFontSize()))
-
+	xa.Style.InheritFrom(defaults).PersistToRenderer(r)
 	sort.Sort(Ticks(ticks))
 
 	var left, right, top, bottom = math.MaxInt32, 0, math.MaxInt32, 0
@@ -110,12 +79,7 @@ func (xa XAxis) Measure(r Renderer, canvasBox Box, ra Range, defaults Style, tic
 
 // Render renders the axis
 func (xa XAxis) Render(r Renderer, canvasBox Box, ra Range, defaults Style, ticks []Tick) {
-	r.SetStrokeColor(xa.Style.GetStrokeColor(defaults.StrokeColor))
-	r.SetStrokeWidth(xa.Style.GetStrokeWidth(defaults.StrokeWidth))
-	r.SetStrokeDashArray(xa.Style.GetStrokeDashArray())
-	r.SetFont(xa.Style.GetFont(defaults.GetFont()))
-	r.SetFontColor(xa.Style.GetFontColor(DefaultAxisColor))
-	r.SetFontSize(xa.Style.GetFontSize(defaults.GetFontSize()))
+	xa.Style.InheritFrom(defaults).PersistToRenderer(r)
 
 	r.MoveTo(canvasBox.Left, canvasBox.Bottom)
 	r.LineTo(canvasBox.Right, canvasBox.Bottom)

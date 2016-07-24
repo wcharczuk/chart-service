@@ -3,6 +3,7 @@ package controller
 import (
 	"github.com/blendlabs/go-util"
 	"github.com/blendlabs/spiffy"
+	"github.com/wcharczuk/chart-service/server/core"
 	"github.com/wcharczuk/chart-service/server/model"
 	"github.com/wcharczuk/go-web"
 )
@@ -147,9 +148,9 @@ func (e Equities) deleteHandler(rc *web.RequestContext) web.ControllerResult {
 func (e Equities) Register(app *web.App) {
 	app.GET("/api/v1/equities", e.getAllHandler)
 	app.GET("/api/v1/equities/search/:query", e.searchHandler)
-	app.POST("/api/v1/equity", e.createHandler)
+	app.POST("/api/v1/equity", e.createHandler, core.AuthRequired, web.APIProviderAsDefault)
 	app.GET("/api/v1/equity/:id", e.getHandler)
-	app.PUT("/api/v1/equity/:id", e.updateHandler)
-	app.PATCH("/api/v1/equity/:id", e.patchHandler)
-	app.DELETE("/api/v1/equity/:id", e.deleteHandler)
+	app.PUT("/api/v1/equity/:id", e.updateHandler, core.AuthRequired, web.APIProviderAsDefault)
+	app.PATCH("/api/v1/equity/:id", e.patchHandler, core.AuthRequired, web.APIProviderAsDefault)
+	app.DELETE("/api/v1/equity/:id", e.deleteHandler, core.AuthRequired, web.APIProviderAsDefault)
 }
