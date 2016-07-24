@@ -79,11 +79,12 @@ func (c *config) IsProduction() bool {
 // DBConfig is the basic config object for db connections.
 type DBConfig struct {
 	Server   string
+	DBName   string
 	Schema   string
 	User     string
 	Password string
 
-	dsn string
+	DSN string
 }
 
 // InitFromEnvironment initializes the db config from environment variables.
@@ -97,6 +98,7 @@ func (db *DBConfig) InitFromEnvironment() {
 		} else {
 			db.Server = "localhost"
 		}
+		db.DBName = os.Getenv("DB_NAME")
 		db.Schema = os.Getenv("DB_SCHEMA")
 		db.User = os.Getenv("DB_USER")
 		db.Password = os.Getenv("DB_PASSWORD")
@@ -105,20 +107,26 @@ func (db *DBConfig) InitFromEnvironment() {
 
 // InitFromDSN initializes the db config from a dsn.
 func (db *DBConfig) InitFromDSN(dsn string) {
-	db.dsn = dsn
+	db.DSN = dsn
 }
 
-// DSN returns the config as a postgres dsn.
-func (db DBConfig) DSN() string {
-	if len(db.dsn) != 0 {
-		return db.dsn
+// GetDSN returns the config as a postgres dsn.
+func (db DBConfig) GetDSN() string {
+	if len(db.DSN) > 0 {
+		return db.DSN
 	}
-	return fmt.Sprintf("postgres://%s:%s@%s/%s?sslmode=disable", db.User, db.Password, db.Server, db.Schema)
+	if len(db.Password) > 0 {
+		return fmt.Sprintf("postgres://%s:%s@%s/%s?sslmode=disable", db.User, db.Password, db.Server, db.DBName)
+	}
+	if len(db.User) > 0 {
+		return fmt.Sprintf("postgres://%s@%s/%s?sslmode=disable", db.User, db.Server, db.DBName)
+	}
+	return fmt.Sprintf("postgres://%s/%s?sslmode=disable", db.Server, db.DBName)
 }
 
 // SetupDatabaseContext writes the config to spiffy.
 func SetupDatabaseContext(config *DBConfig) error {
-	spiffy.CreateDbAlias("main", spiffy.NewDbConnectionFromDSN(config.DSN()))
+	spiffy.CreateDbAlias("main", spiffy.NewDbConnectionFromDSN(config.GetDSN()))
 	spiffy.SetDefaultAlias("main")
 
 	_, dbError := spiffy.DefaultDb().Open()

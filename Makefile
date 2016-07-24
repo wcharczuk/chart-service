@@ -11,7 +11,7 @@ test:
 
 run:
 	@echo "$(OK_COLOR)==> Running$(NO_COLOR)"
-	@DB_SCHEMA=stocks go run main.go
+	@DB_NAME=stocks go run main.go
 
 db:
 	@echo "$(OK_COLOR)==> Wiping DB$(NO_COLOR)"
