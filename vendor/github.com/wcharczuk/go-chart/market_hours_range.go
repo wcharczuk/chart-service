@@ -78,8 +78,9 @@ func (mhr *MarketHoursRange) GetTicks(vf ValueFormatter) []Tick {
 	// figure out how to advance one ticke per market day.
 	var ticks []Tick
 
-	cursor := date.On(mhr.MarketClose, mhr.Min)
+	cursor := date.On(mhr.MarketOpen, mhr.Min)
 	maxClose := date.On(mhr.MarketClose, mhr.Max)
+
 	for date.BeforeDate(cursor, maxClose) {
 		if date.IsWeekDay(cursor.Weekday()) && !mhr.GetHolidayProvider()(cursor) {
 			ticks = append(ticks, Tick{
@@ -91,13 +92,6 @@ func (mhr *MarketHoursRange) GetTicks(vf ValueFormatter) []Tick {
 		cursor = cursor.AddDate(0, 0, 1)
 	}
 
-	endMarketClose := date.On(mhr.MarketClose, cursor)
-	if date.IsWeekDay(endMarketClose.Weekday()) && !mhr.GetHolidayProvider()(endMarketClose) {
-		ticks = append(ticks, Tick{
-			Value: TimeToFloat64(endMarketClose),
-			Label: vf(endMarketClose),
-		})
-	}
 	return ticks
 }
 
@@ -112,5 +106,6 @@ func (mhr MarketHoursRange) Translate(value float64) int {
 	valueDelta := date.CalculateMarketSecondsBetween(mhr.Min, valueTime, mhr.MarketOpen, mhr.MarketClose, mhr.HolidayProvider)
 
 	translated := int((float64(valueDelta) / float64(deltaSeconds)) * float64(mhr.Domain))
+	fmt.Printf("nyse translating: %s to %d ~= %d", valueTime.Format(time.RFC3339), deltaSeconds, valueDelta)
 	return translated
 }
