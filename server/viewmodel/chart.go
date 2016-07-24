@@ -11,6 +11,7 @@ import (
 	"github.com/wcharczuk/chart-service/server/model"
 	"github.com/wcharczuk/chart-service/server/yahoo"
 	"github.com/wcharczuk/go-chart"
+	"github.com/wcharczuk/go-chart/date"
 	"github.com/wcharczuk/go-chart/drawing"
 	"github.com/wcharczuk/go-web"
 )
@@ -217,9 +218,12 @@ func (c *Chart) CreateChart() (chart.Chart, error) {
 	case "ltm", "6m", "3m":
 		xrange = &chart.ContinuousRange{}
 	case "1m", "1wk", "10d", "3d", "1d":
-		xrange = &chart.NYSEMarketHoursRange{
-			Min: c.tickerData[0].TimestampUTC,
-			Max: c.tickerData[len(c.tickerData)-1].TimestampUTC,
+		xrange = &chart.MarketHoursRange{
+			Min:             c.tickerData[0].TimestampUTC,
+			Max:             c.tickerData[len(c.tickerData)-1].TimestampUTC,
+			MarketOpen:      date.NYSEOpen,
+			MarketClose:     date.NYSEClose,
+			HolidayProvider: date.IsNYSEHoliday,
 		}
 	}
 

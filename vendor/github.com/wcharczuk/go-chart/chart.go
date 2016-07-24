@@ -210,7 +210,6 @@ func (c Chart) getRanges() (xrange, yrange, yrangeAlt Range) {
 			tickMin = math.Min(tickMin, t.Value)
 			tickMax = math.Max(tickMax, t.Value)
 		}
-
 		xrange.SetMin(tickMin)
 		xrange.SetMax(tickMax)
 	} else if xrange.IsZero() {
