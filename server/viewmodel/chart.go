@@ -537,7 +537,8 @@ func (c *Chart) getLinRegSeries(ticker string, priceSeries chart.ValueProvider) 
 		Name: fmt.Sprintf("%s Lin. Reg.", ticker),
 		Style: chart.Style{
 			Show:            c.AddLinReg,
-			StrokeColor:     drawing.ColorRed,
+			StrokeColor:     drawing.ColorFromHex("FFA500"),
+			StrokeWidth:     2.0,
 			StrokeDashArray: []float64{5.0, 5.0},
 		},
 		InnerSeries: priceSeries,
