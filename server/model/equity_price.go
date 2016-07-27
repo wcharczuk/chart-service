@@ -95,6 +95,22 @@ func (ep EquityPrices) In(loc *time.Location) []EquityPrice {
 	return newEP
 }
 
+// First returns the first element.
+func (ep EquityPrices) First() *EquityPrice {
+	if len(ep) > 0 {
+		return &ep[0]
+	}
+	return nil
+}
+
+// Last returns the last element.
+func (ep EquityPrices) Last() *EquityPrice {
+	if len(ep) > 0 {
+		return &ep[len(ep)-1]
+	}
+	return nil
+}
+
 // Prices returns the x,y ranges as []time.Time and []float64
 // NOTE: This changes the ep timestamp timezones to eastern.
 func (ep EquityPrices) Prices() ([]time.Time, []float64) {

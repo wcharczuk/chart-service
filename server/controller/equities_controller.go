@@ -147,7 +147,7 @@ func (e Equities) deleteHandler(rc *web.RequestContext) web.ControllerResult {
 // Register registers the controller.
 func (e Equities) Register(app *web.App) {
 	app.GET("/api/v1/equities", e.getAllHandler)
-	app.GET("/api/v1/equities/search/:query", e.searchHandler)
+	app.GET("/api/v1/equities.search/:query", e.searchHandler)
 	app.POST("/api/v1/equity", e.createHandler, core.AuthRequired, web.APIProviderAsDefault)
 	app.GET("/api/v1/equity/:id", e.getHandler)
 	app.PUT("/api/v1/equity/:id", e.updateHandler, core.AuthRequired, web.APIProviderAsDefault)

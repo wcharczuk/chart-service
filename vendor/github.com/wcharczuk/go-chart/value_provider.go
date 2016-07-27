@@ -17,7 +17,12 @@ type LastValueProvider interface {
 	GetLastValue() (x, y float64)
 }
 
-// BoundedLastValueProvider is a special type of value provider that can return it's (potentially computed) bounded last value.
+// BoundedFirstValueProvider is a special type of value provider that can return its (potentially windowed) first value.
+type BoundedFirstValueProvider interface {
+	GetBoundedFirstValue() (x, y1, y2 float64)
+}
+
+// BoundedLastValueProvider is a special type of value provider that can return its (potentially computed) bounded last value.
 type BoundedLastValueProvider interface {
 	GetBoundedLastValue() (x, y1, y2 float64)
 }
@@ -31,5 +36,6 @@ type FullValueProvider interface {
 // FullBoundedValueProvider is an interface that combines `BoundedValueProvider` and `BoundedLastValueProvider`
 type FullBoundedValueProvider interface {
 	BoundedValueProvider
+	BoundedFirstValueProvider
 	BoundedLastValueProvider
 }

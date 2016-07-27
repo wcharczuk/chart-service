@@ -54,8 +54,8 @@
 		{
 			"checksumSHA1": "aCb9XQkK4uIJRW6497iOsZRkzS0=",
 			"path": "github.com/blendlabs/spiffy",
-			"revision": "bdbc91b8d750960f81e40da002813aae1384d61e",
-			"revisionTime": "2016-05-26T22:17:38Z"
+			"revision": "21d25c9dedcd584d80e67388a03cb40c631b7923",
+			"revisionTime": "2016-07-26T21:49:14-07:00"
 		},
 		{
 			"checksumSHA1": "8nOeszKcq6lJ3rTniygcaQBkVhM=",
@@ -114,8 +114,8 @@
 		{
 			"checksumSHA1": "vyFHFWLesrocbpXmKzF8+Wl+qys=",
 			"path": "github.com/wcharczuk/go-chart",
-			"revision": "2f7cd11039c5dc957f63a09984ccd301cba884d6",
-			"revisionTime": "2016-07-24T13:48:15-07:00"
+			"revision": "40ff878b79397f1fe57f54b4a078b1597a07ad0e",
+			"revisionTime": "2016-07-27T00:40:22-07:00"
 		},
 		{
 			"checksumSHA1": "K2yGYp90GP6pQStn38bIWTGEwbg=",

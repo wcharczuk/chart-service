@@ -40,6 +40,7 @@ type Chart struct {
 	UsePercentageDifferences bool `query:"format"`
 
 	ShowAxes                    bool `query:"show_axes"`
+	ShowGrid                    bool `query:"show_grid"`
 	ShowLastValue               bool `query:"show_last"`
 	ShowLegend                  bool `query:"show_legend"`
 	AddSimpleMovingAverage      bool `query:"add_sma"`
@@ -69,9 +70,10 @@ func (c *Chart) Parse(rc *web.RequestContext) error {
 	c.ChartTimeframe = core.ReadRouteValue(rc, "timeframe", defaultChartTimeframe)
 	c.UsePercentageDifferences = core.ReadQueryValueBool(rc, "use_pct", false)
 
-	c.ShowAxes = core.ReadQueryValueBool(rc, "show_axes", false)
-	c.ShowLastValue = core.ReadQueryValueBool(rc, "show_last", false)
-	c.ShowLegend = core.ReadQueryValueBool(rc, "show_legend", false)
+	c.ShowGrid = core.ReadQueryValueBool(rc, "show_grid", false)
+	c.ShowAxes = core.ReadQueryValueBool(rc, "show_axes", true)
+	c.ShowLastValue = core.ReadQueryValueBool(rc, "show_last", true)
+	c.ShowLegend = core.ReadQueryValueBool(rc, "show_legend", true)
 
 	c.AddSimpleMovingAverage = core.ReadQueryValueBool(rc, "add_sma", false)
 	c.AddExponentialMovingAverage = core.ReadQueryValueBool(rc, "add_ema", false)
@@ -214,17 +216,21 @@ func (c *Chart) FetchPriceData() error {
 // CreateChart creates a chart object for the parameters.
 func (c *Chart) CreateChart() (chart.Chart, error) {
 	var xrange chart.Range
-	switch strings.ToLower(c.ChartTimeframe) {
-	case "ltm", "6m", "3m":
-		xrange = &chart.ContinuousRange{}
-	case "1m", "1wk", "10d", "3d", "1d":
-		xrange = &chart.MarketHoursRange{
-			Min:             c.tickerData[0].TimestampUTC,
-			Max:             c.tickerData[len(c.tickerData)-1].TimestampUTC,
-			MarketOpen:      date.NYSEOpen,
-			MarketClose:     date.NYSEClose,
-			HolidayProvider: date.IsNYSEHoliday,
+	if len(c.tickerData) > 0 {
+		switch strings.ToLower(c.ChartTimeframe) {
+		case "ltm", "6m", "3m":
+			xrange = &chart.ContinuousRange{}
+		case "1m", "1wk", "10d", "3d", "1d":
+			xrange = &chart.MarketHoursRange{
+				Min:             model.EquityPrices(c.tickerData).First().TimestampUTC.In(date.Eastern()),
+				Max:             model.EquityPrices(c.tickerData).Last().TimestampUTC.In(date.Eastern()),
+				MarketOpen:      date.NYSEOpen,
+				MarketClose:     date.NYSEClose,
+				HolidayProvider: date.IsNYSEHoliday,
+			}
 		}
+	} else {
+		return chart.Chart{}, errors.New("No data!")
 	}
 
 	graph := chart.Chart{
@@ -235,9 +241,28 @@ func (c *Chart) CreateChart() (chart.Chart, error) {
 			Style: chart.Style{
 				Show: c.ShowAxes,
 			},
+			GridMajorStyle: chart.Style{
+				Show:            c.ShowGrid,
+				StrokeColor:     drawing.ColorFromHex("000"),
+				StrokeWidth:     1.0,
+				StrokeDashArray: []float64{5.0, 5.0},
+			},
+			GridMinorStyle: chart.Style{
+				Show:            c.ShowGrid,
+				StrokeColor:     drawing.ColorFromHex("000"),
+				StrokeWidth:     1.0,
+				StrokeDashArray: []float64{5.0, 5.0},
+			},
 			Range: xrange,
 		},
 		YAxis: chart.YAxis{
+			Zero: chart.GridLine{
+				Style: chart.Style{
+					Show:        true,
+					StrokeColor: chart.DefaultAxisColor,
+					StrokeWidth: 1.0,
+				},
+			},
 			ValueFormatter: c.YValueFormatter,
 			Style: chart.Style{
 				Show: c.ShowAxes,
@@ -384,12 +409,6 @@ func (c *Chart) getLastValueSeries(ticker string, priceSeries chart.FullValuePro
 
 func (c *Chart) getBoundedLastValueSeries(ticker string, priceSeries chart.FullBoundedValueProvider) chart.Series {
 	lvx, lvy1, lvy2 := priceSeries.GetBoundedLastValue()
-
-	if c.UsePercentageDifferences {
-		_, v0y1, v0y2 := priceSeries.GetBoundedValue(0)
-		lvy1 = chart.PercentDifference(v0y1, lvy1)
-		lvy2 = chart.PercentDifference(v0y2, lvy2)
-	}
 
 	var style chart.Style
 	if s, isSeries := priceSeries.(chart.Series); isSeries {

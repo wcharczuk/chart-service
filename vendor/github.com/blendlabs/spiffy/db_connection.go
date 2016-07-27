@@ -6,6 +6,8 @@ package spiffy
 import (
 	"database/sql"
 	"fmt"
+	"net/url"
+	"os"
 	"reflect"
 	"strconv"
 	"strings"
@@ -26,62 +28,113 @@ const (
 // DbConnection
 // --------------------------------------------------------------------------------
 
-// NewUnauthenticatedDbConnection creates a new DbConnection without Username or Password or SSLMode
-func NewUnauthenticatedDbConnection(host, schema string) *DbConnection {
-	conn := &DbConnection{}
-	conn.Host = host
-	conn.Schema = schema
-	conn.Username = ""
-	conn.Password = ""
-	conn.SSLMode = "disable"
-	conn.MetaLock = &sync.Mutex{}
-	conn.TxLock = &sync.RWMutex{}
-	return conn
+// NewDbConnection creates a new DbConnection using current user peer authentication.
+func NewDbConnection(host, dbName string) *DbConnection {
+	return &DbConnection{
+		Host:     host,
+		Database: dbName,
+		SSLMode:  "disable",
+		MetaLock: &sync.Mutex{},
+		TxLock:   &sync.RWMutex{},
+	}
 }
 
-// NewDbConnection creates a new connection with SSLMode set to "disable"
-func NewDbConnection(host, schema, username, password string) *DbConnection {
-	conn := &DbConnection{}
-	conn.Host = host
-	conn.Schema = schema
-	conn.Username = username
-	conn.Password = password
-	conn.SSLMode = "disable"
-	conn.MetaLock = &sync.Mutex{}
-	conn.TxLock = &sync.RWMutex{}
-	return conn
+// NewDbConnectionWithPassword creates a new connection with SSLMode set to "disable"
+func NewDbConnectionWithPassword(host, dbName, username, password string) *DbConnection {
+	return &DbConnection{
+		Host:     host,
+		Database: dbName,
+		Username: username,
+		Password: password,
+		SSLMode:  "disable",
+		MetaLock: &sync.Mutex{},
+		TxLock:   &sync.RWMutex{},
+	}
+}
+
+// NewDbConnectionWithSSLMode creates a new connection with all available options (including SSLMode)
+func NewDbConnectionWithSSLMode(host, dbName, username, password, sslMode string) *DbConnection {
+	return &DbConnection{
+		Host:     host,
+		Database: dbName,
+		Username: username,
+		Password: password,
+		SSLMode:  sslMode,
+		MetaLock: &sync.Mutex{},
+		TxLock:   &sync.RWMutex{},
+	}
 }
 
 // NewDbConnectionFromDSN creates a new connection with SSLMode set to "disable"
 func NewDbConnectionFromDSN(dsn string) *DbConnection {
-	conn := &DbConnection{}
-	conn.DSN = dsn
-	conn.MetaLock = &sync.Mutex{}
-	conn.TxLock = &sync.RWMutex{}
-	return conn
+	return &DbConnection{
+		DSN:      dsn,
+		MetaLock: &sync.Mutex{},
+		TxLock:   &sync.RWMutex{},
+	}
 }
 
-// NewSSLDbConnection creates a new connection with all available options (including SSLMode)
-func NewSSLDbConnection(host, schema, username, password, sslMode string) *DbConnection {
-	conn := &DbConnection{}
-	conn.Host = host
-	conn.Schema = schema
-	conn.Username = username
-	conn.Password = password
-	conn.SSLMode = sslMode
-	conn.MetaLock = &sync.Mutex{}
-	conn.TxLock = &sync.RWMutex{}
-	return conn
+func envVarWithDefault(varName, defaultValue string) string {
+	envVarValue := os.Getenv(varName)
+	if len(envVarValue) > 0 {
+		return envVarValue
+	}
+	return defaultValue
+}
+
+// NewDbConnectionFromEnvironment creates a new db connection from environment variables.
+//
+// The environment variable mappings are as follows:
+//	-	DATABSE_URL 	= DSN 	//note that this trumps other vars (!!)
+// 	-	DB_HOST 		= Host
+//	-	DB_PORT 		= Port
+//	- 	DB_NAME 		= Database
+//	-	DB_SCHEMA		= Schema
+//	-	DB_USER 		= Username
+//	-	DB_PASSWORD 	= Password
+//	-	DB_SSLMODE 		= SSLMode
+func NewDbConnectionFromEnvironment() *DbConnection {
+	if len(os.Getenv("DATABASE_URL")) > 0 {
+		return &DbConnection{
+			DSN:      os.Getenv("DATABASE_URL"),
+			MetaLock: &sync.Mutex{},
+			TxLock:   &sync.RWMutex{},
+		}
+	}
+
+	return &DbConnection{
+		Host:     envVarWithDefault("DB_HOST", "localhost"),
+		Port:     os.Getenv("DB_PORT"),
+		Database: os.Getenv("DB_NAME"),
+		Schema:   os.Getenv("DB_SCHEMA"),
+		Username: os.Getenv("DB_USER"),
+		Password: os.Getenv("DB_PASSWORD"),
+		SSLMode:  envVarWithDefault("DB_SSLMODE", "disable"),
+		MetaLock: &sync.Mutex{},
+		TxLock:   &sync.RWMutex{},
+	}
 }
 
 // DbConnection is the basic wrapper for connection parameters and saves a reference to the created sql.Connection.
 type DbConnection struct {
-	Host       string
-	Schema     string
-	Username   string
-	Password   string
-	SSLMode    string
-	DSN        string
+	// DSN is a fully formed DSN (this skips DSN formation from other variables).
+	DSN string
+
+	// Host is the server to connect to.
+	Host string
+	// Port is the port to connect to.
+	Port string
+	// DBName is the database name
+	Database string
+	// Schema is the application schema within the database, defaults to `public`.
+	Schema string
+	// Username is the username for the connection via password auth.
+	Username string
+	// Password is the password for the connection via password auth.
+	Password string
+	// SSLMode is the sslmode for the connection.
+	SSLMode string
+
 	Connection *sql.DB
 	MetaLock   *sync.Mutex
 
@@ -95,17 +148,22 @@ func (dbc *DbConnection) CreatePostgresConnectionString() string {
 		return dbc.DSN
 	}
 	sslMode := "?sslmode=disable"
-	if dbc.SSLMode != "" {
-		sslMode = fmt.Sprintf("?sslmode=%s", dbc.SSLMode)
+	if len(dbc.SSLMode) > 0 {
+		sslMode = fmt.Sprintf("?sslmode=%s", url.QueryEscape(dbc.SSLMode))
+	}
+
+	portSegment := ""
+	if len(dbc.Port) > 0 {
+		portSegment = fmt.Sprintf(":%s", dbc.Port)
 	}
 
 	if dbc.Username != "" {
 		if dbc.Password != "" {
-			return fmt.Sprintf("postgres://%s:%s@%s/%s%s", dbc.Username, dbc.Password, dbc.Host, dbc.Schema, sslMode)
+			return fmt.Sprintf("postgres://%s:%s@%s%s/%s%s", url.QueryEscape(dbc.Username), url.QueryEscape(dbc.Password), dbc.Host, portSegment, dbc.Database, sslMode)
 		}
-		return fmt.Sprintf("postgres://%s@%s/%s%s", dbc.Username, dbc.Host, dbc.Schema, sslMode)
+		return fmt.Sprintf("postgres://%s@%s%s/%s%s", url.QueryEscape(dbc.Username), dbc.Host, portSegment, dbc.Database, sslMode)
 	}
-	return fmt.Sprintf("postgres://%s/%s%s", dbc.Host, dbc.Schema, sslMode)
+	return fmt.Sprintf("postgres://%s%s/%s%s", dbc.Host, portSegment, dbc.Database, sslMode)
 }
 
 // Begin starts a new transaction.
@@ -189,6 +247,14 @@ func (dbc *DbConnection) OpenNew() (*sql.DB, error) {
 	if err != nil {
 		return nil, exception.Wrap(err)
 	}
+
+	if len(dbc.Schema) > 0 {
+		_, err = dbConn.Exec(fmt.Sprintf("SET search_path TO %s,public;", dbc.Schema))
+		if err != nil {
+			return nil, err
+		}
+	}
+
 	return dbConn, nil
 }
 

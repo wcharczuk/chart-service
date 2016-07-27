@@ -6,7 +6,7 @@ WARN_COLOR=\033[33;01m
 
 test:
 	@echo "$(OK_COLOR)==> Testing$(NO_COLOR)"
-	@DB_SCHEMA=stocks go test ./server/...
+	@DB_NAME=stocks go test ./server/...
 	@echo "$(OK_COLOR)==> Testing Complete!$(NO_COLOR)"
 
 run:
@@ -15,6 +15,10 @@ run:
 
 db:
 	@echo "$(OK_COLOR)==> Wiping DB$(NO_COLOR)"
-	@psql postgres -c "drop database stocks;"
+	@dropdb stocks;
+	@echo "DROP DATABASE"
 	@createdb stocks;
+	@echo "CREATE DATABASE"
+	@pg_restore --dbname=stocks ./_data/stocks.db
+	@echo "RESTORE DATABASE"	
 	@echo "$(OK_COLOR)==> Wiping DB Done!$(NO_COLOR)"

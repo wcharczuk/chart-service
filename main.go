@@ -11,7 +11,7 @@ import (
 )
 
 func main() {
-	err := core.DBInit()
+	err := core.SetupDatabaseContext()
 	if err != nil {
 		log.Fatal(err)
 	}
