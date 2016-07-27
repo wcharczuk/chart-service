@@ -112,10 +112,10 @@
 			"revisionTime": "2016-06-27T19:46:37Z"
 		},
 		{
-			"checksumSHA1": "vyFHFWLesrocbpXmKzF8+Wl+qys=",
+			"checksumSHA1": "iaDfx1kh6PiwWCXxcTj3SLCwsOU=",
 			"path": "github.com/wcharczuk/go-chart",
-			"revision": "40ff878b79397f1fe57f54b4a078b1597a07ad0e",
-			"revisionTime": "2016-07-27T00:40:22-07:00"
+			"revision": "3bf31e45d37356d42d2fd3a95c4f94ad2b6bc831",
+			"revisionTime": "2016-07-25T05:54:03Z"
 		},
 		{
 			"path": "github.com/wcharczuk/go-chart/date",

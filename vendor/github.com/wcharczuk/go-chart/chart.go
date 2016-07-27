@@ -92,7 +92,6 @@ func (c Chart) Render(rp RendererProvider, w io.Writer) error {
 	var xt, yt, yta []Tick
 	xr, yr, yra := c.getRanges()
 	canvasBox := c.getDefaultCanvasBox()
-
 	xf, yf, yfa := c.getValueFormatters()
 	xr, yr, yra = c.setRangeDomains(canvasBox, xr, yr, yra)
 
