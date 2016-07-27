@@ -47,6 +47,7 @@ type Chart struct {
 	AddExponentialMovingAverage bool `query:"add_ema"`
 	AddBollingerBands           bool `query:"add_bb"`
 	AddMACD                     bool `query:"add_macd"`
+	AddLinReg                   bool `query:"add_linreg"`
 
 	XValueFormatter chart.ValueFormatter
 	YValueFormatter chart.ValueFormatter
@@ -56,6 +57,8 @@ type Chart struct {
 
 	K        float64 `query:"k"`
 	MAPeriod int     `query:"period"`
+	LRWindow int     `query:"lr_window"`
+	LROffset int     `query:"lr_offset"`
 }
 
 // Parse sets the chart properties from a request context.
@@ -79,9 +82,12 @@ func (c *Chart) Parse(rc *web.RequestContext) error {
 	c.AddExponentialMovingAverage = core.ReadQueryValueBool(rc, "add_ema", false)
 	c.AddBollingerBands = core.ReadQueryValueBool(rc, "add_bb", false)
 	c.AddMACD = core.ReadQueryValueBool(rc, "add_macd", false)
+	c.AddLinReg = core.ReadQueryValueBool(rc, "add_linreg", false)
 
 	c.K = core.ReadQueryValueFloat64(rc, "k", 2.0)
 	c.MAPeriod = core.ReadQueryValueInt(rc, "period", 16)
+	c.LRWindow = core.ReadQueryValueInt(rc, "lr_window", 32)
+	c.LROffset = core.ReadQueryValueInt(rc, "lr_offset", 0)
 
 	if c.UsePercentageDifferences {
 		c.YValueFormatter = chart.PercentValueFormatter
@@ -334,6 +340,14 @@ func (c *Chart) getSeries() []chart.Series {
 		series = append(series, c.getMACDLineSeries(c.Ticker, c.tickerData))
 	}
 
+	if c.AddLinReg {
+		lrs := c.getLinRegSeries(c.Ticker, t0series)
+		series = append(series, lrs)
+		if c.ShowLastValue {
+			series = append(series, c.getLastValueSeries(c.Ticker, lrs))
+		}
+	}
+
 	return series
 }
 
@@ -511,6 +525,24 @@ func (c *Chart) getMACDLineSeries(ticker string, data []model.EquityPrice) *char
 		},
 		YAxis:       chart.YAxisSecondary,
 		InnerSeries: c.getPriceSeries(ticker, data),
+	}
+}
+
+func (c *Chart) getLinRegSeries(ticker string, priceSeries chart.ValueProvider) *chart.LinearRegressionSeries {
+	offset := c.LROffset
+	if offset == 0 {
+		offset = chart.MaxInt(priceSeries.Len()-c.LRWindow, 0)
+	}
+	return &chart.LinearRegressionSeries{
+		Name: fmt.Sprintf("%s Lin. Reg.", ticker),
+		Style: chart.Style{
+			Show:            c.AddLinReg,
+			StrokeColor:     drawing.ColorRed,
+			StrokeDashArray: []float64{5.0, 5.0},
+		},
+		InnerSeries: priceSeries,
+		Offset:      offset,
+		Window:      c.LRWindow,
 	}
 }
 
