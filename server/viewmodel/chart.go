@@ -284,7 +284,7 @@ func (c *Chart) CreateChart() (chart.Chart, error) {
 	}
 	if c.ShowLegend {
 		graph.Elements = []chart.Renderable{
-			chart.CreateLegend(&graph, chart.Style{
+			chart.Legend(&graph, chart.Style{
 				FontSize: 8.0,
 			}),
 		}
@@ -388,7 +388,7 @@ func (c *Chart) getLastValueSeries(ticker string, priceSeries chart.FullValuePro
 	if c.UsePercentageDifferences {
 		_, v0y := priceSeries.GetValue(0)
 		if v0y > 0 {
-			lvy = chart.PercentDifference(v0y, lvy)
+			lvy = chart.Math.PercentDifference(v0y, lvy)
 		}
 	}
 
@@ -415,8 +415,8 @@ func (c *Chart) getLastValueSeries(ticker string, priceSeries chart.FullValuePro
 		Name:  fmt.Sprintf("%s - Last Value", ticker),
 		YAxis: yaxis,
 		Style: style,
-		Annotations: []chart.Annotation{
-			{X: lvx, Y: lvy, Label: labelText},
+		Annotations: []chart.Value2{
+			{XValue: lvx, YValue: lvy, Label: labelText},
 		},
 	}
 }
@@ -443,9 +443,9 @@ func (c *Chart) getBoundedLastValueSeries(ticker string, priceSeries chart.FullB
 	return chart.AnnotationSeries{
 		Name:  fmt.Sprintf("%s - Last Value", ticker),
 		Style: style,
-		Annotations: []chart.Annotation{
-			{X: lvx, Y: lvy1, Label: label1},
-			{X: lvx, Y: lvy2, Label: label2},
+		Annotations: []chart.Value2{
+			{XValue: lvx, YValue: lvy1, Label: label1},
+			{XValue: lvx, YValue: lvy2, Label: label2},
 		},
 	}
 }
@@ -531,7 +531,7 @@ func (c *Chart) getMACDLineSeries(ticker string, data []model.EquityPrice) *char
 func (c *Chart) getLinRegSeries(ticker string, priceSeries chart.ValueProvider) *chart.LinearRegressionSeries {
 	offset := c.LROffset
 	if offset == 0 {
-		offset = chart.MaxInt(priceSeries.Len()-c.LRWindow, 0)
+		offset = chart.Math.MaxInt(priceSeries.Len()-c.LRWindow, 0)
 	}
 	return &chart.LinearRegressionSeries{
 		Name: fmt.Sprintf("%s Lin. Reg.", ticker),
@@ -560,7 +560,7 @@ func (c *Chart) showSecondaryAxis() bool {
 }
 
 func (c *Chart) getPriceSeriesColors(index int) (stroke, fill drawing.Color) {
-	stroke = chart.GetDefaultSeriesStrokeColor(index)
+	stroke = chart.GetDefaultColor(index)
 	if !c.AddBollingerBands {
 		fill = stroke.WithAlpha(64)
 	}

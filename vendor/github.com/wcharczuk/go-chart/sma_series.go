@@ -9,7 +9,7 @@ const (
 type SMASeries struct {
 	Name  string
 	Style Style
-	YAxis YAxisType
+	YAxis yAxisType
 
 	Period      int
 	InnerSeries ValueProvider
@@ -26,7 +26,7 @@ func (sma SMASeries) GetStyle() Style {
 }
 
 // GetYAxis returns which YAxis the series draws on.
-func (sma SMASeries) GetYAxis() YAxisType {
+func (sma SMASeries) GetYAxis() yAxisType {
 	return sma.YAxis
 }
 
@@ -72,7 +72,7 @@ func (sma SMASeries) GetLastValue() (x, y float64) {
 
 func (sma SMASeries) getAverage(index int) float64 {
 	period := sma.GetPeriod()
-	floor := MaxInt(0, index-period)
+	floor := Math.MaxInt(0, index-period)
 	var accum float64
 	var count float64
 	for x := index; x >= floor; x-- {
@@ -86,5 +86,5 @@ func (sma SMASeries) getAverage(index int) float64 {
 // Render renders the series.
 func (sma SMASeries) Render(r Renderer, canvasBox Box, xrange, yrange Range, defaults Style) {
 	style := sma.Style.InheritFrom(defaults)
-	DrawLineSeries(r, canvasBox, xrange, yrange, style, sma)
+	Draw.LineSeries(r, canvasBox, xrange, yrange, style, sma)
 }

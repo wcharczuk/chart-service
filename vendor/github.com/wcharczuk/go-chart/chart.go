@@ -230,8 +230,8 @@ func (c Chart) getRanges() (xrange, yrange, yrangeAlt Range) {
 		yrange.SetMax(maxy)
 
 		delta := yrange.GetDelta()
-		roundTo := GetRoundToForDelta(delta)
-		rmin, rmax := RoundDown(yrange.GetMin(), roundTo), RoundUp(yrange.GetMax(), roundTo)
+		roundTo := Math.GetRoundToForDelta(delta)
+		rmin, rmax := Math.RoundDown(yrange.GetMin(), roundTo), Math.RoundUp(yrange.GetMax(), roundTo)
 		yrange.SetMin(rmin)
 		yrange.SetMax(rmax)
 	}
@@ -249,8 +249,8 @@ func (c Chart) getRanges() (xrange, yrange, yrangeAlt Range) {
 		yrangeAlt.SetMax(maxya)
 
 		delta := yrangeAlt.GetDelta()
-		roundTo := GetRoundToForDelta(delta)
-		rmin, rmax := RoundDown(yrangeAlt.GetMin(), roundTo), RoundUp(yrangeAlt.GetMax(), roundTo)
+		roundTo := Math.GetRoundToForDelta(delta)
+		rmin, rmax := Math.RoundDown(yrangeAlt.GetMin(), roundTo), Math.RoundUp(yrangeAlt.GetMax(), roundTo)
 		yrangeAlt.SetMin(rmin)
 		yrangeAlt.SetMax(rmax)
 	}
@@ -391,7 +391,7 @@ func (c Chart) getBackgroundStyle() Style {
 }
 
 func (c Chart) drawBackground(r Renderer) {
-	DrawBox(r, Box{
+	Draw.Box(r, Box{
 		Right:  c.GetWidth(),
 		Bottom: c.GetHeight(),
 	}, c.getBackgroundStyle())
@@ -402,7 +402,7 @@ func (c Chart) getCanvasStyle() Style {
 }
 
 func (c Chart) drawCanvas(r Renderer, canvasBox Box) {
-	DrawBox(r, canvasBox, c.getCanvasStyle())
+	Draw.Box(r, canvasBox, c.getCanvasStyle())
 }
 
 func (c Chart) drawAxes(r Renderer, canvasBox Box, xrange, yrange, yrangeAlt Range, xticks, yticks, yticksAlt []Tick) {
@@ -463,7 +463,7 @@ func (c Chart) styleDefaultsCanvas() Style {
 }
 
 func (c Chart) styleDefaultsSeries(seriesIndex int) Style {
-	strokeColor := GetDefaultSeriesStrokeColor(seriesIndex)
+	strokeColor := GetDefaultColor(seriesIndex)
 	return Style{
 		StrokeColor: strokeColor,
 		StrokeWidth: DefaultStrokeWidth,

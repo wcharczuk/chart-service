@@ -13,7 +13,7 @@ type YAxis struct {
 
 	Zero GridLine
 
-	AxisType YAxisType
+	AxisType yAxisType
 
 	ValueFormatter ValueFormatter
 	Range          Range
@@ -48,7 +48,7 @@ func (ya YAxis) GetTicks(r Renderer, ra Range, defaults Style, vf ValueFormatter
 		return tp.GetTicks(vf)
 	}
 	step := CalculateContinuousTickStep(r, ra, true, ya.Style.InheritFrom(defaults), vf)
-	return GenerateContinuousTicksWithStep(ra, step, vf)
+	return GenerateContinuousTicksWithStep(ra, step, vf, true)
 }
 
 // GetGridLines returns the gridlines for the axis.
@@ -61,7 +61,7 @@ func (ya YAxis) GetGridLines(ticks []Tick) []GridLine {
 
 // Measure returns the bounds of the axis.
 func (ya YAxis) Measure(r Renderer, canvasBox Box, ra Range, defaults Style, ticks []Tick) Box {
-	ya.Style.InheritFrom(defaults).PersistToRenderer(r)
+	ya.Style.InheritFrom(defaults).WriteToRenderer(r)
 
 	sort.Sort(Ticks(ticks))
 
@@ -85,13 +85,13 @@ func (ya YAxis) Measure(r Renderer, canvasBox Box, ra Range, defaults Style, tic
 
 		if ya.AxisType == YAxisPrimary {
 			minx = canvasBox.Right
-			maxx = MaxInt(maxx, tx+tb.Width())
+			maxx = Math.MaxInt(maxx, tx+tb.Width())
 		} else if ya.AxisType == YAxisSecondary {
-			minx = MinInt(minx, finalTextX)
-			maxx = MaxInt(maxx, tx)
+			minx = Math.MinInt(minx, finalTextX)
+			maxx = Math.MaxInt(maxx, tx)
 		}
-		miny = MinInt(miny, ly-tb.Height()>>1)
-		maxy = MaxInt(maxy, ly+tb.Height()>>1)
+		miny = Math.MinInt(miny, ly-tb.Height()>>1)
+		maxy = Math.MaxInt(maxy, ly+tb.Height()>>1)
 	}
 
 	return Box{
@@ -104,7 +104,7 @@ func (ya YAxis) Measure(r Renderer, canvasBox Box, ra Range, defaults Style, tic
 
 // Render renders the axis.
 func (ya YAxis) Render(r Renderer, canvasBox Box, ra Range, defaults Style, ticks []Tick) {
-	ya.Style.InheritFrom(defaults).PersistToRenderer(r)
+	ya.Style.InheritFrom(defaults).WriteToRenderer(r)
 
 	sort.Sort(Ticks(ticks))
 
