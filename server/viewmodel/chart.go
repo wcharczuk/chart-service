@@ -265,9 +265,10 @@ func (c *Chart) CreateChart() (chart.Chart, error) {
 		YAxis: chart.YAxis{
 			Zero: chart.GridLine{
 				Style: chart.Style{
-					Show:        true,
-					StrokeColor: chart.DefaultAxisColor,
-					StrokeWidth: 1.0,
+					Show:            true,
+					StrokeColor:     drawing.ColorFromHex("ccccccc"),
+					StrokeWidth:     1.0,
+					StrokeDashArray: []float64{5, 5},
 				},
 			},
 			ValueFormatter: c.YValueFormatter,
