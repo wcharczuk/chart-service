@@ -247,6 +247,7 @@ func (c *Chart) CreateChart() (chart.Chart, error) {
 			Style: chart.Style{
 				Show: c.ShowAxes,
 			},
+			TickPosition: chart.TickPositionBetweenTicks,
 			GridMajorStyle: chart.Style{
 				Show:            c.ShowGrid,
 				StrokeColor:     drawing.ColorFromHex("000"),
