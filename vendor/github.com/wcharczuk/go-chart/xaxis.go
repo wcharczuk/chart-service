@@ -8,12 +8,13 @@ import (
 // XAxis represents the horizontal axis.
 type XAxis struct {
 	Name           string
+	NameStyle      Style
 	Style          Style
 	ValueFormatter ValueFormatter
 	Range          Range
 	Ticks          []Tick
 
-	TickPosition tickPosition
+	TickPosition TickPosition
 
 	GridLines      []GridLine
 	GridMajorStyle Style
@@ -31,7 +32,7 @@ func (xa XAxis) GetStyle() Style {
 }
 
 // GetTickPosition returns the tick position option for the axis.
-func (xa XAxis) GetTickPosition(defaults ...tickPosition) tickPosition {
+func (xa XAxis) GetTickPosition(defaults ...TickPosition) TickPosition {
 	if xa.TickPosition == TickPositionUnset {
 		if len(defaults) > 0 {
 			return defaults[0]
@@ -51,7 +52,7 @@ func (xa XAxis) GetTicks(r Renderer, ra Range, defaults Style, vf ValueFormatter
 		return xa.Ticks
 	}
 	if tp, isTickProvider := ra.(TicksProvider); isTickProvider {
-		return tp.GetTicks(vf)
+		return tp.GetTicks(r, defaults, vf)
 	}
 	tickStyle := xa.Style.InheritFrom(defaults)
 	return GenerateContinuousTicks(r, ra, false, tickStyle, vf)
@@ -72,14 +73,14 @@ func (xa XAxis) Measure(r Renderer, canvasBox Box, ra Range, defaults Style, tic
 
 	tp := xa.GetTickPosition()
 
-	var left, right, top, bottom = math.MaxInt32, 0, math.MaxInt32, 0
+	var left, right, bottom = math.MaxInt32, 0, 0
 	for index, t := range ticks {
 		v := t.Value
 		tickStyle.GetTextOptions().WriteToRenderer(r)
 		tb := r.MeasureText(t.Label)
 
 		var ltx, rtx int
-		tx := ra.Translate(v)
+		tx := canvasBox.Left + ra.Translate(v)
 		ty := canvasBox.Bottom + DefaultXAxisMargin + tb.Height()
 		switch tp {
 		case TickPositionUnderTick, TickPositionUnset:
@@ -94,14 +95,18 @@ func (xa XAxis) Measure(r Renderer, canvasBox Box, ra Range, defaults Style, tic
 			break
 		}
 
-		top = Math.MinInt(top, canvasBox.Bottom)
 		left = Math.MinInt(left, ltx)
 		right = Math.MaxInt(right, rtx)
 		bottom = Math.MaxInt(bottom, ty)
 	}
 
+	if xa.NameStyle.Show && len(xa.Name) > 0 {
+		tb := r.MeasureText(xa.Name)
+		bottom += DefaultXAxisMargin + tb.Height()
+	}
+
 	return Box{
-		Top:    top,
+		Top:    canvasBox.Bottom,
 		Left:   left,
 		Right:  right,
 		Bottom: bottom,
@@ -122,6 +127,7 @@ func (xa XAxis) Render(r Renderer, canvasBox Box, ra Range, defaults Style, tick
 	tp := xa.GetTickPosition()
 
 	var tx, ty int
+	var maxTextHeight int
 	for index, t := range ticks {
 		v := t.Value
 		lx := ra.Translate(v)
@@ -140,20 +146,34 @@ func (xa XAxis) Render(r Renderer, canvasBox Box, ra Range, defaults Style, tick
 		case TickPositionUnderTick, TickPositionUnset:
 			ty = canvasBox.Bottom + DefaultXAxisMargin + tb.Height()
 			r.Text(t.Label, tx-tb.Width()>>1, ty)
+			maxTextHeight = Math.MaxInt(maxTextHeight, tb.Height())
 			break
 		case TickPositionBetweenTicks:
 			if index > 0 {
 				llx := ra.Translate(ticks[index-1].Value)
 				ltx := canvasBox.Left + llx
+				finalTickStyle := tickStyle.InheritFrom(Style{TextHorizontalAlign: TextHorizontalAlignCenter})
 				Draw.TextWithin(r, t.Label, Box{
 					Left:   ltx,
 					Right:  tx,
 					Top:    canvasBox.Bottom + DefaultXAxisMargin,
 					Bottom: canvasBox.Bottom + DefaultXAxisMargin + tb.Height(),
-				}, tickStyle.InheritFrom(Style{TextHorizontalAlign: TextHorizontalAlignCenter}))
+				}, finalTickStyle)
+
+				ftb := Text.MeasureLines(r, Text.WrapFit(r, t.Label, tx-ltx, finalTickStyle), finalTickStyle)
+				maxTextHeight = Math.MaxInt(maxTextHeight, ftb.Height())
 			}
 			break
 		}
+	}
+
+	nameStyle := xa.NameStyle.InheritFrom(defaults)
+	if xa.NameStyle.Show && len(xa.Name) > 0 {
+		nameStyle.GetTextOptions().WriteToRenderer(r)
+		tb := r.MeasureText(xa.Name)
+		tx := canvasBox.Right - (canvasBox.Width()>>1 + tb.Width()>>1)
+		ty := canvasBox.Bottom + DefaultXAxisMargin + maxTextHeight + DefaultXAxisMargin + tb.Height()
+		r.Text(xa.Name, tx, ty)
 	}
 
 	if xa.GridMajorStyle.Show || xa.GridMinorStyle.Show {

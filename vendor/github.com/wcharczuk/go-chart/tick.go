@@ -4,7 +4,7 @@ import "math"
 
 // TicksProvider is a type that provides ticks.
 type TicksProvider interface {
-	GetTicks(vf ValueFormatter) []Tick
+	GetTicks(r Renderer, defaults Style, vf ValueFormatter) []Tick
 }
 
 // Tick represents a label on an axis.
@@ -33,6 +33,10 @@ func (t Ticks) Less(i, j int) bool {
 
 // GenerateContinuousTicks generates a set of ticks.
 func GenerateContinuousTicks(r Renderer, ra Range, isVertical bool, style Style, vf ValueFormatter) []Tick {
+	if vf == nil {
+		panic("vf is nil; did you remember to set a default value formatter?")
+	}
+
 	var ticks []Tick
 	min, max := ra.GetMin(), ra.GetMax()
 

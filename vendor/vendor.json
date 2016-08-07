@@ -114,8 +114,8 @@
 		{
 			"checksumSHA1": "KpS1uRsf59OBmFAckZj88gE3Zx8=",
 			"path": "github.com/wcharczuk/go-chart",
-			"revision": "7b5bb6e952ce4c38c09067fc937a0d2ad6e2be2b",
-			"revisionTime": "2016-07-30T23:14:19-07:00"
+			"revision": "a74c8710df6d1f2bd297f8a3338ac8c770ff3114",
+			"revisionTime": "2016-08-06T23:58:44-07:00"
 		},
 		{
 			"path": "github.com/wcharczuk/go-chart/date",
