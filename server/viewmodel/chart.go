@@ -247,8 +247,6 @@ func (c *Chart) CreateChart() (chart.Chart, error) {
 		Width:  c.Width,
 		Height: c.Height,
 		XAxis: chart.XAxis{
-			Name:           yname,
-			NameStyle:      chart.StyleShow(),
 			ValueFormatter: c.XValueFormatter,
 			Style: chart.Style{
 				Show: c.ShowAxes,
@@ -269,6 +267,8 @@ func (c *Chart) CreateChart() (chart.Chart, error) {
 			Range: xrange,
 		},
 		YAxis: chart.YAxis{
+			Name:      yname,
+			NameStyle: chart.StyleShow(),
 			Zero: chart.GridLine{
 				Style: chart.Style{
 					Show:            true,
