@@ -238,10 +238,17 @@ func (c *Chart) CreateChart() (chart.Chart, error) {
 		return chart.Chart{}, errors.New("No data!")
 	}
 
+	yname := "Price USD"
+	if c.UsePercentageDifferences {
+		yname = "% Change"
+	}
+
 	graph := chart.Chart{
 		Width:  c.Width,
 		Height: c.Height,
 		XAxis: chart.XAxis{
+			Name:           yname,
+			NameStyle:      chart.StyleShow(),
 			ValueFormatter: c.XValueFormatter,
 			Style: chart.Style{
 				Show: c.ShowAxes,
