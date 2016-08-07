@@ -1,6 +1,7 @@
 package model
 
 import (
+	"log"
 	"os"
 	"testing"
 
@@ -8,6 +9,10 @@ import (
 )
 
 func TestMain(m *testing.M) {
-	core.DBInit()
+	err := core.SetupDatabaseContext()
+	if err != nil {
+		log.Fatal(err)
+		os.Exit(1)
+	}
 	os.Exit(m.Run())
 }

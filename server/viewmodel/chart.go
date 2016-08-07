@@ -227,11 +227,11 @@ func (c *Chart) CreateChart() (chart.Chart, error) {
 			xrange = &chart.ContinuousRange{}
 		case "1m", "1wk", "10d", "3d", "1d":
 			xrange = &chart.MarketHoursRange{
-				Min:             model.EquityPrices(c.tickerData).First().TimestampUTC.In(date.Eastern()),
-				Max:             model.EquityPrices(c.tickerData).Last().TimestampUTC.In(date.Eastern()),
-				MarketOpen:      date.NYSEOpen,
-				MarketClose:     date.NYSEClose,
-				HolidayProvider: date.IsNYSEHoliday,
+				Min:             model.EquityPrices(c.tickerData).First().TimestampUTC.In(chart.Date.Eastern()),
+				Max:             model.EquityPrices(c.tickerData).Last().TimestampUTC.In(chart.Date.Eastern()),
+				MarketOpen:      chart.NYSEOpen,
+				MarketClose:     chart.NYSEClose,
+				HolidayProvider: chart.Date.IsNYSEHoliday,
 			}
 		}
 	} else {
