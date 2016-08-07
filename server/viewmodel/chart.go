@@ -11,7 +11,6 @@ import (
 	"github.com/wcharczuk/chart-service/server/model"
 	"github.com/wcharczuk/chart-service/server/yahoo"
 	"github.com/wcharczuk/go-chart"
-	"github.com/wcharczuk/go-chart/date"
 	"github.com/wcharczuk/go-chart/drawing"
 	"github.com/wcharczuk/go-web"
 )

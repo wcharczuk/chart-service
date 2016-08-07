@@ -26,6 +26,7 @@ func NewLoggerFromLog(l *log.Logger) *Logger {
 type Logger struct {
 	Output *log.Logger
 	Phase  string // `test` or `apply`
+	Result string // `apply` or `skipped` or `failed`
 
 	applied int
 	skipped int
@@ -35,6 +36,7 @@ type Logger struct {
 // Applyf active actions to the log.
 func (l *Logger) Applyf(stack []string, body string, args ...interface{}) error {
 	l.applied = l.applied + 1
+	l.Result = "applied"
 	l.write(stack, util.ColorLightGreen, fmt.Sprintf(body, args...))
 	return nil
 }
@@ -42,6 +44,7 @@ func (l *Logger) Applyf(stack []string, body string, args ...interface{}) error 
 // Skipf passive actions to the log.
 func (l *Logger) Skipf(stack []string, body string, args ...interface{}) error {
 	l.skipped = l.skipped + 1
+	l.Result = "skipped"
 	l.write(stack, util.ColorGreen, fmt.Sprintf(body, args...))
 	return nil
 }
@@ -49,6 +52,7 @@ func (l *Logger) Skipf(stack []string, body string, args ...interface{}) error {
 // Errorf writes errors to the log.
 func (l *Logger) Errorf(stack []string, err error) error {
 	l.failed = l.failed + 1
+	l.Result = "failed"
 	l.write(stack, util.ColorRed, fmt.Sprintf("%v", err.Error()))
 	return err
 }
@@ -63,9 +67,19 @@ func (l *Logger) WriteStats() {
 }
 
 func (l *Logger) write(stack []string, color, body string) {
-	l.Output.Printf("%s %s %s %s %s %s",
+	resultColor := util.ColorBlue
+	switch l.Result {
+	case "skipped":
+		resultColor = util.ColorYellow
+	case "failed":
+		resultColor = util.ColorRed
+	}
+
+	l.Output.Printf("%s %s %s %s %s %s %s %s",
 		util.Color("migrate", util.ColorBlue),
 		util.ColorFixedWidthLeftAligned(l.Phase, util.ColorBlue, 5),
+		util.Color("--", util.ColorLightBlack),
+		util.ColorFixedWidthLeftAligned(l.Result, resultColor, 5),
 		util.Color("--", util.ColorLightBlack),
 		l.renderStack(stack, color),
 		util.Color("--", util.ColorLightBlack),

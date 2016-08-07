@@ -243,6 +243,14 @@ func DecomposeToPostDataAsJSON(object interface{}) []KeyValuePairOfString {
 	return kvps
 }
 
+// Decompose is a *very* inefficient way to turn an object into a map string => interface.
+func Decompose(object interface{}) map[string]interface{} {
+	var output map[string]interface{}
+	serialized := SerializeJSON(object)
+	DeserializeJSON(&output, serialized)
+	return output
+}
+
 // checks if a value is a zero value or its types default value
 func isZero(v reflect.Value) bool {
 	if !v.IsValid() {

@@ -3,11 +3,9 @@ package util
 import (
 	"encoding/base64"
 	"fmt"
-	"math/rand"
 	"regexp"
 	"strconv"
 	"strings"
-	"time"
 	"unicode"
 )
 
@@ -15,23 +13,59 @@ const (
 	// StringEmpty is the empty string
 	StringEmpty = ""
 
-	// ColorRed is the posix escape code fragment for red.
-	ColorRed = "31"
+	// ColorBlack is the posix escape code fragment for black.
+	ColorBlack = "30m"
 
-	// ColorBlue is the posix escape code fragment for blue.
-	ColorBlue = "94"
+	// ColorRed is the posix escape code fragment for red.
+	ColorRed = "31m"
 
 	// ColorGreen is the posix escape code fragment for green.
-	ColorGreen = "32"
+	ColorGreen = "32m"
 
 	// ColorYellow is the posix escape code fragment for yellow.
-	ColorYellow = "33"
+	ColorYellow = "33m"
+
+	// ColorBlue is the posix escape code fragment for blue.
+	ColorBlue = "34m"
+
+	// ColorPurple is the posix escape code fragement for magenta (purple)
+	ColorPurple = "35m"
+
+	// ColorCyan is the posix escape code fragement for cyan.
+	ColorCyan = "36m"
 
 	// ColorWhite is the posix escape code fragment for white.
-	ColorWhite = "37"
+	ColorWhite = "37m"
 
-	// ColorGray is the posix escape code fragment for white.
-	ColorGray = "90"
+	// ColorLightBlack is the posix escape code fragment for black.
+	ColorLightBlack = "90m"
+
+	// ColorLightRed is the posix escape code fragment for red.
+	ColorLightRed = "91m"
+
+	// ColorLightGreen is the posix escape code fragment for green.
+	ColorLightGreen = "92m"
+
+	// ColorLightYellow is the posix escape code fragment for yellow.
+	ColorLightYellow = "93m"
+
+	// ColorLightBlue is the posix escape code fragment for blue.
+	ColorLightBlue = "94m"
+
+	// ColorLightPurple is the posix escape code fragement for magenta (purple)
+	ColorLightPurple = "95m"
+
+	// ColorLightCyan is the posix escape code fragement for cyan.
+	ColorLightCyan = "96m"
+
+	// ColorLightWhite is the posix escape code fragment for white.
+	ColorLightWhite = "97m"
+
+	// ColorGray is an alias to ColorLightWhite to preserve backwards compatibility.
+	ColorGray = ColorLightBlack
+
+	// ColorReset is the posix escape code fragment to reset all formatting.
+	ColorReset = "0m"
 )
 
 var (
@@ -40,10 +74,28 @@ var (
 	// LowerZ is the ascii int value for 'z'
 	LowerZ = uint('z')
 
-	letters           = []rune("abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ")
-	numbers           = []rune("0123456789")
-	lettersAndNumbers = append(letters, numbers...)
-	lowerDiff         = (LowerZ - LowerA)
+	lowerDiff = (LowerZ - LowerA)
+
+	// LowerLetters is a runset of lowercase letters.
+	LowerLetters = []rune("abcdefghijklmnopqrstuvwxyz")
+
+	// UpperLetters is a runset of uppercase letters.
+	UpperLetters = []rune("ABCDEFGHIJKLMNOPQRSTUVWXYZ")
+
+	// Letters is a runset of both lower and uppercase letters.
+	Letters = append(LowerLetters, UpperLetters...)
+
+	// Numbers is a runset of numeric characters.
+	Numbers = []rune("0123456789")
+
+	// LettersAndNumbers is a runset of letters and numeric characters.
+	LettersAndNumbers = append(Letters, Numbers...)
+
+	// Symbols is a runset of symbol characters.
+	Symbols = []rune(`!@#$%^&*()_+-=[]{}\|:;`)
+
+	// LettersNumbersAndSymbols is a runset of letters, numbers and symbols.
+	LettersNumbersAndSymbols = append(LettersAndNumbers, Symbols...)
 )
 
 // IsEmpty returns if a string is empty.
@@ -87,19 +139,29 @@ func CaseInsensitiveEquals(a, b string) bool {
 	return true
 }
 
-// IsLetter returns if a byte is in the ascii letter range.
-func IsLetter(c byte) bool {
+// IsLetter returns if a rune is in the ascii letter range.
+func IsLetter(c rune) bool {
 	return IsUpper(c) || IsLower(c)
 }
 
-// IsUpper returns if a letter is in the ascii upper letter range.
-func IsUpper(c byte) bool {
-	return c > byte('A') && c < byte('Z')
+// IsUpper returns if a rune is in the ascii upper letter range.
+func IsUpper(c rune) bool {
+	return c >= rune('A') && c <= rune('Z')
 }
 
-// IsLower returns if a letter is in the ascii lower letter range.
-func IsLower(c byte) bool {
-	return c > byte('a') && c < byte('z')
+// IsLower returns if a rune is in the ascii lower letter range.
+func IsLower(c rune) bool {
+	return c >= rune('a') && c <= rune('z')
+}
+
+// IsNumber returns if a rune is in the number range.
+func IsNumber(c rune) bool {
+	return c >= rune('0') && c <= rune('9')
+}
+
+// IsSymbol returns if the rune is in the symbol range.
+func IsSymbol(c rune) bool {
+	return c >= rune(' ') && c <= rune('/')
 }
 
 // CombinePathComponents combines string components of a path.
@@ -125,34 +187,62 @@ func CombinePathComponents(components ...string) string {
 	return fullPath
 }
 
-// RandomString returns a new random string composed of letters from the `letters` collection.
-func RandomString(length int) string {
-	r := rand.New(rand.NewSource(time.Now().UnixNano()))
-	b := make([]rune, length)
-	for i := range b {
-		b[i] = letters[r.Intn(len(letters))]
+// StringAny returns true if any of the possibles are == to the basis.
+func StringAny(basis string, possibles ...string) bool {
+	for _, possible := range possibles {
+		if basis == possible {
+			return true
+		}
 	}
-	return string(b)
+	return false
 }
 
-// RandomStringWithNumbers returns a random string composed of chars from the `lettersAndNumbers` collection.
-func RandomStringWithNumbers(length int) string {
-	r := rand.New(rand.NewSource(time.Now().UnixNano()))
-	b := make([]rune, length)
-	for i := range b {
-		b[i] = lettersAndNumbers[r.Intn(len(lettersAndNumbers))]
+// StringAnyInsensitive returns true if any of the possibles are == to the basis regardless of letter casing.
+func StringAnyInsensitive(basis string, possibles ...string) bool {
+	for _, possible := range possibles {
+		if CaseInsensitiveEquals(basis, possible) {
+			return true
+		}
 	}
-	return string(b)
+	return false
+}
+
+// RandomString returns a new random string composed of letters from the `letters` collection.
+func RandomString(length int) string {
+	return RandomRunes(Letters, length)
 }
 
 // RandomNumbers returns a random string of chars from the `numbers` collection.
 func RandomNumbers(length int) string {
-	r := rand.New(rand.NewSource(time.Now().UnixNano()))
-	b := make([]rune, length)
-	for i := range b {
-		b[i] = numbers[r.Intn(len(numbers))]
+	return RandomRunes(Numbers, length)
+}
+
+// RandomStringWithNumbers returns a random string composed of chars from the `lettersAndNumbers` collection.
+func RandomStringWithNumbers(length int) string {
+	return RandomRunes(LettersAndNumbers, length)
+}
+
+// RandomStringWithNumbersAndSymbols returns a random string composed of chars from the `lettersNumbersAndSymbols` collection.
+func RandomStringWithNumbersAndSymbols(length int) string {
+	return RandomRunes(LettersNumbersAndSymbols, length)
+}
+
+// RandomRunes returns a random selection of runes from the set.
+func RandomRunes(runeset []rune, length int) string {
+	runes := make([]rune, length)
+	for index := range runes {
+		runes[index] = runeset[provider.Intn(len(runeset))]
 	}
-	return string(b)
+	return string(runes)
+}
+
+// CombineRunsets combines given runsets into a single runset.
+func CombineRunsets(runesets ...[]rune) []rune {
+	output := []rune{}
+	for _, set := range runesets {
+		output = append(output, set...)
+	}
+	return output
 }
 
 // IsValidInteger returns if a string is an integer.
@@ -280,21 +370,26 @@ func Base64Decode(blob string) ([]byte, error) {
 	return base64.StdEncoding.DecodeString(blob)
 }
 
+//AnsiEscapeCode prefixes a color or text formatting code with the ESC keyboard code and a `[` character.
+func AnsiEscapeCode(code string) string {
+	return fmt.Sprintf("\033[%s", code)
+}
+
 // Color returns a posix color code escaled string.
 func Color(input string, colorCode string) string {
-	return fmt.Sprintf("\033[%s;01m%s\033[0m", colorCode, input)
+	return fmt.Sprintf("%s%s%s", AnsiEscapeCode(colorCode), input, AnsiEscapeCode(ColorReset))
 }
 
 // ColorFixedWidth returns a posix color code escaled string of a fixed width.
 func ColorFixedWidth(input string, colorCode string, width int) string {
 	fixedToken := fmt.Sprintf("%%%d.%ds", width, width)
 	fixedMessage := fmt.Sprintf(fixedToken, input)
-	return fmt.Sprintf("\033[%s;01m%s\033[0m", colorCode, fixedMessage)
+	return fmt.Sprintf("%s%s%s", AnsiEscapeCode(colorCode), fixedMessage, AnsiEscapeCode(ColorReset))
 }
 
 // ColorFixedWidthLeftAligned returns a posix color code escaled string of a fixed width left aligned.
 func ColorFixedWidthLeftAligned(input string, colorCode string, width int) string {
 	fixedToken := fmt.Sprintf("%%-%ds", width)
 	fixedMessage := fmt.Sprintf(fixedToken, input)
-	return fmt.Sprintf("\033[%s;01m%s\033[0m", colorCode, fixedMessage)
+	return fmt.Sprintf("%s%s%s", AnsiEscapeCode(colorCode), fixedMessage, AnsiEscapeCode(ColorReset))
 }
