@@ -9,7 +9,7 @@ func NewRateLimiter(numberOfActions int, quantum time.Duration) *RateLimiter {
 	return &RateLimiter{
 		NumberOfActions: numberOfActions,
 		Quantum:         quantum,
-		Limits:          map[string]Queue{},
+		Limits:          map[string]*Queue{},
 	}
 }
 
@@ -17,20 +17,20 @@ func NewRateLimiter(numberOfActions int, quantum time.Duration) *RateLimiter {
 type RateLimiter struct {
 	NumberOfActions int
 	Quantum         time.Duration
-	Limits          map[string]Queue
+	Limits          map[string]*Queue
 }
 
 // Check returns true if it has been called NumberOfActions times or more in Quantum or smaller duration.
 func (rl *RateLimiter) Check(id string) bool {
 	queue, hasQueue := rl.Limits[id]
 	if !hasQueue {
-		queue = NewRingBufferWithCapacity(rl.NumberOfActions)
+		queue = &Queue{}
 		rl.Limits[id] = queue
 	}
 
 	currentTime := time.Now().UTC()
-	queue.Enqueue(currentTime)
-	if queue.Len() < rl.NumberOfActions {
+	queue.Push(currentTime)
+	if queue.Length() < rl.NumberOfActions {
 		return false
 	}
 

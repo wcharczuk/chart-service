@@ -3,7 +3,6 @@ package web
 import (
 	"bytes"
 	"encoding/json"
-	"fmt"
 	"io"
 	"io/ioutil"
 	"net"
@@ -124,8 +123,4 @@ type handleShim struct {
 
 func (hs handleShim) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	hs.app.renderAction(hs.action)(w, r, httprouter.Params{})
-}
-
-func trace(format string, args ...interface{}) {
-	fmt.Printf("trace :: "+format+"\n", args...)
 }

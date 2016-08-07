@@ -176,10 +176,6 @@ func (mrb *MockRequestBuilder) Response() (*http.Response, error) {
 	w := NewMockResponseWriter(buffer)
 	handle(w, req, params)
 	res := http.Response{
-		StatusCode:    w.statusCode,
-		Proto:         "http",
-		ProtoMajor:    1,
-		ProtoMinor:    1,
 		Body:          ioutil.NopCloser(bytes.NewBuffer(buffer.Bytes())),
 		ContentLength: int64(w.ContentLength()),
 		Header:        http.Header{},
@@ -190,6 +186,11 @@ func (mrb *MockRequestBuilder) Response() (*http.Response, error) {
 			res.Header.Add(key, value)
 		}
 	}
+
+	res.StatusCode = w.statusCode
+	res.Proto = "http"
+	res.ProtoMajor = 1
+	res.ProtoMinor = 1
 
 	return &res, nil
 }

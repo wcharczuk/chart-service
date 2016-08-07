@@ -18,7 +18,9 @@ import "github.com/blendlabs/go-chronometer"
 
 	chronometer.Default().RunTask(chronometer.NewTask(func(ct *chronometer.CancellationToken) error {
 		... //long winded process here
-		ct.CheckCancellation()
+		if ct.ShouldCancel {
+			return ct.Cancel()
+		}
 	}))
 ```
 

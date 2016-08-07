@@ -61,8 +61,3 @@ func OptionalBool(value bool) *bool {
 func OptionalTime(value time.Time) *time.Time {
 	return &value
 }
-
-// OptionalDuration Returns a pointer to a value
-func OptionalDuration(value time.Duration) *time.Duration {
-	return &value
-}
