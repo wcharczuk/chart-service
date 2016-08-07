@@ -1,6 +1,3 @@
-// Copyright 2010 The draw2d Authors. All rights reserved.
-// created: 13/12/2010 by Laurent Le Goff
-
 package drawing
 
 import (
@@ -25,14 +22,10 @@ func DrawContour(path PathBuilder, ps []truetype.Point, dx, dy float64) {
 			} else {
 				path.QuadCurveTo(q0X+dx, q0Y+dy, qX+dx, qY+dy)
 			}
-		} else {
-			if on0 {
-				// No-op.
-			} else {
-				midX := (q0X + qX) / 2
-				midY := (q0Y + qY) / 2
-				path.QuadCurveTo(q0X+dx, q0Y+dy, midX+dx, midY+dy)
-			}
+		} else if !on0 {
+			midX := (q0X + qX) / 2
+			midY := (q0Y + qY) / 2
+			path.QuadCurveTo(q0X+dx, q0Y+dy, midX+dx, midY+dy)
 		}
 		q0X, q0Y, on0 = qX, qY, on
 	}

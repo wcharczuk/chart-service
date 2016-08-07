@@ -1,158 +1,106 @@
 {
 	"comment": "",
-	"goVersion": "go1.6",
-	"heroku": {
-		"goVersion": "go1.6",
-		"install": [
-			"."
-		]
-	},
 	"ignore": "test",
 	"package": [
 		{
-			"checksumSHA1": "6qccqKKVnwL9ECLdP+lVzTegdwk=",
-			"path": "github.com/ajstarks/svgo",
-			"revision": "672fe547df4e49efc6db67a74391368bcb149b37",
-			"revisionTime": "2016-03-25T11:55:36Z"
-		},
-		{
-			"checksumSHA1": "VBwAtJoOqCuy19CVUPgtGHLqYvg=",
 			"path": "github.com/blendlabs/go-assert",
-			"revision": "818eedc5570589009f6d8804b4670b0a369fd9b4",
-			"revisionTime": "2016-03-23T23:33:47Z"
+			"revision": "192dc078cd1c144e8fec85530e7d49325888c28c",
+			"revisionTime": "2016-01-29T09:15:17-08:00"
 		},
 		{
-			"checksumSHA1": "1cxVhjrcZGBiHhYpn/zPGk1vmbs=",
 			"path": "github.com/blendlabs/go-chronometer",
-			"revision": "678fbbb02f8028b20f8798d6eb1a946a24d01abb",
-			"revisionTime": "2016-07-14T08:45:29Z"
+			"revision": "e8c65fb5a1f8b6dd177e4d580c0414df4a0faa8a",
+			"revisionTime": "2016-04-02T23:39:57-07:00"
 		},
 		{
-			"checksumSHA1": "lAsqE8ZJ3titP59fFMt8jmx6BXY=",
 			"path": "github.com/blendlabs/go-exception",
-			"revision": "4f8219ce4d9bf0a7074e988fb5dc8d71d536db13",
-			"revisionTime": "2016-03-23T23:34:35Z"
+			"revision": "4c5fb3b838fd613ec4fc4a78d60b972ff7a88ada",
+			"revisionTime": "2015-12-07T18:39:50-08:00"
 		},
 		{
-			"checksumSHA1": "oqDdDQF2OY2pzj4F3NdccjHyjh0=",
 			"path": "github.com/blendlabs/go-request",
-			"revision": "d99acfe45d6afdd681b86696523f66395e03af58",
-			"revisionTime": "2016-05-17T19:40:19Z"
+			"revision": "98e4dd80a68ccf427bed8bdf2f9fb64c8b0da88b",
+			"revisionTime": "2016-02-17T16:56:47-08:00"
 		},
 		{
-			"checksumSHA1": "gO7RbvXh/Cwpbtv61gs0sO4ZIFs=",
 			"path": "github.com/blendlabs/go-util",
-			"revision": "5b1aa355a232e003127a8e94667ab499062e5388",
-			"revisionTime": "2016-06-10T04:33:31Z"
+			"revision": "66b67f5a9e13b732e41525c44feb6d4c7a5d94bd",
+			"revisionTime": "2016-03-23T16:35:13-07:00"
 		},
 		{
-			"checksumSHA1": "cUQlxzU4bpI8L1MuL1EgaZV6gJo=",
 			"path": "github.com/blendlabs/go-util/collections",
-			"revision": "5b1aa355a232e003127a8e94667ab499062e5388",
-			"revisionTime": "2016-06-10T04:33:31Z"
+			"revision": "66b67f5a9e13b732e41525c44feb6d4c7a5d94bd",
+			"revisionTime": "2016-03-23T16:35:13-07:00"
 		},
 		{
-			"checksumSHA1": "aCb9XQkK4uIJRW6497iOsZRkzS0=",
 			"path": "github.com/blendlabs/spiffy",
 			"revision": "21d25c9dedcd584d80e67388a03cb40c631b7923",
 			"revisionTime": "2016-07-26T21:49:14-07:00"
 		},
 		{
-			"checksumSHA1": "8nOeszKcq6lJ3rTniygcaQBkVhM=",
 			"path": "github.com/blendlabs/spiffy/migration",
-			"revision": "a09e7f7d6538403725af8296a8b37b2428ff9e55",
-			"revisionTime": "2016-07-13T19:30:08Z"
+			"revision": "21d25c9dedcd584d80e67388a03cb40c631b7923",
+			"revisionTime": "2016-07-26T21:49:14-07:00"
 		},
 		{
-			"checksumSHA1": "aJ/kX/eCUlrCJBZ26Hwh/RXzAIw=",
 			"path": "github.com/golang/freetype/raster",
 			"revision": "38b4c392adc5eed94207994c4848fff99f4ac234",
-			"revisionTime": "2016-06-26T06:51:47Z"
+			"revisionTime": "2016-06-26T16:51:47+10:00"
 		},
 		{
-			"checksumSHA1": "OFDbVPtW4VoZtkjPUVzpOOWe22I=",
 			"path": "github.com/golang/freetype/truetype",
 			"revision": "38b4c392adc5eed94207994c4848fff99f4ac234",
-			"revisionTime": "2016-06-26T06:51:47Z"
+			"revisionTime": "2016-06-26T16:51:47+10:00"
 		},
 		{
-			"checksumSHA1": "mZK+4q1Xr8z0AwkCAgO+7Rb8xk8=",
 			"path": "github.com/julienschmidt/httprouter",
 			"revision": "77366a47451a56bb3ba682481eed85b64fea14e8",
-			"revisionTime": "2016-02-19T15:40:26Z"
+			"revisionTime": "2016-02-19T16:40:26+01:00"
 		},
 		{
-			"checksumSHA1": "xB64naNkKuwFKUPkmdwdyY2mN6o=",
 			"path": "github.com/lib/pq",
-			"revision": "3cd0097429be7d611bb644ef85b42bfb102ceea4",
-			"revisionTime": "2016-03-14T19:42:24Z"
+			"revision": "69552e54d2a9d4c6a2438926a774930f7bc398ec",
+			"revisionTime": "2016-02-09T23:37:49+09:00"
 		},
 		{
-			"checksumSHA1": "xppHi82MLqVx1eyQmbhTesAEjx8=",
 			"path": "github.com/lib/pq/oid",
-			"revision": "3cd0097429be7d611bb644ef85b42bfb102ceea4",
-			"revisionTime": "2016-03-14T19:42:24Z"
+			"revision": "69552e54d2a9d4c6a2438926a774930f7bc398ec",
+			"revisionTime": "2016-02-09T23:37:49+09:00"
 		},
 		{
-			"checksumSHA1": "aRDMOm3ibMxRFRTHFxBgHrf8NMg=",
-			"path": "github.com/llgcode/draw2d",
-			"revision": "3f01cfe277a813f87884f0ff9430d9998d058576",
-			"revisionTime": "2016-06-27T19:46:37Z"
-		},
-		{
-			"checksumSHA1": "i03xBENW+GtlNefPBKEZ/h+JLUk=",
-			"path": "github.com/llgcode/draw2d/draw2dbase",
-			"revision": "3f01cfe277a813f87884f0ff9430d9998d058576",
-			"revisionTime": "2016-06-27T19:46:37Z"
-		},
-		{
-			"checksumSHA1": "H0lqDQcTAwF8RS4Ck5ZNhh/XYKg=",
-			"path": "github.com/llgcode/draw2d/draw2dimg",
-			"revision": "3f01cfe277a813f87884f0ff9430d9998d058576",
-			"revisionTime": "2016-06-27T19:46:37Z"
-		},
-		{
-			"checksumSHA1": "KpS1uRsf59OBmFAckZj88gE3Zx8=",
 			"path": "github.com/wcharczuk/go-chart",
 			"revision": "a74c8710df6d1f2bd297f8a3338ac8c770ff3114",
 			"revisionTime": "2016-08-06T23:58:44-07:00"
 		},
 		{
-			"checksumSHA1": "K2yGYp90GP6pQStn38bIWTGEwbg=",
 			"path": "github.com/wcharczuk/go-chart/drawing",
-			"revision": "cbb945dc1c61463142bfa823aa938d94e6234a47",
-			"revisionTime": "2016-07-15T02:40:32Z"
+			"revision": "a74c8710df6d1f2bd297f8a3338ac8c770ff3114",
+			"revisionTime": "2016-08-06T23:58:44-07:00"
 		},
 		{
-			"checksumSHA1": "XHHgQkl3RS8tGs2kMjdpDpkv9GY=",
 			"path": "github.com/wcharczuk/go-web",
-			"revision": "526e9ebbfca2393aec476a1b090c42d547e8d774",
-			"revisionTime": "2016-07-19T21:40:39Z"
+			"revision": "f759fa3d6e1d817372dba9338ef335a5cc8e8a87",
+			"revisionTime": "2016-07-19T13:37:13-07:00"
 		},
 		{
-			"checksumSHA1": "7E3Y1HU/UbsQF/dxMRdjFmx9QDQ=",
 			"path": "golang.org/x/image/draw",
-			"revision": "8550bb53808b49e6f655a27cbb293b1f90c56a24",
-			"revisionTime": "2016-06-26T06:52:26Z"
+			"revision": "c348254d65821a0aaca538bf5e7774bb522c1dec",
+			"revisionTime": "2016-07-16T09:11:08+10:00"
 		},
 		{
-			"checksumSHA1": "ZG6tBwXNShvXeDlqXHQ+5z8JxZw=",
 			"path": "golang.org/x/image/font",
-			"revision": "8550bb53808b49e6f655a27cbb293b1f90c56a24",
-			"revisionTime": "2016-06-26T06:52:26Z"
+			"revision": "c348254d65821a0aaca538bf5e7774bb522c1dec",
+			"revisionTime": "2016-07-16T09:11:08+10:00"
 		},
 		{
-			"checksumSHA1": "o7VkCGBiKM5HXzVzrIci1YDlpvc=",
 			"path": "golang.org/x/image/math/f64",
-			"revision": "8550bb53808b49e6f655a27cbb293b1f90c56a24",
-			"revisionTime": "2016-06-26T06:52:26Z"
+			"revision": "c348254d65821a0aaca538bf5e7774bb522c1dec",
+			"revisionTime": "2016-07-16T09:11:08+10:00"
 		},
 		{
-			"checksumSHA1": "KDV8C7GLbL2QcT1yQysYlFlQ+a8=",
 			"path": "golang.org/x/image/math/fixed",
-			"revision": "8550bb53808b49e6f655a27cbb293b1f90c56a24",
-			"revisionTime": "2016-06-26T06:52:26Z"
+			"revision": "c348254d65821a0aaca538bf5e7774bb522c1dec",
+			"revisionTime": "2016-07-16T09:11:08+10:00"
 		}
-	],
-	"rootPath": "github.com/wcharczuk/chart-service"
+	]
 }
