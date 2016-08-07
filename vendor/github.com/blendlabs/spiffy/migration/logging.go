@@ -67,6 +67,10 @@ func (l *Logger) WriteStats() {
 }
 
 func (l *Logger) write(stack []string, color, body string) {
+	if l.Output == nil {
+		return
+	}
+
 	resultColor := util.ColorBlue
 	switch l.Result {
 	case "skipped":

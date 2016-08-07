@@ -6,12 +6,12 @@ WARN_COLOR=\033[33;01m
 
 test:
 	@echo "$(OK_COLOR)==> Testing$(NO_COLOR)"
-	@DB_NAME=stocks go test ./server/...
+	@DATABASE_URL=postgres://localhost/stocks go test ./server/...
 	@echo "$(OK_COLOR)==> Testing Complete!$(NO_COLOR)"
 
 run:
 	@echo "$(OK_COLOR)==> Running$(NO_COLOR)"
-	@DB_NAME=stocks go run main.go
+	@DATABASE_URL=postgres://localhost/stocks go run main.go
 
 db:
 	@echo "$(OK_COLOR)==> Wiping DB$(NO_COLOR)"
