@@ -68,33 +68,9 @@
 			"revisionTime": "2016-02-09T23:37:49+09:00"
 		},
 		{
-<<<<<<< HEAD
-			"checksumSHA1": "i03xBENW+GtlNefPBKEZ/h+JLUk=",
-			"path": "github.com/llgcode/draw2d/draw2dbase",
-			"revision": "3f01cfe277a813f87884f0ff9430d9998d058576",
-			"revisionTime": "2016-06-27T19:46:37Z"
-		},
-		{
-			"checksumSHA1": "H0lqDQcTAwF8RS4Ck5ZNhh/XYKg=",
-			"path": "github.com/llgcode/draw2d/draw2dimg",
-			"revision": "3f01cfe277a813f87884f0ff9430d9998d058576",
-			"revisionTime": "2016-06-27T19:46:37Z"
-		},
-		{
-			"checksumSHA1": "i7A+XviEQuwb9UmLjwmiryT7vXM=",
-			"path": "github.com/wcharczuk/go-chart",
-			"revision": "7bb3fbf81081b20d23f6e381711e255d9ff6fe5c",
-			"revisionTime": "2016-08-05T23:55:55Z"
-		},
-		{
-			"path": "github.com/wcharczuk/go-chart/date",
-			"revision": "9fec24c3021cc5637f469994cdf7d1e2027b4872",
-			"revisionTime": "2016-07-27T01:33:49-07:00"
-=======
 			"path": "github.com/wcharczuk/go-chart",
 			"revision": "a74c8710df6d1f2bd297f8a3338ac8c770ff3114",
 			"revisionTime": "2016-08-06T23:58:44-07:00"
->>>>>>> 31a5182febb06f16665d7e7660d10d510ee5fa6e
 		},
 		{
 			"path": "github.com/wcharczuk/go-chart/drawing",
