@@ -102,5 +102,6 @@
 			"revision": "c348254d65821a0aaca538bf5e7774bb522c1dec",
 			"revisionTime": "2016-07-16T09:11:08+10:00"
 		}
-	]
+	],
+    "rootPath":"github.com/wcharczuk/chart-service"
 }
