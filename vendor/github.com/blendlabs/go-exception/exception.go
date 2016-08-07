@@ -7,12 +7,14 @@ import (
 	"strings"
 )
 
+// Exception is an error with a stack trace.
 type Exception struct {
 	message        string
 	stackTrace     []string
 	innerException *Exception
 }
 
+// MarshalJSON is a custom json marshaler.
 func (e *Exception) MarshalJSON() ([]byte, error) {
 	values := map[string]interface{}{}
 	values["message"] = e.message
@@ -21,38 +23,47 @@ func (e *Exception) MarshalJSON() ([]byte, error) {
 	return json.Marshal(values)
 }
 
+// Message returns the exception message.
 func (e *Exception) Message() string {
 	if e.innerException == nil {
 		return e.message
-	} else {
-		return fmt.Sprintf("%s Nested: %s", e.message, e.innerException.Message())
 	}
+	return fmt.Sprintf("%s Nested: %s", e.message, e.innerException.Message())
 }
 
+// StackTrace returns the exception stack trace.
 func (e *Exception) StackTrace() []string {
 	return e.stackTrace
 }
 
+// StackString returns the stack trace formated nicely.
 func (e *Exception) StackString() string {
 	return formatStackTrace(e.stackTrace)
 }
 
+// InnerException returns the nested exception.
 func (e *Exception) InnerException() *Exception {
 	return e.innerException
 }
 
+// Error implements the `error` interface
 func (e *Exception) Error() string {
 	message := fmt.Sprintf("Exception: %s", e.message)
 	message = message + fmt.Sprintf("\n%11s", "At: ")
 	message = message + formatStackTrace(prefixLines(spaces(11), e.StackTrace()))
 
+	if e.innerException == e {
+		panic("exception loop cycle length 1")
+	}
+
 	if e.innerException != nil {
 		innerErrorMessage := e.innerException.Error()
-		message = message + fmt.Sprintf("\nNested %s", innerErrorMessage)
+		message = message + fmt.Sprintf("\n\nWrapped Exception: %s", innerErrorMessage)
 	}
 	return message
 }
 
+// New returns a new exception by `Sprint`ing the messageComponents.
 func New(messageComponents ...interface{}) error {
 	message := fmt.Sprint(messageComponents...)
 	if len(message) == 0 {
@@ -61,6 +72,7 @@ func New(messageComponents ...interface{}) error {
 	return &Exception{message: message, stackTrace: callerInfo()}
 }
 
+// Newf returns a new exception by `Sprintf`ing the format and the args.
 func Newf(format string, args ...interface{}) error {
 	message := fmt.Sprintf(format, args...)
 	if len(message) == 0 {
@@ -69,6 +81,7 @@ func Newf(format string, args ...interface{}) error {
 	return &Exception{message: message, stackTrace: callerInfo()}
 }
 
+// Wrap wraps an exception, will return error-typed `nil` if the exception is nil.
 func Wrap(err error) error {
 	if err == nil {
 		return nil
@@ -83,23 +96,32 @@ func Wrap(err error) error {
 	}
 }
 
+// WrapMany wraps an arbitrary number of exceptions.
 func WrapMany(err ...error) error {
-	var ex *Exception
+	var ex *Exception //(*Exception)(nil) != nil
+	didSet := false
+
 	for _, e := range err {
-		if typeWrapped, didTypeCorrectly := Wrap(e).(*Exception); didTypeCorrectly {
-			if typeWrapped != nil {
+		if e != nil {
+			typedException := Wrap(e).(*Exception)
+			if typedException != nil && typedException != ex {
 				if ex == nil {
-					ex = typeWrapped
+					ex = typedException
 				} else {
-					typeWrapped.innerException = ex
-					ex = typeWrapped
+					typedException.innerException = ex
+					ex = typedException
 				}
+				didSet = true
 			}
 		}
 	}
-	return ex
+	if didSet {
+		return ex
+	}
+	return nil
 }
 
+// WrapError is a shortcut method for wrapping an error by calling .Message() on it.
 func WrapError(err error) error {
 	if err == nil {
 		return nil
@@ -107,24 +129,25 @@ func WrapError(err error) error {
 	return New(err.Error())
 }
 
+// GetStackTrace is a utility method to get the current stack trace at call time.
 func GetStackTrace() string {
 	return formatStackTrace(callerInfo())
 }
 
+// IsException is a helper function that returns if an error is an exception.
 func IsException(err error) bool {
 	if _, typedOk := err.(*Exception); typedOk {
 		return true
-	} else {
-		return false
 	}
+	return false
 }
 
+// AsException is a helper method that returns an error as an exception.
 func AsException(err error) *Exception {
 	if typed, typedOk := err.(*Exception); typedOk {
 		return typed
-	} else {
-		return nil
 	}
+	return nil
 }
 
 func prefixLines(prefix string, lines []string) []string {
