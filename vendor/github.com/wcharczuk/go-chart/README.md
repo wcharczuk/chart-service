@@ -1,11 +1,13 @@
 go-chart
 ========
-[![Build Status](https://travis-ci.org/wcharczuk/go-chart.svg?branch=master)](https://travis-ci.org/wcharczuk/go-chart)
+[![Build Status](https://travis-ci.org/wcharczuk/go-chart.svg?branch=master)](https://travis-ci.org/wcharczuk/go-chart)[![Go Report Card](https://goreportcard.com/badge/github.com/wcharczuk/go-chart)](https://goreportcard.com/report/github.com/wcharczuk/go-chart)
 
 Package `chart` is a very simple golang native charting library that supports timeseries and continuous
 line charts. 
 
 The v1.0 release has been tagged so things should be more or less stable, if something changes please log an issue.
+
+Master should now be on the v2.x codebase, which brings a couple new features and better handling of basics like axes labeling etc. Per usual, see `_examples` for more information.
 
 # Installation
 
