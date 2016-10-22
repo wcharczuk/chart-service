@@ -63,7 +63,7 @@ func GetEquitiesActive(txs ...*sql.Tx) ([]Equity, error) {
 
 	query := `select * from equity where active = true`
 	var tickers []Equity
-	err := spiffy.DefaultDb().QueryInTransaction(query, tx).OutMany(&tickers)
+	err := spiffy.DefaultDb().QueryInTx(query, tx).OutMany(&tickers)
 	return tickers, err
 }
 
@@ -75,7 +75,7 @@ func SearchEquities(searchString string, txs ...*sql.Tx) ([]Equity, error) {
 	}
 	query := `select * from equity where name ilike '%'||$1||'%' or ticker ilike '%'||$1||'%';`
 	var tickers []Equity
-	err := spiffy.DefaultDb().QueryInTransaction(query, tx, searchString).OutMany(&tickers)
+	err := spiffy.DefaultDb().QueryInTx(query, tx, searchString).OutMany(&tickers)
 	return tickers, err
 }
 
@@ -88,7 +88,7 @@ func GetEquityByTicker(ticker string, txs ...*sql.Tx) (*Equity, error) {
 
 	var equity Equity
 	query := `select * from equity where ticker ilike $1`
-	err := spiffy.DefaultDb().QueryInTransaction(query, tx, ticker).Out(&equity)
+	err := spiffy.DefaultDb().QueryInTx(query, tx, ticker).Out(&equity)
 	return &equity, err
 }
 
@@ -106,6 +106,6 @@ func (e Equities) Tickers() []string {
 
 func createTestEquity(tx *sql.Tx) (*Equity, error) {
 	equity := Equity{Active: true, Name: "Test Equity", Ticker: util.UUIDv4().ToShortString()}
-	err := spiffy.DefaultDb().CreateInTransaction(&equity, tx)
+	err := spiffy.DefaultDb().CreateInTx(&equity, tx)
 	return &equity, err
 }

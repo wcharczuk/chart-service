@@ -43,12 +43,12 @@ func (hp *HistoricalPrice) Populate(line string) error {
 	}
 	// these days are edt/est at market close ...
 	hp.Date = time.Date(hp.Date.Year(), hp.Date.Month(), hp.Date.Day(), 20, 30, 20, 00, time.UTC).In(core.GetEasternTimezone())
-	hp.Open = util.ParseFloat64(parts[1])
-	hp.High = util.ParseFloat64(parts[2])
-	hp.Low = util.ParseFloat64(parts[3])
-	hp.Close = util.ParseFloat64(parts[4])
-	hp.Volume = util.ParseFloat64(parts[5])
-	hp.AdjustedClose = util.ParseFloat64(parts[6])
+	hp.Open = util.String.ParseFloat64(parts[1])
+	hp.High = util.String.ParseFloat64(parts[2])
+	hp.Low = util.String.ParseFloat64(parts[3])
+	hp.Close = util.String.ParseFloat64(parts[4])
+	hp.Volume = util.String.ParseFloat64(parts[5])
+	hp.AdjustedClose = util.String.ParseFloat64(parts[6])
 	return nil
 }
 
@@ -62,11 +62,11 @@ func GetHistoricalPrices(ticker string, start, end time.Time) ([]HistoricalPrice
 		WithURL("http://real-chart.finance.yahoo.com/table.csv").
 		WithQueryString("s", ticker).
 		WithQueryString("a", fmt.Sprintf("%02d", int(start.Month())-1)).
-		WithQueryString("b", util.IntToString(start.Day())).
-		WithQueryString("c", util.IntToString(start.Year())).
+		WithQueryString("b", util.String.IntToString(start.Day())).
+		WithQueryString("c", util.String.IntToString(start.Year())).
 		WithQueryString("d", fmt.Sprintf("%02d", int(end.Month())-1)).
-		WithQueryString("e", util.IntToString(end.Day())).
-		WithQueryString("f", util.IntToString(end.Year())).
+		WithQueryString("e", util.String.IntToString(end.Day())).
+		WithQueryString("f", util.String.IntToString(end.Year())).
 		WithQueryString("g", "d").
 		WithQueryString("ignore", ".csv").
 		FetchRawResponse()

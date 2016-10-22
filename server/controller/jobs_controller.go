@@ -5,6 +5,7 @@ import (
 	"github.com/wcharczuk/go-web"
 )
 
+// Jobs is a controller that exposes methods to control jobs.
 type Jobs struct{}
 
 // GET "/api/v1/jobs"

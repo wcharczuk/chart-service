@@ -1,6 +1,7 @@
 package web
 
 import (
+	"crypto/tls"
 	"database/sql"
 	"fmt"
 	"html/template"
@@ -8,29 +9,22 @@ import (
 	"os"
 	"regexp"
 	"strings"
+	"sync"
 
+	logger "github.com/blendlabs/go-logger"
 	"github.com/julienschmidt/httprouter"
 )
 
 // New returns a new app.
 func New() *App {
-	return &App{
+	app := &App{
 		router:             httprouter.New(),
-		name:               "Web",
 		staticRewriteRules: map[string][]*RewriteRule{},
 		staticHeaders:      map[string]http.Header{},
-		requestStartHandlers: []RequestEventHandler{func(r *RequestContext) {
-			r.onRequestStart()
-		}},
-		requestCompleteHandlers: []RequestEventHandler{func(r *RequestContext) {
-			r.onRequestEnd()
-		}},
-		requestErrorHandlers: []RequestEventErrorHandler{func(r *RequestContext, err interface{}) {
-			if r != nil && r.logger != nil {
-				r.logger.Error(err)
-			}
-		}},
+		tlsCertLock:        &sync.Mutex{},
 	}
+	app.SetDiagnostics(logger.NewDiagnosticsAgent(logger.NewEventFlagSetNone()))
+	return app
 }
 
 // AppStartDelegate is a function that is run on start. Typically you use this to initialize the app.
@@ -40,57 +34,112 @@ type AppStartDelegate func(app *App) error
 type App struct {
 	name string
 
-	logger    Logger
-	router    *httprouter.Router
-	viewCache *template.Template
+	diagnostics *logger.DiagnosticsAgent
+	config      interface{}
+	router      *httprouter.Router
+	viewCache   *template.Template
+
+	tlsCertBytes, tlsKeyBytes []byte
+	tlsCertLock               *sync.Mutex
+	tlsCert                   *tls.Certificate
 
 	apiResultProvider  *APIResultProvider
 	viewResultProvider *ViewResultProvider
 
 	startDelegate AppStartDelegate
 
-	requestStartHandlers    []RequestEventHandler
-	requestCompleteHandlers []RequestEventHandler
-	requestErrorHandlers    []RequestEventErrorHandler
-
-	requestLogFormat string
-
 	staticRewriteRules map[string][]*RewriteRule
 	staticHeaders      map[string]http.Header
+
+	panicHandler PanicControllerAction
 
 	tx *sql.Tx
 
 	port string
 }
 
-// Name returns the app name.``
-func (a *App) Name() string {
-	return a.name
+// AppName returns the app name.
+func (a *App) AppName() string {
+	return a.diagnostics.Writer().Label()
 }
 
-// SetName sets the app name
-func (a *App) SetName(name string) {
-	a.name = name
+// SetAppName sets a log label for the app.
+func (a *App) SetAppName(appName string) {
+	a.diagnostics.Writer().SetLabel(appName)
 }
 
-// RequestLogFormat returns a custom w3c request log format if set.
-func (a *App) RequestLogFormat() string {
-	return a.requestLogFormat
+// UseTLS sets the app to use TLS.
+func (a *App) UseTLS(tlsCert, tlsKey []byte) {
+	a.tlsCertBytes = tlsCert
+	a.tlsKeyBytes = tlsKey
 }
 
-// SetRequestLogFormat sets a custom w3c request log format.
-func (a *App) SetRequestLogFormat(format string) {
-	a.requestLogFormat = format
+// Diagnostics returns the diagnostics agent for the app.
+func (a *App) Diagnostics() *logger.DiagnosticsAgent {
+	return a.diagnostics
 }
 
-// Logger returns the logger for the app.
-func (a *App) Logger() Logger {
-	return a.logger
+// SetDiagnostics sets the diagnostics agent.
+func (a *App) SetDiagnostics(da *logger.DiagnosticsAgent) {
+	a.diagnostics = da
+	if a.diagnostics != nil {
+		a.diagnostics.AddEventListener(logger.EventWebRequestStart, a.onRequestStart)
+		a.diagnostics.AddEventListener(logger.EventWebRequest, a.onRequestComplete)
+		a.diagnostics.AddEventListener(logger.EventWebResponse, a.onResponse)
+	}
 }
 
-// SetLogger sets the logger.
-func (a *App) SetLogger(l Logger) {
-	a.logger = l
+// Config returns the app config object.
+func (a *App) Config() interface{} {
+	return a.config
+}
+
+// SetConfig sets the app config object.
+func (a *App) SetConfig(config interface{}) {
+	a.config = config
+}
+
+// InitializeConfig reads a config prototype from the environment.
+func (a *App) InitializeConfig(configPrototype interface{}) error {
+	config, err := ReadConfigFromEnvironment(configPrototype)
+	if err != nil {
+		return err
+	}
+	a.config = config
+	return nil
+}
+
+func (a *App) onRequestStart(writer logger.Logger, ts logger.TimeSource, eventFlag logger.EventFlag, state ...interface{}) {
+	if len(state) < 1 {
+		return
+	}
+	context, isContext := state[0].(*RequestContext)
+	if !isContext {
+		return
+	}
+	logger.WriteRequestStart(writer, ts, context.Request)
+}
+
+func (a *App) onRequestComplete(writer logger.Logger, ts logger.TimeSource, eventFlag logger.EventFlag, state ...interface{}) {
+	if len(state) < 1 {
+		return
+	}
+	context, isContext := state[0].(*RequestContext)
+	if !isContext {
+		return
+	}
+	logger.WriteRequest(writer, ts, context.Request, context.Response.StatusCode(), context.Response.ContentLength(), context.Elapsed())
+}
+
+func (a *App) onResponse(writer logger.Logger, ts logger.TimeSource, eventFlag logger.EventFlag, state ...interface{}) {
+	if len(state) < 1 {
+		return
+	}
+	body, stateIsBody := state[0].([]byte)
+	if !stateIsBody {
+		return
+	}
+	logger.WriteResponseBody(writer, ts, body)
 }
 
 // ViewCache gets the view cache for the app.
@@ -140,7 +189,19 @@ func (a *App) Start() error {
 		Addr:    bindAddr,
 		Handler: a,
 	}
+
 	return a.StartWithServer(server)
+}
+
+func (a *App) getCertificate(clientHello *tls.ClientHelloInfo) (*tls.Certificate, error) {
+	if a.tlsCert == nil {
+		tlsCert, err := tls.X509KeyPair(a.tlsCertBytes, a.tlsKeyBytes)
+		if err != nil {
+			return nil, err
+		}
+		a.tlsCert = &tlsCert
+	}
+	return a.tlsCert, nil
 }
 
 // StartWithServer starts the app on a custom server.
@@ -148,19 +209,28 @@ func (a *App) Start() error {
 // other options.
 func (a *App) StartWithServer(server *http.Server) error {
 	if a.startDelegate != nil {
-		a.Logf("%s Startup tasks starting", a.Name())
+		a.diagnostics.Infof("Startup tasks starting")
 		err := a.startDelegate(a)
 		if err != nil {
-			a.Errorf("%s Startup tasks error: %v", a.Name(), err)
+			a.diagnostics.Errorf("Startup tasks error: %v", err)
 			return err
 		}
-		a.Logf("%s Startup tasks complete", a.Name())
+		a.diagnostics.Infof("Startup tasks complete")
 	}
 
 	// this is the only property we will set of the server
 	// i.e. the server handler (which is this app)
 	server.Handler = a
-	a.Logf("%s Started, listening on %s", a.Name(), server.Addr)
+	a.diagnostics.Infof("Started, listening on %s", server.Addr)
+	a.diagnostics.Infof("Diagnostics Verbosity %s", a.diagnostics.Events().String())
+
+	if len(a.tlsCertBytes) > 0 && len(a.tlsKeyBytes) > 0 {
+		server.TLSConfig = &tls.Config{
+			GetCertificate: a.getCertificate,
+		}
+
+		return server.ListenAndServeTLS("", "")
+	}
 
 	return server.ListenAndServe()
 }
@@ -170,8 +240,8 @@ func (a *App) Register(c Controller) {
 	c.Register(a)
 }
 
-// InitViewCache caches templates by path.
-func (a *App) InitViewCache(paths ...string) error {
+// InitializeViewCache caches templates by path.
+func (a *App) InitializeViewCache(paths ...string) error {
 	views, err := template.ParseFiles(paths...)
 	if err != nil {
 		return err
@@ -213,38 +283,6 @@ func (a *App) POST(path string, action ControllerAction, middleware ...Controlle
 // DELETE registers a DELETE request handler.
 func (a *App) DELETE(path string, action ControllerAction, middleware ...ControllerMiddleware) {
 	a.router.DELETE(path, a.renderAction(NestMiddleware(action, middleware...)))
-}
-
-// --------------------------------------------------------------------------------
-// Logging methods
-// --------------------------------------------------------------------------------
-
-// Log logs a message to the logger if one is provisioned.
-func (a *App) Log(args ...interface{}) {
-	if a.logger != nil {
-		a.logger.Log(args...)
-	}
-}
-
-// Logf logs a message to the logger if one is provisioned.
-func (a *App) Logf(format string, args ...interface{}) {
-	if a.logger != nil {
-		a.logger.Logf(format, args...)
-	}
-}
-
-// Error logs a message to the logger if one is provisioned.
-func (a *App) Error(args ...interface{}) {
-	if a.logger != nil {
-		a.logger.Error(args...)
-	}
-}
-
-// Errorf logs a message to the logger if one is provisioned.
-func (a *App) Errorf(format string, args ...interface{}) {
-	if a.logger != nil {
-		a.logger.Errorf(format, args...)
-	}
 }
 
 // --------------------------------------------------------------------------------
@@ -337,9 +375,10 @@ func (a *App) SetMethodNotAllowedHandler(handler ControllerAction) {
 
 // SetPanicHandler sets the not found handler.
 func (a *App) SetPanicHandler(handler PanicControllerAction) {
+	a.panicHandler = handler
 	a.router.PanicHandler = func(w http.ResponseWriter, r *http.Request, err interface{}) {
 		a.renderAction(func(r *RequestContext) ControllerResult {
-			a.onRequestError(r, err)
+			a.diagnostics.Fatal(err)
 			return handler(r, err)
 		})(w, r, httprouter.Params{})
 	}
@@ -347,52 +386,6 @@ func (a *App) SetPanicHandler(handler PanicControllerAction) {
 
 func (a *App) ServeHTTP(w http.ResponseWriter, req *http.Request) {
 	a.router.ServeHTTP(w, req)
-}
-
-// --------------------------------------------------------------------------------
-// Events
-// --------------------------------------------------------------------------------
-
-// OnRequestStart triggers the onRequestStart event.
-func (a *App) onRequestStart(r *RequestContext) {
-	if len(a.requestStartHandlers) > 0 {
-		for _, handler := range a.requestStartHandlers {
-			handler(r)
-		}
-	}
-}
-
-// OnRequestComplete triggers the onRequestStart event.
-func (a *App) onRequestComplete(r *RequestContext) {
-	if len(a.requestCompleteHandlers) > 0 {
-		for _, handler := range a.requestCompleteHandlers {
-			handler(r)
-		}
-	}
-}
-
-// OnRequestError triggers the onRequestStart event.
-func (a *App) onRequestError(r *RequestContext, err interface{}) {
-	if len(a.requestErrorHandlers) > 0 {
-		for _, handler := range a.requestErrorHandlers {
-			handler(r, err)
-		}
-	}
-}
-
-// RequestStartHandler fires before an action handler is run.
-func (a *App) RequestStartHandler(handler RequestEventHandler) {
-	a.requestStartHandlers = append(a.requestStartHandlers, handler)
-}
-
-// RequestCompleteHandler fires after an action handler is run.
-func (a *App) RequestCompleteHandler(handler RequestEventHandler) {
-	a.requestCompleteHandlers = append(a.requestCompleteHandlers, handler)
-}
-
-// RequestErrorHandler fires if there is an error logged.
-func (a *App) RequestErrorHandler(handler RequestEventErrorHandler) {
-	a.requestErrorHandlers = append(a.requestErrorHandlers, handler)
 }
 
 // --------------------------------------------------------------------------------
@@ -405,46 +398,22 @@ func (a *App) Mock() *MockRequestBuilder {
 }
 
 // --------------------------------------------------------------------------------
-// Render Methods
+// Request Pipeline
 // --------------------------------------------------------------------------------
 
-// RequestContext creates an http context.
-func (a *App) requestContext(w ResponseWriter, r *http.Request, p RouteParameters) *RequestContext {
-	hc := NewRequestContext(w, r, p)
-	if len(a.requestLogFormat) != 0 {
-		hc.requestLogFormat = a.requestLogFormat
-	}
-	hc.tx = a.tx
-	hc.logger = a.logger
-	hc.api = NewAPIResultProvider(a, hc)
-	hc.view = NewViewResultProvider(a, hc)
-	return hc
-}
-
 // renderAction is the translation step from ControllerAction to httprouter.Handle.
+// this is where the bulk of the "pipeline" happens.
 func (a *App) renderAction(action ControllerAction) httprouter.Handle {
 	return func(w http.ResponseWriter, r *http.Request, p httprouter.Params) {
-		a.commonResponseHeaders(w)
-
-		var response ResponseWriter
-		if a.shouldCompressOutput(r) {
-			w.Header().Set("Content-Encoding", "gzip")
-			response = NewCompressedResponseWriter(w)
-		} else {
-			response = NewRawResponseWriter(w)
-		}
-
+		a.setCommonResponseHeaders(w)
+		response := a.newResponse(w, r)
 		context := a.pipelineInit(response, r, NewRouteParameters(p))
 		a.renderResult(action, context)
 		a.pipelineComplete(context)
 	}
 }
 
-func (a *App) shouldCompressOutput(r *http.Request) bool {
-	return strings.Contains(r.Header.Get("Accept-Encoding"), "gzip")
-}
-
-func (a *App) commonResponseHeaders(w http.ResponseWriter) {
+func (a *App) setCommonResponseHeaders(w http.ResponseWriter) {
 	w.Header().Set("Vary", "Accept-Encoding")
 	w.Header().Set("X-Served-By", "github.com/wcharczuk/go-web")
 	w.Header().Set("X-Frame-Options", "SAMEORIGIN")
@@ -452,10 +421,44 @@ func (a *App) commonResponseHeaders(w http.ResponseWriter) {
 	w.Header().Set("X-Content-Type-Options", "nosniff")
 }
 
+func (a *App) newResponse(w http.ResponseWriter, r *http.Request) ResponseWriter {
+	var response ResponseWriter
+	if a.shouldCompressOutput(r) {
+		w.Header().Set("Content-Encoding", "gzip")
+		if a.diagnostics.IsEnabled(logger.EventWebResponse) {
+			response = NewBufferedCompressedResponseWriter(w)
+		} else {
+			response = NewCompressedResponseWriter(w)
+		}
+	} else {
+		if a.diagnostics.IsEnabled(logger.EventWebResponse) {
+			response = NewBufferedResponseWriter(w)
+		} else {
+			response = NewResponseWriter(w)
+		}
+	}
+	return response
+}
+
+func (a *App) shouldCompressOutput(r *http.Request) bool {
+	return strings.Contains(r.Header.Get("Accept-Encoding"), "gzip")
+}
+
 func (a *App) pipelineInit(w ResponseWriter, r *http.Request, p RouteParameters) *RequestContext {
 	context := a.requestContext(w, r, p)
-	a.onRequestStart(context)
+	context.onRequestStart()
+	a.diagnostics.OnEvent(logger.EventWebRequestStart, context)
 	return context
+}
+
+// RequestContext creates an http context.
+func (a *App) requestContext(w ResponseWriter, r *http.Request, p RouteParameters) *RequestContext {
+	rc := NewRequestContext(w, r, p)
+	rc.app = a
+	rc.tx = a.tx
+	rc.diagnostics = a.diagnostics
+	rc.config = a.config
+	return rc
 }
 
 func (a *App) renderResult(action ControllerAction, context *RequestContext) {
@@ -463,17 +466,26 @@ func (a *App) renderResult(action ControllerAction, context *RequestContext) {
 	if result != nil {
 		err := result.Render(context.Response, context.Request)
 		if err != nil {
-			if a.logger != nil {
-				a.logger.Error(err)
-			}
+			a.diagnostics.Error(err)
 		}
 	}
 }
 
 func (a *App) pipelineComplete(context *RequestContext) {
-	context.Response.Flush()
-	context.setStatusCode(context.Response.StatusCode())
-	context.setContentLength(context.Response.ContentLength())
-	a.onRequestComplete(context)
-	context.LogRequest()
+	err := context.Response.Flush()
+	if err != nil && err != http.ErrBodyNotAllowed {
+		a.diagnostics.Error(err)
+	}
+	context.onRequestEnd()
+	context.setLoggedStatusCode(context.Response.StatusCode())
+	context.setLoggedContentLength(context.Response.ContentLength())
+	if a.diagnostics.IsEnabled(logger.EventWebResponse) {
+		a.diagnostics.OnEvent(logger.EventWebResponse, context.Response.Bytes())
+	}
+	a.diagnostics.OnEvent(logger.EventWebRequest, context)
+
+	err = context.Response.Close()
+	if err != nil && err != http.ErrBodyNotAllowed {
+		a.diagnostics.Error(err)
+	}
 }

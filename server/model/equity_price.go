@@ -54,7 +54,7 @@ func GetEquityPrices(ticker string, txs ...*sql.Tx) ([]EquityPrice, error) {
 		e.ticker ilike $1
 	`
 	var prices []EquityPrice
-	return prices, spiffy.DefaultDb().QueryInTransaction(query, tx, ticker).OutMany(&prices)
+	return prices, spiffy.DefaultDb().QueryInTx(query, tx, ticker).OutMany(&prices)
 }
 
 // GetEquityPricesByDate gets equity prices in a date range.
@@ -73,7 +73,7 @@ func GetEquityPricesByDate(ticker string, start, end time.Time, txs ...*sql.Tx) 
 		and ep.timestamp_utc > $2 and ep.timestamp_utc < $3
 	`
 	var prices []EquityPrice
-	return prices, spiffy.DefaultDb().QueryInTransaction(query, tx, ticker, start, end).OutMany(&prices)
+	return prices, spiffy.DefaultDb().QueryInTx(query, tx, ticker, start, end).OutMany(&prices)
 }
 
 // EquityPrices is an array of EquityPrice
@@ -167,7 +167,7 @@ func (ep EquityPrices) LastValueAnnotation(ticker string, vf chart.ValueFormatte
 	}
 	lastValue := ep[len(ep)-1].Price
 	return chart.Value2{
-		XValue: chart.TimeToFloat64(ep[len(ep)-1].TimestampUTC),
+		XValue: chart.Time.ToFloat64(ep[len(ep)-1].TimestampUTC),
 		YValue: lastValue,
 		Label:  fmt.Sprintf("%s %s", ticker, vf(lastValue)),
 	}
@@ -181,6 +181,6 @@ func createTestEquityPrice(equityID int, timestamp time.Time, tx *sql.Tx) (*Equi
 		Price:        rp.Float64() * 1024,
 		Volume:       rp.Int63n(10000),
 	}
-	err := spiffy.DefaultDb().CreateInTransaction(&ep, tx)
+	err := spiffy.DefaultDb().CreateInTx(&ep, tx)
 	return &ep, err
 }

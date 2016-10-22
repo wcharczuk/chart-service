@@ -3,8 +3,11 @@ package web
 import (
 	"bytes"
 	"encoding/json"
+	"encoding/xml"
 	"fmt"
+	"io"
 	"io/ioutil"
+	"mime/multipart"
 	"net/http"
 	"net/url"
 	"strings"
@@ -34,6 +37,8 @@ type MockRequestBuilder struct {
 	headers     http.Header
 	cookies     []*http.Cookie
 	postBody    []byte
+
+	postedFiles map[string]PostedFile
 
 	responseBuffer *bytes.Buffer
 }
@@ -87,14 +92,23 @@ func (mrb *MockRequestBuilder) WithPostBodyAsJSON(object interface{}) *MockReque
 	return mrb
 }
 
-// WithResponseBuffer optionally sets a response buffer to write to during Execute and AsRequestContext.
+// WithPostedFile includes a file as a post parameter.
+func (mrb *MockRequestBuilder) WithPostedFile(postedFile PostedFile) *MockRequestBuilder {
+	if mrb.postedFiles == nil {
+		mrb.postedFiles = map[string]PostedFile{}
+	}
+	mrb.postedFiles[postedFile.Key] = postedFile
+	return mrb
+}
+
+// WithResponseBuffer optionally sets a response buffer to write to during ??????
 func (mrb *MockRequestBuilder) WithResponseBuffer(buffer *bytes.Buffer) *MockRequestBuilder {
 	mrb.responseBuffer = buffer
 	return mrb
 }
 
-// AsRequest returns the mock request builder settings as an http.Request.
-func (mrb *MockRequestBuilder) AsRequest() (*http.Request, error) {
+// Request returns the mock request builder settings as an http.Request.
+func (mrb *MockRequestBuilder) Request() (*http.Request, error) {
 	req := &http.Request{}
 	reqURL, err := url.Parse(fmt.Sprintf("http://localhost/%s", mrb.path))
 	if err != nil {
@@ -102,11 +116,9 @@ func (mrb *MockRequestBuilder) AsRequest() (*http.Request, error) {
 	}
 
 	reqURL.RawQuery = mrb.queryString.Encode()
-
 	req.Method = mrb.verb
 	req.URL = reqURL
 	req.RequestURI = reqURL.String()
-	req.Body = ioutil.NopCloser(bytes.NewBuffer(mrb.postBody))
 	req.Form = mrb.formValues
 	req.Header = http.Header{}
 
@@ -120,12 +132,37 @@ func (mrb *MockRequestBuilder) AsRequest() (*http.Request, error) {
 		req.AddCookie(cookie)
 	}
 
+	if len(mrb.postedFiles) > 0 {
+		b := bytes.NewBuffer(nil)
+		w := multipart.NewWriter(b)
+		for _, file := range mrb.postedFiles {
+			fw, err := w.CreateFormFile(file.Key, file.FileName)
+			if err != nil {
+				return nil, err
+			}
+			_, err = io.Copy(fw, bytes.NewBuffer(file.Contents))
+			if err != nil {
+				return nil, err
+			}
+		}
+		// Don't forget to set the content type, this will contain the boundary.
+		req.Header.Set("Content-Type", w.FormDataContentType())
+
+		err = w.Close()
+		if err != nil {
+			return nil, err
+		}
+		req.Body = ioutil.NopCloser(b)
+	} else if len(mrb.postBody) > 0 {
+		req.Body = ioutil.NopCloser(bytes.NewBuffer(mrb.postBody))
+	}
+
 	return req, nil
 }
 
-// AsRequestContext returns the mock request as a request context.
-func (mrb *MockRequestBuilder) AsRequestContext(p RouteParameters) (*RequestContext, error) {
-	r, err := mrb.AsRequest()
+// RequestContext returns the mock request as a request context.
+func (mrb *MockRequestBuilder) RequestContext(p RouteParameters) (*RequestContext, error) {
+	r, err := mrb.Request()
 
 	if err != nil {
 		return nil, err
@@ -149,8 +186,29 @@ func (mrb *MockRequestBuilder) AsRequestContext(p RouteParameters) (*RequestCont
 	return rc, nil
 }
 
-// Response runs the mock request.
-func (mrb *MockRequestBuilder) Response() (*http.Response, error) {
+// FetchResponse runs the mock request.
+func (mrb *MockRequestBuilder) FetchResponse() (res *http.Response, err error) {
+	defer func() {
+		if r := recover(); r != nil {
+			if mrb.app.panicHandler != nil {
+				rc, _ := mrb.RequestContext(nil)
+				controllerResult := mrb.app.panicHandler(rc, r)
+				panicRecoveryBuffer := bytes.NewBuffer([]byte{})
+				panicRecoveryWriter := NewMockResponseWriter(panicRecoveryBuffer)
+				err = controllerResult.Render(panicRecoveryWriter, rc.Request)
+				res = &http.Response{
+					Body:          ioutil.NopCloser(bytes.NewBuffer(panicRecoveryBuffer.Bytes())),
+					ContentLength: int64(panicRecoveryWriter.ContentLength()),
+					Header:        http.Header{},
+					StatusCode:    panicRecoveryWriter.StatusCode(),
+					Proto:         "http",
+					ProtoMajor:    1,
+					ProtoMinor:    1,
+				}
+			}
+		}
+	}()
+
 	handle, params, addTrailingSlash := mrb.app.router.Lookup(mrb.verb, mrb.path)
 	if addTrailingSlash {
 		mrb.path = mrb.path + "/"
@@ -161,7 +219,7 @@ func (mrb *MockRequestBuilder) Response() (*http.Response, error) {
 		return nil, exception.Newf("No matching route for path %s `%s`", mrb.verb, mrb.path)
 	}
 
-	req, err := mrb.AsRequest()
+	req, err := mrb.Request()
 	if err != nil {
 		return nil, err
 	}
@@ -175,10 +233,14 @@ func (mrb *MockRequestBuilder) Response() (*http.Response, error) {
 
 	w := NewMockResponseWriter(buffer)
 	handle(w, req, params)
-	res := http.Response{
+	res = &http.Response{
 		Body:          ioutil.NopCloser(bytes.NewBuffer(buffer.Bytes())),
 		ContentLength: int64(w.ContentLength()),
 		Header:        http.Header{},
+		StatusCode:    w.statusCode,
+		Proto:         "http",
+		ProtoMajor:    1,
+		ProtoMinor:    1,
 	}
 
 	for key, values := range w.Header() {
@@ -187,17 +249,12 @@ func (mrb *MockRequestBuilder) Response() (*http.Response, error) {
 		}
 	}
 
-	res.StatusCode = w.statusCode
-	res.Proto = "http"
-	res.ProtoMajor = 1
-	res.ProtoMinor = 1
-
-	return &res, nil
+	return
 }
 
-// JSON executes the mock request and reads the response to the given object as json.
-func (mrb *MockRequestBuilder) JSON(object interface{}) error {
-	res, err := mrb.Response()
+// FetchResponseAsJSON executes the mock request and reads the response to the given object as json.
+func (mrb *MockRequestBuilder) FetchResponseAsJSON(object interface{}) error {
+	res, err := mrb.FetchResponse()
 	if err != nil {
 		return err
 	}
@@ -209,9 +266,23 @@ func (mrb *MockRequestBuilder) JSON(object interface{}) error {
 	return json.Unmarshal(contents, object)
 }
 
-// Bytes returns the response as bytes.
-func (mrb *MockRequestBuilder) Bytes() ([]byte, error) {
-	res, err := mrb.Response()
+// FetchResponseAsXML executes the mock request and reads the response to the given object as json.
+func (mrb *MockRequestBuilder) FetchResponseAsXML(object interface{}) error {
+	res, err := mrb.FetchResponse()
+	if err != nil {
+		return err
+	}
+	defer res.Body.Close()
+	contents, err := ioutil.ReadAll(res.Body)
+	if err != nil {
+		return err
+	}
+	return xml.Unmarshal(contents, object)
+}
+
+// FetchResponseAsBytes returns the response as bytes.
+func (mrb *MockRequestBuilder) FetchResponseAsBytes() ([]byte, error) {
+	res, err := mrb.FetchResponse()
 	if err != nil {
 		return nil, err
 	}
@@ -221,13 +292,13 @@ func (mrb *MockRequestBuilder) Bytes() ([]byte, error) {
 
 // Execute just runs the request.
 func (mrb *MockRequestBuilder) Execute() error {
-	_, err := mrb.Bytes()
+	_, err := mrb.FetchResponseAsBytes()
 	return err
 }
 
 // ExecuteWithMeta returns basic metadata for a response.
 func (mrb *MockRequestBuilder) ExecuteWithMeta() (*ResponseMeta, error) {
-	res, err := mrb.Response()
+	res, err := mrb.FetchResponse()
 	if err != nil {
 		return nil, err
 	}

@@ -1,7 +1,6 @@
 package jobs
 
 import (
-	"fmt"
 	"time"
 
 	"github.com/blendlabs/go-chronometer"
@@ -81,7 +80,6 @@ func (epf *EquityPriceFetch) Schedule() chronometer.Schedule {
 func (epf *EquityPriceFetch) tradeDayIsValid(lastTradeDate string, current time.Time) bool {
 	parsed, err := time.Parse(yahoo.DateFormat, lastTradeDate)
 	if err != nil {
-		epf.error(fmt.Errorf("Job `%s` - invalid trade day: %s %s", epf.Name(), lastTradeDate, err.Error()))
 		return false
 	}
 	return parsed.Day() == current.Day() && parsed.Month() == current.Month() && parsed.Year() == current.Year()
@@ -137,29 +135,4 @@ func (epf *EquityPriceFetch) getNextMarketOpen(after time.Time) time.Time {
 
 func (epf *EquityPriceFetch) getMarketClose(after time.Time) time.Time {
 	return time.Date(after.Year(), after.Month(), after.Day(), 16, 0, 0, 0, epf.eastern)
-}
-
-// OnStart runs before the job body.
-func (epf *EquityPriceFetch) OnStart() {
-	epf.logf("starting.")
-}
-
-// OnComplete runs after the job body.
-func (epf *EquityPriceFetch) OnComplete(err error) {
-	if err == nil {
-		epf.logf("complete.")
-	} else {
-		epf.logf("failed.")
-		epf.error(err)
-	}
-}
-
-func (epf *EquityPriceFetch) logf(format string, args ...interface{}) {
-	message := fmt.Sprintf(format, args...)
-	fmt.Printf("Job `%s` %s %s\n", epf.Name(), util.Color(time.Now().UTC().Format(time.RFC3339), util.ColorGray), message)
-}
-
-func (epf *EquityPriceFetch) error(err error) {
-	message := fmt.Sprintf("%s:\n%v", util.Color("Exception", util.ColorRed), err)
-	fmt.Printf("Job `%s` %s %s\n", epf.Name(), util.Color(time.Now().UTC().Format(time.RFC3339), util.ColorGray), message)
 }

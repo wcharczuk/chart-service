@@ -110,7 +110,7 @@ func (e Equities) patchHandler(rc *web.RequestContext) web.ControllerResult {
 		return rc.API().BadRequest(err.Error())
 	}
 
-	err = util.PatchObject(&reference, patchData)
+	err = util.Reflection.PatchObject(&reference, patchData)
 	if err != nil {
 		return rc.API().BadRequest(err.Error())
 	}

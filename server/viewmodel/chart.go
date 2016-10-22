@@ -370,7 +370,7 @@ func (c *Chart) getPriceSeries(ticker string, data []model.EquityPrice) chart.Ti
 		xvalues, yvalues = model.EquityPrices(data).Prices()
 	}
 	index := 0
-	if util.CaseInsensitiveEquals(ticker, c.TickerCompare) {
+	if util.String.CaseInsensitiveEquals(ticker, c.TickerCompare) {
 		index = 1
 		if !c.UsePercentageDifferences {
 			yaxis = chart.YAxisSecondary
@@ -401,7 +401,7 @@ func (c *Chart) getLastValueSeries(ticker string, priceSeries chart.FullValuePro
 	}
 
 	yaxis := chart.YAxisPrimary
-	if util.CaseInsensitiveEquals(ticker, c.TickerCompare) {
+	if util.String.CaseInsensitiveEquals(ticker, c.TickerCompare) {
 		if !c.UsePercentageDifferences {
 			yaxis = chart.YAxisSecondary
 		}

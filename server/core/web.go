@@ -74,7 +74,7 @@ func ReadQueryValueFloat64(rc *web.RequestContext, key string, defaultValue floa
 // ReadQueryValueBool reads a query value with a default.
 func ReadQueryValueBool(rc *web.RequestContext, key string, defaultValue bool) bool {
 	if value, err := rc.QueryParam(key); err == nil {
-		return util.CaseInsensitiveEquals(value, "true")
+		return util.String.CaseInsensitiveEquals(value, "true")
 	}
 	return defaultValue
 }

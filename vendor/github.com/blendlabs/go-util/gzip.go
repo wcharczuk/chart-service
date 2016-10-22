@@ -8,8 +8,15 @@ import (
 	exception "github.com/blendlabs/go-exception"
 )
 
+var (
+	// GZip is a namespace for gzip utilities.
+	GZip = gzipUtil{}
+)
+
+type gzipUtil struct{}
+
 // Compress gzip compresses the bytes.
-func Compress(contents []byte) ([]byte, error) {
+func (gu gzipUtil) Compress(contents []byte) ([]byte, error) {
 	var b bytes.Buffer
 	w := gzip.NewWriter(&b)
 	w.Write(contents)
@@ -26,7 +33,7 @@ func Compress(contents []byte) ([]byte, error) {
 }
 
 // Decompress gzip decompresses the bytes.
-func Decompress(contents []byte) ([]byte, error) {
+func (gu gzipUtil) Decompress(contents []byte) ([]byte, error) {
 	r, err := gzip.NewReader(bytes.NewBuffer(contents))
 	if err != nil {
 		return nil, exception.Wrap(err)

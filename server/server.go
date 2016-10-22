@@ -26,14 +26,8 @@ func faviconHandler(rc *web.RequestContext) web.ControllerResult {
 // Init inits the web app.
 func Init() *web.App {
 	app := web.New()
-	app.SetName(AppName)
+	app.Diagnostics().Writer().SetLabel(AppName)
 	app.SetPort(core.Config.Port())
-
-	if core.Config.IsProduction() {
-		app.SetLogger(web.NewStandardOutputErrorLogger())
-	} else {
-		app.SetLogger(web.NewStandardOutputLogger())
-	}
 
 	app.GET("/", rootHandler)
 	app.GET("/favicon.ico", faviconHandler)

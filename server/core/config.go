@@ -31,7 +31,7 @@ type config struct {
 func (c *config) Port() string {
 	if len(c.port) == 0 {
 		envPort := os.Getenv("PORT")
-		if !util.IsEmpty(envPort) {
+		if !util.String.IsEmpty(envPort) {
 			c.port = envPort
 		} else {
 			c.port = DefaultPort
@@ -45,7 +45,7 @@ func (c *config) Key() []byte {
 	if c.key == nil {
 		keyBlob := os.Getenv("ENCRYPTION_KEY")
 		if len(keyBlob) != 0 {
-			key, keyErr := util.Base64Decode(keyBlob)
+			key, keyErr := util.String.Base64Decode(keyBlob)
 			if keyErr != nil {
 				println(keyErr.Error())
 				return key
@@ -80,15 +80,12 @@ func (c *config) Environment() string {
 
 // IsProduction returns if the app is running in production mode.
 func (c *config) IsProduction() bool {
-	return util.CaseInsensitiveEquals(c.Environment(), "prod")
+	return util.String.CaseInsensitiveEquals(c.Environment(), "prod")
 }
 
 // SetupDatabaseContext writes the config to spiffy.
 func SetupDatabaseContext() error {
-	spiffy.CreateDbAlias("main", spiffy.NewDbConnectionFromEnvironment())
-	spiffy.SetDefaultAlias("main")
-
-	_, err := spiffy.DefaultDb().Open()
+	err := spiffy.SetDefaultDb(spiffy.NewDbConnectionFromEnvironment())
 	if err != nil {
 		return err
 	}

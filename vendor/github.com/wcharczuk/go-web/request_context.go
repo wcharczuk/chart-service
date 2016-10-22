@@ -9,7 +9,7 @@ import (
 	"strconv"
 	"time"
 
-	"github.com/blendlabs/go-util"
+	logger "github.com/blendlabs/go-logger"
 )
 
 const (
@@ -17,33 +17,29 @@ const (
 	PostBodySize = int64(1 << 26) //64mb
 
 	// PostBodySizeMax is the absolute maximum file size the server can handle.
-	PostBodySizeMax = int64(1 << 32) //fucking enormous.
+	PostBodySizeMax = int64(1 << 32) //enormous.
+
+	// StringEmpty is the empty string.
+	StringEmpty = ""
 )
 
 // PostedFile is a file that has been posted to an hc endpoint.
 type PostedFile struct {
 	Key      string
-	Filename string
+	FileName string
 	Contents []byte
 }
 
 // State is the collection of state objects on a context.
 type State map[string]interface{}
 
-// RequestEventHandler is an event handler for requests.
-type RequestEventHandler func(r *RequestContext)
-
-// RequestEventErrorHandler is fired when an error occurs.
-type RequestEventErrorHandler func(r *RequestContext, err interface{})
-
 // NewRequestContext returns a new hc context.
 func NewRequestContext(w ResponseWriter, r *http.Request, p RouteParameters) *RequestContext {
 	ctx := &RequestContext{
-		Response:         w,
-		Request:          r,
-		routeParameters:  p,
-		state:            State{},
-		requestLogFormat: DefaultRequestLogFormat,
+		Response:        w,
+		Request:         r,
+		routeParameters: p,
+		state:           State{},
 	}
 
 	return ctx
@@ -61,7 +57,9 @@ type RequestContext struct {
 	api                   *APIResultProvider
 	view                  *ViewResultProvider
 	defaultResultProvider ControllerResultProvider
-	logger                Logger
+	app                   *App
+	diagnostics           *logger.DiagnosticsAgent
+	config                interface{}
 	tx                    *sql.Tx
 	state                 State
 	routeParameters       RouteParameters
@@ -109,11 +107,17 @@ func (rc *RequestContext) TxRollback(rollbacker func() error) error {
 
 // API returns the API result provider.
 func (rc *RequestContext) API() *APIResultProvider {
+	if rc.api == nil {
+		rc.api = NewAPIResultProvider(rc.app, rc)
+	}
 	return rc.api
 }
 
 // View returns the view result provider.
 func (rc *RequestContext) View() *ViewResultProvider {
+	if rc.view == nil {
+		rc.view = NewViewResultProvider(rc.app, rc)
+	}
 	return rc.view
 }
 
@@ -144,18 +148,23 @@ func (rc *RequestContext) SetState(key string, value interface{}) {
 
 // Param returns a parameter from the request.
 func (rc *RequestContext) Param(name string) string {
+	routeValue := rc.routeParameters.Get(name)
+	if len(routeValue) > 0 {
+		return routeValue
+	}
+
 	queryValue := rc.Request.URL.Query().Get(name)
-	if len(queryValue) != 0 {
+	if len(queryValue) > 0 {
 		return queryValue
 	}
 
 	headerValue := rc.Request.Header.Get(name)
-	if len(headerValue) != 0 {
+	if len(headerValue) > 0 {
 		return headerValue
 	}
 
 	formValue := rc.Request.FormValue(name)
-	if len(formValue) != 0 {
+	if len(formValue) > 0 {
 		return formValue
 	}
 
@@ -164,7 +173,7 @@ func (rc *RequestContext) Param(name string) string {
 		return cookie.Value
 	}
 
-	return util.StringEmpty
+	return ""
 }
 
 // PostBody returns the bytes in a post body.
@@ -172,6 +181,9 @@ func (rc *RequestContext) PostBody() []byte {
 	if len(rc.postBody) == 0 {
 		defer rc.Request.Body.Close()
 		rc.postBody, _ = ioutil.ReadAll(rc.Request.Body)
+		if rc.diagnostics != nil {
+			rc.diagnostics.OnEvent(logger.EventWebRequestPostBody, rc.postBody)
+		}
 	}
 
 	return rc.postBody
@@ -202,7 +214,7 @@ func (rc *RequestContext) PostedFiles() ([]PostedFile, error) {
 			if err != nil {
 				return nil, err
 			}
-			files = append(files, PostedFile{Key: key, Filename: fileHeader.Filename, Contents: bytes})
+			files = append(files, PostedFile{Key: key, FileName: fileHeader.Filename, Contents: bytes})
 		}
 	} else {
 		err = rc.Request.ParseForm()
@@ -213,7 +225,7 @@ func (rc *RequestContext) PostedFiles() ([]PostedFile, error) {
 					if err != nil {
 						return nil, err
 					}
-					files = append(files, PostedFile{Key: key, Filename: fileHeader.Filename, Contents: bytes})
+					files = append(files, PostedFile{Key: key, FileName: fileHeader.Filename, Contents: bytes})
 				}
 			}
 		}
@@ -221,12 +233,16 @@ func (rc *RequestContext) PostedFiles() ([]PostedFile, error) {
 	return files, nil
 }
 
+func parameterMissingError(paramName string) error {
+	return fmt.Errorf("`%s` parameter is missing", paramName)
+}
+
 // RouteParameterInt returns a route parameter as an integer.
 func (rc *RequestContext) RouteParameterInt(key string) (int, error) {
 	if value, hasKey := rc.routeParameters[key]; hasKey {
 		return strconv.Atoi(value)
 	}
-	return 0, fmt.Errorf("`%s` parameter is missing", key)
+	return 0, parameterMissingError(key)
 }
 
 // RouteParameterInt64 returns a route parameter as an integer.
@@ -234,7 +250,7 @@ func (rc *RequestContext) RouteParameterInt64(key string) (int64, error) {
 	if value, hasKey := rc.routeParameters[key]; hasKey {
 		return strconv.ParseInt(value, 10, 64)
 	}
-	return 0, fmt.Errorf("`%s` parameter is missing", key)
+	return 0, parameterMissingError(key)
 }
 
 // RouteParameterFloat64 returns a route parameter as an float64.
@@ -242,7 +258,7 @@ func (rc *RequestContext) RouteParameterFloat64(key string) (float64, error) {
 	if value, hasKey := rc.routeParameters[key]; hasKey {
 		return strconv.ParseFloat(value, 64)
 	}
-	return 0, fmt.Errorf("`%s` parameter is missing", key)
+	return 0, parameterMissingError(key)
 }
 
 // RouteParameter returns a string route parameter
@@ -250,7 +266,7 @@ func (rc *RequestContext) RouteParameter(key string) (string, error) {
 	if value, hasKey := rc.routeParameters[key]; hasKey {
 		return value, nil
 	}
-	return util.StringEmpty, fmt.Errorf("`%s` parameter is missing", key)
+	return StringEmpty, parameterMissingError(key)
 }
 
 // QueryParam returns a query parameter.
@@ -258,7 +274,7 @@ func (rc *RequestContext) QueryParam(key string) (string, error) {
 	if value := rc.Request.URL.Query().Get(key); len(value) > 0 {
 		return value, nil
 	}
-	return util.StringEmpty, fmt.Errorf("`%s` parameter is missing", key)
+	return StringEmpty, parameterMissingError(key)
 }
 
 // QueryParamInt returns a query parameter as an integer.
@@ -266,7 +282,7 @@ func (rc *RequestContext) QueryParamInt(key string) (int, error) {
 	if value := rc.Request.URL.Query().Get(key); len(value) > 0 {
 		return strconv.Atoi(value)
 	}
-	return 0, fmt.Errorf("`%s` parameter is missing", key)
+	return 0, parameterMissingError(key)
 }
 
 // QueryParamInt64 returns a query parameter as an int64.
@@ -274,7 +290,7 @@ func (rc *RequestContext) QueryParamInt64(key string) (int64, error) {
 	if value := rc.Request.URL.Query().Get(key); len(value) > 0 {
 		return strconv.ParseInt(value, 10, 64)
 	}
-	return 0, fmt.Errorf("`%s` parameter is missing", key)
+	return 0, parameterMissingError(key)
 }
 
 // QueryParamFloat64 returns a query parameter as a float64.
@@ -282,7 +298,7 @@ func (rc *RequestContext) QueryParamFloat64(key string) (float64, error) {
 	if value := rc.Request.URL.Query().Get(key); len(value) > 0 {
 		return strconv.ParseFloat(value, 64)
 	}
-	return 0, fmt.Errorf("`%s` parameter is missing", key)
+	return 0, parameterMissingError(key)
 }
 
 // QueryParamTime returns a query parameter as a time.Time.
@@ -290,7 +306,47 @@ func (rc *RequestContext) QueryParamTime(key, format string) (time.Time, error) 
 	if value := rc.Request.URL.Query().Get(key); len(value) > 0 {
 		return time.Parse(format, value)
 	}
-	return time.Time{}, fmt.Errorf("`%s` parameter is missing", key)
+	return time.Time{}, parameterMissingError(key)
+}
+
+// HeaderParam returns a header parameter value.
+func (rc *RequestContext) HeaderParam(key string) (string, error) {
+	if value := rc.Request.Header.Get(key); len(value) > 0 {
+		return value, nil
+	}
+	return StringEmpty, parameterMissingError(key)
+}
+
+// HeaderParamInt returns a header parameter value as an integer.
+func (rc *RequestContext) HeaderParamInt(key string) (int, error) {
+	if value := rc.Request.Header.Get(key); len(value) > 0 {
+		return strconv.Atoi(value)
+	}
+	return 0, parameterMissingError(key)
+}
+
+// HeaderParamInt64 returns a header parameter value as an integer.
+func (rc *RequestContext) HeaderParamInt64(key string) (int64, error) {
+	if value := rc.Request.Header.Get(key); len(value) > 0 {
+		return strconv.ParseInt(value, 10, 64)
+	}
+	return 0, parameterMissingError(key)
+}
+
+// HeaderParamFloat64 returns a header parameter value as an float64.
+func (rc *RequestContext) HeaderParamFloat64(key string) (float64, error) {
+	if value := rc.Request.Header.Get(key); len(value) > 0 {
+		return strconv.ParseFloat(value, 64)
+	}
+	return 0, parameterMissingError(key)
+}
+
+// HeaderParamTime returns a header parameter value as an float64.
+func (rc *RequestContext) HeaderParamTime(key, format string) (time.Time, error) {
+	if value := rc.Request.Header.Get(key); len(value) > 0 {
+		return time.Parse(format, key)
+	}
+	return time.Time{}, parameterMissingError(key)
 }
 
 // GetCookie returns a named cookie from the request.
@@ -344,26 +400,17 @@ func (rc *RequestContext) ExpireCookie(name string) {
 }
 
 // --------------------------------------------------------------------------------
-// Logging
+// Diagnostics
 // --------------------------------------------------------------------------------
 
-// LogRequest consumes the context and writes a log message for the request.
-func (rc *RequestContext) LogRequest() {
-	if rc.logger != nil {
-		rc.logger.Write(FormatRequestLog(rc.requestLogFormat, rc))
-	}
+// Diagnostics returns the diagnostics agent.
+func (rc *RequestContext) Diagnostics() *logger.DiagnosticsAgent {
+	return rc.diagnostics
 }
 
-// LogRequestWithW3CFormat consumes the context and writes a log message for the request.
-func (rc *RequestContext) LogRequestWithW3CFormat(format string) {
-	if rc.logger != nil {
-		rc.logger.Log(FormatRequestLog(format, rc))
-	}
-}
-
-// Logger returns the logger.
-func (rc *RequestContext) Logger() Logger {
-	return rc.logger
+// Config returns the app config.
+func (rc *RequestContext) Config() interface{} {
+	return rc.config
 }
 
 // --------------------------------------------------------------------------------
@@ -411,22 +458,22 @@ func (rc *RequestContext) Redirect(path string) *RedirectResult {
 // --------------------------------------------------------------------------------
 
 // StatusCode returns the status code for the request, this is used for logging.
-func (rc *RequestContext) getStatusCode() int {
+func (rc *RequestContext) getLoggedStatusCode() int {
 	return rc.statusCode
 }
 
 // SetStatusCode sets the status code for the request, this is used for logging.
-func (rc *RequestContext) setStatusCode(code int) {
+func (rc *RequestContext) setLoggedStatusCode(code int) {
 	rc.statusCode = code
 }
 
 // ContentLength returns the content length for the request, this is used for logging.
-func (rc *RequestContext) getContentLength() int {
+func (rc *RequestContext) getLoggedContentLength() int {
 	return rc.contentLength
 }
 
 // SetContentLength sets the content length, this is used for logging.
-func (rc *RequestContext) setContentLength(length int) {
+func (rc *RequestContext) setLoggedContentLength(length int) {
 	rc.contentLength = length
 }
 

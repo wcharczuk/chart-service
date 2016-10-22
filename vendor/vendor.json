@@ -21,16 +21,16 @@
 			"revisionTime": "2016-03-23T23:34:35Z"
 		},
 		{
-			"checksumSHA1": "SFZ+pys/AD+p8STyZa2vwmSbVoc=",
+			"checksumSHA1": "fLA/O0kGVSL10pDtqez3j0Ph1j0=",
 			"path": "github.com/blendlabs/go-request",
-			"revision": "bef2dcc149995af925195c313526e62fa05e5f55",
-			"revisionTime": "2016-08-03T20:11:29Z"
+			"revision": "196ea2d1501c4303b77bbcbb54f4df7561279d21",
+			"revisionTime": "2016-10-13T00:11:56Z"
 		},
 		{
-			"checksumSHA1": "Pmz4CRLAjdqT2ISjlbrcdIPoBlE=",
+			"checksumSHA1": "lyPOOsZgD8CydIR9kAKq+4q1gwI=",
 			"path": "github.com/blendlabs/go-util",
-			"revision": "5c199cc0bfd014a3dccf5e6eea7d609f20e5537a",
-			"revisionTime": "2016-08-03T20:31:37Z"
+			"revision": "75a6f360bf831d368bf10978ff13fdd07bc48177",
+			"revisionTime": "2016-10-19T17:29:18Z"
 		},
 		{
 			"checksumSHA1": "cUQlxzU4bpI8L1MuL1EgaZV6gJo=",
@@ -39,16 +39,16 @@
 			"revisionTime": "2016-08-03T20:31:37Z"
 		},
 		{
-			"checksumSHA1": "54lwl8z08lyYcDjsS2Bi6otOZBc=",
+			"checksumSHA1": "Ckd0zDpK3DknFOtCnsAZTp22F6s=",
 			"path": "github.com/blendlabs/spiffy",
-			"revision": "7c861d2494d02675830f9355ad87eb20e9920c6d",
-			"revisionTime": "2016-08-01T23:21:04Z"
+			"revision": "e4538dde91510c8cc46f7b5cd367c145f7a38a5e",
+			"revisionTime": "2016-10-22T00:29:29Z"
 		},
 		{
-			"checksumSHA1": "TYZpZq78vUW5i5wF7wrPSFe8W18=",
+			"checksumSHA1": "uzLhaxiThbx9FpXBOTESwdkK4cY=",
 			"path": "github.com/blendlabs/spiffy/migration",
-			"revision": "47ede29bee829a5ab28c87b28c88f841c5376116",
-			"revisionTime": "2016-08-07T07:23:07Z"
+			"revision": "e4538dde91510c8cc46f7b5cd367c145f7a38a5e",
+			"revisionTime": "2016-10-22T00:29:29Z"
 		},
 		{
 			"checksumSHA1": "aJ/kX/eCUlrCJBZ26Hwh/RXzAIw=",
@@ -81,10 +81,10 @@
 			"revisionTime": "2016-02-09T14:37:49Z"
 		},
 		{
-			"checksumSHA1": "3ly6MkhaaJvLqwm7ajpoNCXxpSk=",
+			"checksumSHA1": "g+n5XpdIZgebl9TKs0deFHCTXjI=",
 			"path": "github.com/wcharczuk/go-chart",
-			"revision": "102f7a8aa36a2adb815ccdc61f42a81b70239f58",
-			"revisionTime": "2016-08-12T05:24:40Z"
+			"revision": "4d7ea04118631de805f4cd8ae4c1cc12fee2a6fb",
+			"revisionTime": "2016-10-22T00:01:02Z"
 		},
 		{
 			"checksumSHA1": "KvhMRi/cqJzoCWTYPWt8iOe6y6c=",
@@ -93,10 +93,10 @@
 			"revisionTime": "2016-08-07T06:58:44Z"
 		},
 		{
-			"checksumSHA1": "MmX8r1mHojEee4ZzH/8n83Q+pBw=",
+			"checksumSHA1": "qxPTq/SglOSA5a5KCS68FqDi3HY=",
 			"path": "github.com/wcharczuk/go-web",
-			"revision": "f759fa3d6e1d817372dba9338ef335a5cc8e8a87",
-			"revisionTime": "2016-07-19T20:37:13Z"
+			"revision": "607693c43bb1fb0b8ea790b668e5e0b6c4567549",
+			"revisionTime": "2016-10-19T22:45:05Z"
 		},
 		{
 			"checksumSHA1": "7E3Y1HU/UbsQF/dxMRdjFmx9QDQ=",

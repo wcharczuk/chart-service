@@ -13,9 +13,18 @@ var (
 )
 
 // --------------------------------------------------------------------------------
-// Column Collection
+// Utility
 // --------------------------------------------------------------------------------
 
+// ColumnNames returns a csv of column names.
+func ColumnNames(object DatabaseMapped) string {
+	columns := CachedColumnCollectionFromInstance(object)
+	return CSV(columns.ColumnNames())
+}
+
+// --------------------------------------------------------------------------------
+// Column Collection
+// --------------------------------------------------------------------------------
 // func NewColumnCollection() *ColumnCollection { return &ColumnCollection{lookup: map[string]*Column} }
 
 // NewColumnCollectionWithPrefix makes a new column collection with a column prefix.
@@ -35,9 +44,20 @@ func NewColumnCollectionFromColumns(columns []Column) *ColumnCollection {
 	return &cc
 }
 
+// Meta is an alias to CachedColumnCollectionFromInstance
+func Meta(obj DatabaseMapped) *ColumnCollection {
+	return CachedColumnCollectionFromInstance(obj)
+}
+
+// MakeColumnCacheKey creates a cache key for a type.
+func MakeColumnCacheKey(objectType reflect.Type, tableName string) string {
+	return fmt.Sprintf("%s_%s", objectType.Name(), tableName)
+}
+
 // CachedColumnCollectionFromInstance reflects an object instance into a new column collection.
 func CachedColumnCollectionFromInstance(object DatabaseMapped) *ColumnCollection {
-	return CachedColumnCollectionFromType(object.TableName(), reflect.TypeOf(object))
+	objectType := reflect.TypeOf(object)
+	return CachedColumnCollectionFromType(MakeColumnCacheKey(objectType, object.TableName()), objectType)
 }
 
 // CachedColumnCollectionFromType reflects a reflect.Type into a column collection.

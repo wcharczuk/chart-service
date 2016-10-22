@@ -38,20 +38,20 @@ func (cc Charts) getChartAction(rc *web.RequestContext) web.ControllerResult {
 		return rc.API().InternalError(err)
 	}
 
-	if util.CaseInsensitiveEquals(cv.Format, "png") {
+	if util.String.CaseInsensitiveEquals(cv.Format, "png") {
 		rc.Response.Header().Set("Content-Type", "image/png")
 		err := graph.Render(chart.PNG, rc.Response)
 		if err != nil {
-			if rc.Logger() != nil {
-				rc.Logger().Errorf("render error: %s", err.Error())
+			if rc.Diagnostics() != nil {
+				rc.Diagnostics().Errorf("render error: %s", err.Error())
 			}
 		}
-	} else if util.CaseInsensitiveEquals(cv.Format, "svg") {
+	} else if util.String.CaseInsensitiveEquals(cv.Format, "svg") {
 		rc.Response.Header().Set("Content-Type", "image/svg+xml")
 		err := graph.Render(chart.SVG, rc.Response)
 		if err != nil {
-			if rc.Logger() != nil {
-				rc.Logger().Errorf("render error: %s", err.Error())
+			if rc.Diagnostics() != nil {
+				rc.Diagnostics().Errorf("render error: %s", err.Error())
 			}
 		}
 	}
