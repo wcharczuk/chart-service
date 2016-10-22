@@ -21,6 +21,12 @@
 			"revisionTime": "2016-03-23T23:34:35Z"
 		},
 		{
+			"checksumSHA1": "/gvFAe62V39yRK7DEyHSPvsxUkc=",
+			"path": "github.com/blendlabs/go-logger",
+			"revision": "c444adc9c8cd52d349de53e5389afe75dfd3d39c",
+			"revisionTime": "2016-10-06T17:49:58Z"
+		},
+		{
 			"checksumSHA1": "fLA/O0kGVSL10pDtqez3j0Ph1j0=",
 			"path": "github.com/blendlabs/go-request",
 			"revision": "196ea2d1501c4303b77bbcbb54f4df7561279d21",
