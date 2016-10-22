@@ -45,6 +45,12 @@
 			"revisionTime": "2016-08-03T20:31:37Z"
 		},
 		{
+			"checksumSHA1": "YLTGAsVJsgn6DI1YwDj+nn94TgQ=",
+			"path": "github.com/blendlabs/go-workqueue",
+			"revision": "9981a668b38c19ab2ddc8096776b85e11592a653",
+			"revisionTime": "2016-09-17T19:40:04Z"
+		},
+		{
 			"checksumSHA1": "Ckd0zDpK3DknFOtCnsAZTp22F6s=",
 			"path": "github.com/blendlabs/spiffy",
 			"revision": "e4538dde91510c8cc46f7b5cd367c145f7a38a5e",
