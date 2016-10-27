@@ -33,7 +33,7 @@ func AuthRequired(action web.ControllerAction) web.ControllerAction {
 
 // ReadRouteValue reads a route value with a default.
 func ReadRouteValue(rc *web.RequestContext, key, defaultValue string) string {
-	if value, err := rc.RouteParameter(key); err == nil {
+	if value, err := rc.RouteParam(key); err == nil {
 		return value
 	}
 	return defaultValue
@@ -41,7 +41,7 @@ func ReadRouteValue(rc *web.RequestContext, key, defaultValue string) string {
 
 // ReadRouteValueInt reads a route value with a default.
 func ReadRouteValueInt(rc *web.RequestContext, key string, defaultValue int) int {
-	if value, err := rc.RouteParameterInt(key); err == nil {
+	if value, err := rc.RouteParamInt(key); err == nil {
 		return value
 	}
 	return defaultValue

@@ -290,6 +290,17 @@ func (mrb *MockRequestBuilder) FetchResponseAsBytes() ([]byte, error) {
 	return ioutil.ReadAll(res.Body)
 }
 
+// FetchResponseAsBytesWithMeta returns the response as bytes with meta information.
+func (mrb *MockRequestBuilder) FetchResponseAsBytesWithMeta() (*ResponseMeta, []byte, error) {
+	res, err := mrb.FetchResponse()
+	if err != nil {
+		return nil, nil, err
+	}
+	defer res.Body.Close()
+	contents, err := ioutil.ReadAll(res.Body)
+	return NewResponseMeta(res), contents, err
+}
+
 // Execute just runs the request.
 func (mrb *MockRequestBuilder) Execute() error {
 	_, err := mrb.FetchResponseAsBytes()
@@ -308,5 +319,5 @@ func (mrb *MockRequestBuilder) ExecuteWithMeta() (*ResponseMeta, error) {
 	if err != nil {
 		return nil, err
 	}
-	return NewResponseMetaFromResponse(res), nil
+	return NewResponseMeta(res), nil
 }

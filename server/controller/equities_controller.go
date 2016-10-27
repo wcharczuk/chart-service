@@ -21,7 +21,7 @@ func (e Equities) getAllHandler(rc *web.RequestContext) web.ControllerResult {
 }
 
 func (e Equities) searchHandler(rc *web.RequestContext) web.ControllerResult {
-	searchString, err := rc.RouteParameter("query")
+	searchString, err := rc.RouteParam("query")
 	if err != nil {
 		return rc.API().BadRequest(err.Error())
 	}
@@ -33,7 +33,7 @@ func (e Equities) searchHandler(rc *web.RequestContext) web.ControllerResult {
 }
 
 func (e Equities) getHandler(rc *web.RequestContext) web.ControllerResult {
-	id, err := rc.RouteParameterInt("id")
+	id, err := rc.RouteParamInt("id")
 	if err != nil {
 		return rc.API().BadRequest(err.Error())
 	}
@@ -62,7 +62,7 @@ func (e Equities) createHandler(rc *web.RequestContext) web.ControllerResult {
 }
 
 func (e Equities) updateHandler(rc *web.RequestContext) web.ControllerResult {
-	id, err := rc.RouteParameterInt("id")
+	id, err := rc.RouteParamInt("id")
 	if err != nil {
 		return rc.API().BadRequest(err.Error())
 	}
@@ -91,7 +91,7 @@ func (e Equities) updateHandler(rc *web.RequestContext) web.ControllerResult {
 }
 
 func (e Equities) patchHandler(rc *web.RequestContext) web.ControllerResult {
-	id, err := rc.RouteParameterInt("id")
+	id, err := rc.RouteParamInt("id")
 	if err != nil {
 		return rc.API().BadRequest(err.Error())
 	}
@@ -124,7 +124,7 @@ func (e Equities) patchHandler(rc *web.RequestContext) web.ControllerResult {
 }
 
 func (e Equities) deleteHandler(rc *web.RequestContext) web.ControllerResult {
-	id, err := rc.RouteParameterInt("id")
+	id, err := rc.RouteParamInt("id")
 	if err != nil {
 		return rc.API().BadRequest(err.Error())
 	}

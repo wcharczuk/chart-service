@@ -50,28 +50,48 @@ func Meta(obj DatabaseMapped) *ColumnCollection {
 }
 
 // MakeColumnCacheKey creates a cache key for a type.
-func MakeColumnCacheKey(objectType reflect.Type, tableName string) string {
-	return fmt.Sprintf("%s_%s", objectType.Name(), tableName)
+func MakeColumnCacheKey(objectType reflect.Type) string {
+	if dbm, err := MakeNewDatabaseMapped(objectType); err == nil {
+		return fmt.Sprintf("%s_%s", objectType.String(), dbm.TableName())
+	}
+	return objectType.String()
 }
 
 // CachedColumnCollectionFromInstance reflects an object instance into a new column collection.
-func CachedColumnCollectionFromInstance(object DatabaseMapped) *ColumnCollection {
+func CachedColumnCollectionFromInstance(object interface{}) *ColumnCollection {
 	objectType := reflect.TypeOf(object)
-	return CachedColumnCollectionFromType(MakeColumnCacheKey(objectType, object.TableName()), objectType)
+	return CachedColumnCollectionFromType(MakeColumnCacheKey(objectType), objectType)
 }
 
-// CachedColumnCollectionFromType reflects a reflect.Type into a column collection.
-// The results of this are cached for speed.
-func CachedColumnCollectionFromType(identifier string, t reflect.Type) *ColumnCollection {
+func initMetaCache() {
 	metaCacheLock.Lock()
 	defer metaCacheLock.Unlock()
 
 	if metaCache == nil {
 		metaCache = map[string]*ColumnCollection{}
 	}
+}
+
+func addMetaCacheEntry(identifier string, t reflect.Type) *ColumnCollection {
+	metaCacheLock.Lock()
+	defer metaCacheLock.Unlock()
+	if _, ok := metaCache[identifier]; !ok {
+		metadata := GenerateColumnCollectionForType(t)
+		metaCache[identifier] = metadata
+		return metadata
+	}
+	return metaCache[identifier]
+}
+
+// CachedColumnCollectionFromType reflects a reflect.Type into a column collection.
+// The results of this are cached for speed.
+func CachedColumnCollectionFromType(identifier string, t reflect.Type) *ColumnCollection {
+	if metaCache == nil {
+		initMetaCache()
+	}
 
 	if _, ok := metaCache[identifier]; !ok {
-		metaCache[identifier] = GenerateColumnCollectionForType(t)
+		return addMetaCacheEntry(identifier, t)
 	}
 	return metaCache[identifier]
 }

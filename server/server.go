@@ -1,6 +1,7 @@
 package server
 
 import (
+	logger "github.com/blendlabs/go-logger"
 	"github.com/wcharczuk/chart-service/server/controller"
 	"github.com/wcharczuk/chart-service/server/core"
 	"github.com/wcharczuk/go-web"
@@ -26,7 +27,9 @@ func faviconHandler(rc *web.RequestContext) web.ControllerResult {
 // Init inits the web app.
 func Init() *web.App {
 	app := web.New()
+	app.SetDiagnostics(logger.NewDiagnosticsAgentFromEnvironment())
 	app.Diagnostics().Writer().SetLabel(AppName)
+	app.Diagnostics().EnableEvent(logger.EventInfo)
 	app.SetPort(core.Config.Port())
 
 	app.GET("/", rootHandler)

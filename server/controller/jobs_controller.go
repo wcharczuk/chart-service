@@ -16,7 +16,7 @@ func (j Jobs) getJobsAction(rc *web.RequestContext) web.ControllerResult {
 
 // POST "/api/v1/job/:job_id"
 func (j Jobs) runJobAction(rc *web.RequestContext) web.ControllerResult {
-	jobID, err := rc.RouteParameter("job_id")
+	jobID, err := rc.RouteParam("job_id")
 	if err != nil {
 		return rc.API().BadRequest(err.Error())
 	}

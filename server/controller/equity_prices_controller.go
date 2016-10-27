@@ -9,7 +9,7 @@ import (
 type EquityPrices struct{}
 
 func (ep EquityPrices) getPricesAction(rc *web.RequestContext) web.ControllerResult {
-	ticker, err := rc.RouteParameter("ticker")
+	ticker, err := rc.RouteParam("ticker")
 	if err != nil {
 		return rc.API().BadRequest(err.Error())
 	}

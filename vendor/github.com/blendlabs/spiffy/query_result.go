@@ -31,14 +31,17 @@ func (q *QueryResult) Close() error {
 		rowsErr = q.rows.Close()
 		q.rows = nil
 	}
-	if q.stmt != nil {
-		stmtErr = q.stmt.Close()
-		q.stmt = nil
+
+	if !q.conn.useStatementCache {
+		if q.stmt != nil {
+			stmtErr = q.stmt.Close()
+			q.stmt = nil
+		}
 	}
 
 	//yes this is gross.
 	//release the tx lock on the connection for this query.
-	q.conn.txUnlock()
+	q.conn.transactionUnlock()
 	return exception.WrapMany(rowsErr, stmtErr)
 }
 
@@ -53,7 +56,7 @@ func (q *QueryResult) Any() (hasRows bool, err error) {
 		if closeErr := q.Close(); closeErr != nil {
 			err = exception.WrapMany(err, closeErr)
 		}
-		q.conn.FireEvent(q.conn.queryListeners, q.queryBody, time.Now().Sub(q.start), err)
+		q.conn.fireEvent(EventFlagQuery, q.queryBody, time.Now().Sub(q.start), err)
 	}()
 
 	if q.err != nil {
@@ -114,7 +117,7 @@ func (q *QueryResult) Scan(args ...interface{}) (err error) {
 		if closeErr := q.Close(); closeErr != nil {
 			err = exception.WrapMany(err, closeErr)
 		}
-		q.conn.FireEvent(q.conn.queryListeners, q.queryBody, time.Now().Sub(q.start), err)
+		q.conn.fireEvent(EventFlagQuery, q.queryBody, time.Now().Sub(q.start), err)
 	}()
 
 	if q.err != nil {
@@ -139,7 +142,7 @@ func (q *QueryResult) Scan(args ...interface{}) (err error) {
 }
 
 // Out writes the query result to a single object via. reflection mapping.
-func (q *QueryResult) Out(object DatabaseMapped) (err error) {
+func (q *QueryResult) Out(object interface{}) (err error) {
 	defer func() {
 		if r := recover(); r != nil {
 			recoveryException := exception.New(r)
@@ -149,7 +152,7 @@ func (q *QueryResult) Out(object DatabaseMapped) (err error) {
 		if closeErr := q.Close(); closeErr != nil {
 			err = exception.WrapMany(err, closeErr)
 		}
-		q.conn.FireEvent(q.conn.queryListeners, q.queryBody, time.Now().Sub(q.start), err)
+		q.conn.fireEvent(EventFlagQuery, q.queryBody, time.Now().Sub(q.start), err)
 	}()
 
 	if q.err != nil {
@@ -191,7 +194,7 @@ func (q *QueryResult) OutMany(collection interface{}) (err error) {
 		if closeErr := q.Close(); closeErr != nil {
 			err = exception.WrapMany(err, closeErr)
 		}
-		q.conn.FireEvent(q.conn.queryListeners, q.queryBody, time.Now().Sub(q.start), err)
+		q.conn.fireEvent(EventFlagQuery, q.queryBody, time.Now().Sub(q.start), err)
 	}()
 
 	if q.err != nil {
@@ -214,15 +217,15 @@ func (q *QueryResult) OutMany(collection interface{}) (err error) {
 	sliceInnerType := reflectSliceType(collection)
 	collectionValue := reflectValue(collection)
 
-	v, _ := MakeNew(sliceInnerType)
-	meta := CachedColumnCollectionFromType(MakeColumnCacheKey(sliceInnerType, v.TableName()), sliceInnerType)
+	v := MakeNew(sliceInnerType)
+	meta := CachedColumnCollectionFromType(MakeColumnCacheKey(sliceInnerType), sliceInnerType)
 
 	isPopulatable := IsPopulatable(v)
 
 	var popErr error
 	didSetRows := false
 	for q.rows.Next() {
-		newObj, _ := MakeNew(sliceInnerType)
+		newObj := MakeNew(sliceInnerType)
 
 		if isPopulatable {
 			popErr = AsPopulatable(newObj).Populate(q.rows)
@@ -256,7 +259,7 @@ func (q *QueryResult) Each(consumer RowsConsumer) (err error) {
 		if closeErr := q.Close(); closeErr != nil {
 			err = exception.WrapMany(err, closeErr)
 		}
-		q.conn.FireEvent(q.conn.queryListeners, q.queryBody, time.Now().Sub(q.start), err)
+		q.conn.fireEvent(EventFlagQuery, q.queryBody, time.Now().Sub(q.start), err)
 	}()
 
 	if q.err != nil {

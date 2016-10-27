@@ -12,7 +12,7 @@ import (
 type Yahoo struct{}
 
 func (y Yahoo) getQuoteAction(rc *web.RequestContext) web.ControllerResult {
-	ticker, err := rc.RouteParameter("ticker")
+	ticker, err := rc.RouteParam("ticker")
 	if err != nil {
 		return rc.API().BadRequest(err.Error())
 	}
@@ -24,7 +24,7 @@ func (y Yahoo) getQuoteAction(rc *web.RequestContext) web.ControllerResult {
 }
 
 func (y Yahoo) getPricesAction(rc *web.RequestContext) web.ControllerResult {
-	ticker, err := rc.RouteParameter("ticker")
+	ticker, err := rc.RouteParam("ticker")
 	if err != nil {
 		return rc.API().BadRequest(err.Error())
 	}
@@ -32,7 +32,7 @@ func (y Yahoo) getPricesAction(rc *web.RequestContext) web.ControllerResult {
 	from := time.Now().UTC().AddDate(0, -1, 0)
 	to := time.Now().UTC()
 
-	timeframe, err := rc.RouteParameter("timeframe")
+	timeframe, err := rc.RouteParam("timeframe")
 	if err == nil {
 		from, to, _, _, err = core.ParseTimeFrame(timeframe)
 		if err != nil {
