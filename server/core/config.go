@@ -4,6 +4,7 @@ import (
 	"os"
 
 	"github.com/blendlabs/go-util"
+	"github.com/blendlabs/go-util/env"
 	"github.com/blendlabs/spiffy"
 )
 
@@ -29,15 +30,7 @@ type config struct {
 
 // Port is the port the server should listen on.
 func (c *config) Port() string {
-	if len(c.port) == 0 {
-		envPort := os.Getenv("PORT")
-		if !util.String.IsEmpty(envPort) {
-			c.port = envPort
-		} else {
-			c.port = DefaultPort
-		}
-	}
-	return c.port
+	return env.Env().String("PORT", DefaultPort)
 }
 
 // ConfigKey is the app secret we use to encrypt things.
@@ -65,31 +58,18 @@ func (c *config) AuthKey() string {
 	return c.authKey
 }
 
-// Environment returns the current environment.
-func (c *config) Environment() string {
-	if len(c.env) == 0 {
-		env := os.Getenv("ENV")
-		if len(env) != 0 {
-			c.env = env
-		} else {
-			c.env = DefaultEnv
-		}
-	}
-	return c.env
-}
-
-// IsProduction returns if the app is running in production mode.
 func (c *config) IsProduction() bool {
-	return util.String.CaseInsensitiveEquals(c.Environment(), "prod")
+	return util.String.CaseInsensitiveEquals(env.Env().String("ENV", DefaultEnv), "prod")
 }
 
 // SetupDatabaseContext writes the config to spiffy.
 func SetupDatabaseContext() error {
-	err := spiffy.SetDefaultDb(spiffy.NewDbConnectionFromEnvironment())
+	err := spiffy.InitDefault(spiffy.NewConnectionFromEnvironment())
 	if err != nil {
 		return err
 	}
 
-	spiffy.DefaultDb().Connection.SetMaxIdleConns(50)
+	spiffy.DB().Connection.SetMaxIdleConns(64)
+	spiffy.DB().Connection.SetMaxOpenConns(64)
 	return nil
 }

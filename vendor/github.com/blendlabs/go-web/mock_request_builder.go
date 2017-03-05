@@ -4,6 +4,7 @@ import (
 	"bytes"
 	"encoding/json"
 	"encoding/xml"
+	"errors"
 	"fmt"
 	"io"
 	"io/ioutil"
@@ -17,12 +18,18 @@ import (
 
 // NewMockRequestBuilder returns a new mock request builder for a given app.
 func NewMockRequestBuilder(app *App) *MockRequestBuilder {
+	var err error
+	if app != nil {
+		err = app.commonStartupTasks()
+	}
+
 	return &MockRequestBuilder{
 		app:         app,
 		verb:        "GET",
 		queryString: url.Values{},
 		formValues:  url.Values{},
 		headers:     http.Header{},
+		startupErr:  err,
 	}
 }
 
@@ -40,12 +47,40 @@ type MockRequestBuilder struct {
 
 	postedFiles map[string]PostedFile
 
+	startupErr error
+
 	responseBuffer *bytes.Buffer
+}
+
+// Get is a shortcut for WithVerb("GET") WithPathf(pathFormat, args...)
+func (mrb *MockRequestBuilder) Get(pathFormat string, args ...interface{}) *MockRequestBuilder {
+	return mrb.WithVerb("GET").WithPathf(pathFormat, args...)
+}
+
+// Post is a shortcut for WithVerb("POST") WithPathf(pathFormat, args...)
+func (mrb *MockRequestBuilder) Post(pathFormat string, args ...interface{}) *MockRequestBuilder {
+	return mrb.WithVerb("POST").WithPathf(pathFormat, args...)
+}
+
+// Put is a shortcut for WithVerb("PUT") WithPathf(pathFormat, args...)
+func (mrb *MockRequestBuilder) Put(pathFormat string, args ...interface{}) *MockRequestBuilder {
+	return mrb.WithVerb("PUT").WithPathf(pathFormat, args...)
+}
+
+// Delete is a shortcut for WithVerb("DELETE") WithPathf(pathFormat, args...)
+func (mrb *MockRequestBuilder) Delete(pathFormat string, args ...interface{}) *MockRequestBuilder {
+	return mrb.WithVerb("DELETE").WithPathf(pathFormat, args...)
 }
 
 // WithPathf sets the path for the request.
 func (mrb *MockRequestBuilder) WithPathf(pathFormat string, args ...interface{}) *MockRequestBuilder {
 	mrb.path = fmt.Sprintf(pathFormat, args...)
+
+	// url.Parse always includes the '/' path prefix.
+	if !strings.HasPrefix(mrb.path, "/") {
+		mrb.path = fmt.Sprintf("/%s", mrb.path)
+	}
+
 	return mrb
 }
 
@@ -101,7 +136,7 @@ func (mrb *MockRequestBuilder) WithPostedFile(postedFile PostedFile) *MockReques
 	return mrb
 }
 
-// WithResponseBuffer optionally sets a response buffer to write to during ??????
+// WithResponseBuffer optionally sets a response buffer to write to directly.
 func (mrb *MockRequestBuilder) WithResponseBuffer(buffer *bytes.Buffer) *MockRequestBuilder {
 	mrb.responseBuffer = buffer
 	return mrb
@@ -110,7 +145,9 @@ func (mrb *MockRequestBuilder) WithResponseBuffer(buffer *bytes.Buffer) *MockReq
 // Request returns the mock request builder settings as an http.Request.
 func (mrb *MockRequestBuilder) Request() (*http.Request, error) {
 	req := &http.Request{}
-	reqURL, err := url.Parse(fmt.Sprintf("http://localhost/%s", mrb.path))
+
+	reqURL, err := url.Parse(fmt.Sprintf("http://localhost%s", mrb.path))
+
 	if err != nil {
 		return nil, err
 	}
@@ -160,8 +197,8 @@ func (mrb *MockRequestBuilder) Request() (*http.Request, error) {
 	return req, nil
 }
 
-// RequestContext returns the mock request as a request context.
-func (mrb *MockRequestBuilder) RequestContext(p RouteParameters) (*RequestContext, error) {
+// Ctx returns the mock request as a request context.
+func (mrb *MockRequestBuilder) Ctx(p RouteParameters) (*Ctx, error) {
 	r, err := mrb.Request()
 
 	if err != nil {
@@ -176,11 +213,11 @@ func (mrb *MockRequestBuilder) RequestContext(p RouteParameters) (*RequestContex
 	}
 
 	w := NewMockResponseWriter(buffer)
-	var rc *RequestContext
+	var rc *Ctx
 	if mrb.app != nil {
-		rc = mrb.app.requestContext(w, r, p)
+		rc = mrb.app.newCtx(w, r, p)
 	} else {
-		rc = NewRequestContext(w, r, p)
+		rc = NewCtx(w, r, p)
 	}
 
 	return rc, nil
@@ -188,14 +225,19 @@ func (mrb *MockRequestBuilder) RequestContext(p RouteParameters) (*RequestContex
 
 // FetchResponse runs the mock request.
 func (mrb *MockRequestBuilder) FetchResponse() (res *http.Response, err error) {
-	defer func() {
-		if r := recover(); r != nil {
-			if mrb.app.panicHandler != nil {
-				rc, _ := mrb.RequestContext(nil)
+	if mrb.startupErr != nil {
+		err = mrb.startupErr
+		return
+	}
+
+	if mrb.app != nil && mrb.app.panicHandler != nil {
+		defer func() {
+			if r := recover(); r != nil {
+				rc, _ := mrb.Ctx(nil)
 				controllerResult := mrb.app.panicHandler(rc, r)
 				panicRecoveryBuffer := bytes.NewBuffer([]byte{})
 				panicRecoveryWriter := NewMockResponseWriter(panicRecoveryBuffer)
-				err = controllerResult.Render(panicRecoveryWriter, rc.Request)
+				err = controllerResult.Render(NewCtx(panicRecoveryWriter, rc.Request, rc.routeParameters))
 				res = &http.Response{
 					Body:          ioutil.NopCloser(bytes.NewBuffer(panicRecoveryBuffer.Bytes())),
 					ContentLength: int64(panicRecoveryWriter.ContentLength()),
@@ -206,8 +248,8 @@ func (mrb *MockRequestBuilder) FetchResponse() (res *http.Response, err error) {
 					ProtoMinor:    1,
 				}
 			}
-		}
-	}()
+		}()
+	}
 
 	handle, params, addTrailingSlash := mrb.app.router.Lookup(mrb.verb, mrb.path)
 	if addTrailingSlash {
@@ -314,10 +356,16 @@ func (mrb *MockRequestBuilder) ExecuteWithMeta() (*ResponseMeta, error) {
 		return nil, err
 	}
 
-	defer res.Body.Close()
-	_, err = ioutil.ReadAll(res.Body)
-	if err != nil {
-		return nil, err
+	if res == nil {
+		return nil, errors.New("`res` is nil")
+	}
+
+	if res.Body != nil {
+		defer res.Body.Close()
+		_, err = ioutil.ReadAll(res.Body)
+		if err != nil {
+			return nil, err
+		}
 	}
 	return NewResponseMeta(res), nil
 }

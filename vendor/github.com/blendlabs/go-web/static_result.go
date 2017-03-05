@@ -34,7 +34,7 @@ type StaticResult struct {
 }
 
 // Render renders a static result.
-func (sr StaticResult) Render(w http.ResponseWriter, r *http.Request) error {
+func (sr StaticResult) Render(ctx *Ctx) error {
 	filePath := sr.FilePath
 	for _, rule := range sr.RewriteRules {
 		if matched, newFilePath := rule.Apply(filePath); matched {
@@ -45,18 +45,18 @@ func (sr StaticResult) Render(w http.ResponseWriter, r *http.Request) error {
 	if sr.Headers != nil {
 		for key, values := range sr.Headers {
 			for _, value := range values {
-				w.Header().Add(key, value)
+				ctx.Response.Header().Add(key, value)
 			}
 		}
 	}
 
 	if sr.FileServer != nil {
-		r.URL.Path = filePath
-		sr.FileServer.ServeHTTP(w, r)
+		ctx.Request.URL.Path = filePath
+		sr.FileServer.ServeHTTP(ctx.Response, ctx.Request)
 		return nil
 	}
 
-	return sr.serveStaticFile(w, r, sr.FileSystem, path.Clean(filePath))
+	return sr.serveStaticFile(ctx.Response, ctx.Request, sr.FileSystem, path.Clean(filePath))
 }
 
 func (sr StaticResult) serveStaticFile(w http.ResponseWriter, r *http.Request, fs http.FileSystem, name string) error {

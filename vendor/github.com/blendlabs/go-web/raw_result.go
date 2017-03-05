@@ -10,15 +10,15 @@ type RawResult struct {
 }
 
 // Render renders the result.
-func (rr *RawResult) Render(w http.ResponseWriter, r *http.Request) error {
+func (rr *RawResult) Render(ctx *Ctx) error {
 	if len(rr.ContentType) != 0 {
-		w.Header().Set("Content-Type", rr.ContentType)
+		ctx.Response.Header().Set("Content-Type", rr.ContentType)
 	}
 	if rr.StatusCode == 0 {
-		w.WriteHeader(http.StatusOK)
+		ctx.Response.WriteHeader(http.StatusOK)
 	} else {
-		w.WriteHeader(rr.StatusCode)
+		ctx.Response.WriteHeader(rr.StatusCode)
 	}
-	_, err := w.Write(rr.Body)
+	_, err := ctx.Response.Write(rr.Body)
 	return err
 }

@@ -23,7 +23,7 @@ func Migrate() error {
 	if len(migrations) > 0 {
 		runner := m.New("chart-service", migrations...)
 		runner.SetLogger(m.NewLogger())
-		return runner.Apply(spiffy.DefaultDb())
+		return runner.Apply(spiffy.DB())
 	}
 	return nil
 }

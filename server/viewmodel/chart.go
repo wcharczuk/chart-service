@@ -7,12 +7,12 @@ import (
 	"time"
 
 	"github.com/blendlabs/go-util"
+	"github.com/blendlabs/go-web"
 	"github.com/wcharczuk/chart-service/server/core"
 	"github.com/wcharczuk/chart-service/server/model"
 	"github.com/wcharczuk/chart-service/server/yahoo"
 	"github.com/wcharczuk/go-chart"
 	"github.com/wcharczuk/go-chart/drawing"
-	"github.com/wcharczuk/go-web"
 )
 
 const (
@@ -61,7 +61,7 @@ type Chart struct {
 }
 
 // Parse sets the chart properties from a request context.
-func (c *Chart) Parse(rc *web.RequestContext) error {
+func (c *Chart) Parse(rc *web.Ctx) error {
 	c.Width = core.ReadQueryValueInt(rc, "width", defaultChartWidth)
 	c.Height = core.ReadQueryValueInt(rc, "height", defaultChartHeight)
 
@@ -229,8 +229,8 @@ func (c *Chart) CreateChart() (chart.Chart, error) {
 			xrange = &chart.MarketHoursRange{
 				Min:             model.EquityPrices(c.tickerData).First().TimestampUTC.In(chart.Date.Eastern()),
 				Max:             model.EquityPrices(c.tickerData).Last().TimestampUTC.In(chart.Date.Eastern()),
-				MarketOpen:      chart.NYSEOpen,
-				MarketClose:     chart.NYSEClose,
+				MarketOpen:      chart.NYSEOpen(),
+				MarketClose:     chart.NYSEClose(),
 				HolidayProvider: chart.Date.IsNYSEHoliday,
 			}
 		}

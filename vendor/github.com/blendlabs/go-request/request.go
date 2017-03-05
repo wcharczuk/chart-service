@@ -19,13 +19,6 @@ import (
 	"github.com/blendlabs/go-util"
 )
 
-const (
-	// EventFlagOutgoing is a diagnostics agent event flag.
-	EventFlagOutgoing logger.EventFlag = "outgoing.request"
-	// EventFlagOutgoingResponse is a diagnostics agent event flag.
-	EventFlagOutgoingResponse logger.EventFlag = "outgoing.response"
-)
-
 //--------------------------------------------------------------------------------
 // HTTPRequestMeta
 //--------------------------------------------------------------------------------
@@ -182,7 +175,7 @@ type HTTPRequest struct {
 
 	Label string
 
-	diagnostics *logger.DiagnosticsAgent
+	logger *logger.Agent
 
 	state interface{}
 
@@ -248,15 +241,15 @@ func (hr *HTTPRequest) WithMockedResponse(hook MockedResponseHandler) *HTTPReque
 	return hr
 }
 
-// WithDiagnostics enables logging with HTTPRequestLogLevelErrors.
-func (hr *HTTPRequest) WithDiagnostics(agent *logger.DiagnosticsAgent) *HTTPRequest {
-	hr.diagnostics = agent
+// WithLogger enables logging with HTTPRequestLogLevelErrors.
+func (hr *HTTPRequest) WithLogger(agent *logger.Agent) *HTTPRequest {
+	hr.logger = agent
 	return hr
 }
 
-// Diagnostics returns the request diagnostics agent.
-func (hr *HTTPRequest) Diagnostics() *logger.DiagnosticsAgent {
-	return hr.diagnostics
+// Logger returns the request diagnostics agent.
+func (hr *HTTPRequest) Logger() *logger.Agent {
+	return hr.logger
 }
 
 // WithTransport sets a transport for the request.
@@ -626,6 +619,31 @@ func (hr *HTTPRequest) ExecuteWithMeta() (*HTTPResponseMeta, error) {
 	return meta, nil
 }
 
+// FetchBytesWithMeta fetches the response as bytes with meta.
+func (hr *HTTPRequest) FetchBytesWithMeta() ([]byte, *HTTPResponseMeta, error) {
+	res, err := hr.FetchRawResponse()
+	resMeta := NewHTTPResponseMeta(res)
+	if err != nil {
+		return nil, resMeta, exception.Wrap(err)
+	}
+	defer res.Body.Close()
+
+	bytes, readErr := ioutil.ReadAll(res.Body)
+	if readErr != nil {
+		return nil, resMeta, exception.Wrap(readErr)
+	}
+
+	resMeta.ContentLength = int64(len(bytes))
+	hr.logResponse(resMeta, bytes, hr.state)
+	return bytes, resMeta, nil
+}
+
+// FetchBytes fetches the response as bytes.
+func (hr *HTTPRequest) FetchBytes() ([]byte, error) {
+	contents, _, err := hr.FetchBytesWithMeta()
+	return contents, err
+}
+
 // FetchString returns the body of the response as a string.
 func (hr *HTTPRequest) FetchString() (string, error) {
 	responseStr, _, err := hr.FetchStringWithMeta()
@@ -634,21 +652,8 @@ func (hr *HTTPRequest) FetchString() (string, error) {
 
 // FetchStringWithMeta returns the body of the response as a string in addition to the response metadata.
 func (hr *HTTPRequest) FetchStringWithMeta() (string, *HTTPResponseMeta, error) {
-	res, err := hr.FetchRawResponse()
-	resMeta := NewHTTPResponseMeta(res)
-	if err != nil {
-		return util.StringEmpty, resMeta, exception.Wrap(err)
-	}
-	defer res.Body.Close()
-
-	bytes, readErr := ioutil.ReadAll(res.Body)
-	if readErr != nil {
-		return util.StringEmpty, resMeta, exception.Wrap(readErr)
-	}
-
-	resMeta.ContentLength = int64(len(bytes))
-	hr.logResponse(resMeta, bytes, hr.state)
-	return string(bytes), resMeta, nil
+	contents, meta, err := hr.FetchBytesWithMeta()
+	return string(contents), meta, err
 }
 
 // FetchJSONToObject unmarshals the response as json to an object.
@@ -810,8 +815,8 @@ func (hr *HTTPRequest) logRequest() {
 		hr.outgoingRequestHandler(meta)
 	}
 
-	if hr.diagnostics != nil {
-		hr.diagnostics.OnEvent(EventFlagOutgoing, meta)
+	if hr.logger != nil {
+		hr.logger.OnEvent(Event, meta)
 	}
 }
 
@@ -823,8 +828,8 @@ func (hr *HTTPRequest) logResponse(resMeta *HTTPResponseMeta, responseBody []byt
 		hr.incomingResponseHandler(hr.AsRequestMeta(), resMeta, responseBody)
 	}
 
-	if hr.diagnostics != nil {
-		hr.diagnostics.OnEvent(EventFlagOutgoingResponse, hr.AsRequestMeta(), resMeta, responseBody, state)
+	if hr.logger != nil {
+		hr.logger.OnEvent(EventResponse, hr.AsRequestMeta(), resMeta, responseBody, state)
 	}
 }
 

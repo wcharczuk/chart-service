@@ -3,15 +3,15 @@ package controller
 import (
 	"time"
 
+	"github.com/blendlabs/go-web"
 	"github.com/wcharczuk/chart-service/server/core"
 	"github.com/wcharczuk/chart-service/server/yahoo"
-	"github.com/wcharczuk/go-web"
 )
 
 // Yahoo is the yahoo controller.
 type Yahoo struct{}
 
-func (y Yahoo) getQuoteAction(rc *web.RequestContext) web.ControllerResult {
+func (y Yahoo) getQuoteAction(rc *web.Ctx) web.Result {
 	ticker, err := rc.RouteParam("ticker")
 	if err != nil {
 		return rc.API().BadRequest(err.Error())
@@ -20,10 +20,10 @@ func (y Yahoo) getQuoteAction(rc *web.RequestContext) web.ControllerResult {
 	if err != nil {
 		return rc.API().InternalError(err)
 	}
-	return rc.API().JSON(quote)
+	return rc.API().Result(quote)
 }
 
-func (y Yahoo) getPricesAction(rc *web.RequestContext) web.ControllerResult {
+func (y Yahoo) getPricesAction(rc *web.Ctx) web.Result {
 	ticker, err := rc.RouteParam("ticker")
 	if err != nil {
 		return rc.API().BadRequest(err.Error())
@@ -45,7 +45,7 @@ func (y Yahoo) getPricesAction(rc *web.RequestContext) web.ControllerResult {
 		return rc.API().InternalError(err)
 	}
 
-	return rc.API().JSON(hist)
+	return rc.API().Result(hist)
 }
 
 // Register registers the controllers routes with the app.

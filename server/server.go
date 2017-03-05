@@ -2,9 +2,9 @@ package server
 
 import (
 	logger "github.com/blendlabs/go-logger"
+	"github.com/blendlabs/go-web"
 	"github.com/wcharczuk/chart-service/server/controller"
 	"github.com/wcharczuk/chart-service/server/core"
-	"github.com/wcharczuk/go-web"
 )
 
 const (
@@ -15,11 +15,11 @@ const (
 	DateFormat = "2006-01-02"
 )
 
-func rootHandler(rc *web.RequestContext) web.ControllerResult {
-	return rc.JSON(map[string]interface{}{"status": "ok!"})
+func rootHandler(rc *web.Ctx) web.Result {
+	return rc.JSON().Result(map[string]interface{}{"status": "ok!"})
 }
 
-func faviconHandler(rc *web.RequestContext) web.ControllerResult {
+func faviconHandler(rc *web.Ctx) web.Result {
 	rc.Response.Header().Set("Content-Type", "image/png")
 	return rc.Raw([]byte{})
 }
@@ -27,9 +27,9 @@ func faviconHandler(rc *web.RequestContext) web.ControllerResult {
 // Init inits the web app.
 func Init() *web.App {
 	app := web.New()
-	app.SetDiagnostics(logger.NewDiagnosticsAgentFromEnvironment())
-	app.Diagnostics().Writer().SetLabel(AppName)
-	app.Diagnostics().EnableEvent(logger.EventInfo)
+	app.SetLogger(logger.NewFromEnvironment())
+	app.SetName(AppName)
+	app.Logger().EnableEvent(logger.EventInfo)
 	app.SetPort(core.Config.Port())
 
 	app.GET("/", rootHandler)

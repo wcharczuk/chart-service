@@ -38,7 +38,7 @@ func (epf *EquityPriceFetch) Execute(ct *chronometer.CancellationToken) error {
 		return err
 	}
 	var stocks []model.Equity
-	err = spiffy.DefaultDb().GetAll(&stocks)
+	err = spiffy.DB().GetAll(&stocks)
 	if err != nil {
 		return err
 	}
@@ -58,7 +58,7 @@ func (epf *EquityPriceFetch) Execute(ct *chronometer.CancellationToken) error {
 			if err != nil {
 				return err
 			}
-			err = spiffy.DefaultDb().Create(model.EquityPrice{
+			err = spiffy.DB().Create(model.EquityPrice{
 				EquityID:     equity.ID,
 				TimestampUTC: timestamp,
 				Price:        i.LastPrice,

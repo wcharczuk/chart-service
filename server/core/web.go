@@ -4,7 +4,7 @@ import (
 	"crypto/hmac"
 
 	"github.com/blendlabs/go-util"
-	"github.com/wcharczuk/go-web"
+	"github.com/blendlabs/go-web"
 )
 
 const (
@@ -13,8 +13,8 @@ const (
 )
 
 // AuthRequired is a special type of middleware that checks an `auth` header param.
-func AuthRequired(action web.ControllerAction) web.ControllerAction {
-	return func(context *web.RequestContext) web.ControllerResult {
+func AuthRequired(action web.Action) web.Action {
+	return func(context *web.Ctx) web.Result {
 		if context.DefaultResultProvider() == nil {
 			panic("You must provide a content provider as middleware to use `AuthRequired`")
 		}
@@ -32,7 +32,7 @@ func AuthRequired(action web.ControllerAction) web.ControllerAction {
 }
 
 // ReadRouteValue reads a route value with a default.
-func ReadRouteValue(rc *web.RequestContext, key, defaultValue string) string {
+func ReadRouteValue(rc *web.Ctx, key, defaultValue string) string {
 	if value, err := rc.RouteParam(key); err == nil {
 		return value
 	}
@@ -40,7 +40,7 @@ func ReadRouteValue(rc *web.RequestContext, key, defaultValue string) string {
 }
 
 // ReadRouteValueInt reads a route value with a default.
-func ReadRouteValueInt(rc *web.RequestContext, key string, defaultValue int) int {
+func ReadRouteValueInt(rc *web.Ctx, key string, defaultValue int) int {
 	if value, err := rc.RouteParamInt(key); err == nil {
 		return value
 	}
@@ -48,7 +48,7 @@ func ReadRouteValueInt(rc *web.RequestContext, key string, defaultValue int) int
 }
 
 // ReadQueryValue reads a query value with a default.
-func ReadQueryValue(rc *web.RequestContext, key, defaultValue string) string {
+func ReadQueryValue(rc *web.Ctx, key, defaultValue string) string {
 	if value, err := rc.QueryParam(key); err == nil {
 		return value
 	}
@@ -56,7 +56,7 @@ func ReadQueryValue(rc *web.RequestContext, key, defaultValue string) string {
 }
 
 // ReadQueryValueInt reads a query value with a default.
-func ReadQueryValueInt(rc *web.RequestContext, key string, defaultValue int) int {
+func ReadQueryValueInt(rc *web.Ctx, key string, defaultValue int) int {
 	if value, err := rc.QueryParamInt(key); err == nil {
 		return value
 	}
@@ -64,7 +64,7 @@ func ReadQueryValueInt(rc *web.RequestContext, key string, defaultValue int) int
 }
 
 // ReadQueryValueFloat64 reads a query value with a default.
-func ReadQueryValueFloat64(rc *web.RequestContext, key string, defaultValue float64) float64 {
+func ReadQueryValueFloat64(rc *web.Ctx, key string, defaultValue float64) float64 {
 	if value, err := rc.QueryParamFloat64(key); err == nil {
 		return value
 	}
@@ -72,7 +72,7 @@ func ReadQueryValueFloat64(rc *web.RequestContext, key string, defaultValue floa
 }
 
 // ReadQueryValueBool reads a query value with a default.
-func ReadQueryValueBool(rc *web.RequestContext, key string, defaultValue bool) bool {
+func ReadQueryValueBool(rc *web.Ctx, key string, defaultValue bool) bool {
 	if value, err := rc.QueryParam(key); err == nil {
 		return util.String.CaseInsensitiveEquals(value, "true")
 	}

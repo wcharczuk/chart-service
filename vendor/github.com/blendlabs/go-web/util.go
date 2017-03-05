@@ -2,6 +2,7 @@ package web
 
 import (
 	"encoding/json"
+	"encoding/xml"
 	"io"
 	"net"
 	"net/http"
@@ -10,36 +11,22 @@ import (
 	"github.com/julienschmidt/httprouter"
 )
 
-const (
-	//HeaderContentType is the content type header.
-	HeaderContentType = "Content-Type"
-
-	//HeaderConnection is the connection header.
-	HeaderConnection = "Connection"
-
-	//ConnectionKeepAlive is the keep-alive connection header value.
-	ConnectionKeepAlive = "keep-alive"
-
-	//ContentTypeJSON is the standard json content type.
-	ContentTypeJSON = "application/json; charset=utf-8"
-)
-
 // NestMiddleware reads the middleware variadic args and organizes the calls recursively in the order they appear.
-func NestMiddleware(action ControllerAction, middleware ...ControllerMiddleware) ControllerAction {
+func NestMiddleware(action Action, middleware ...Middleware) Action {
 	if len(middleware) == 0 {
 		return action
 	}
 
-	var nest = func(a, b ControllerMiddleware) ControllerMiddleware {
+	var nest = func(a, b Middleware) Middleware {
 		if b == nil {
 			return a
 		}
-		return func(action ControllerAction) ControllerAction {
+		return func(action Action) Action {
 			return a(b(action))
 		}
 	}
 
-	var metaAction ControllerMiddleware
+	var metaAction Middleware
 	for _, step := range middleware {
 		metaAction = nest(step, metaAction)
 	}
@@ -62,10 +49,20 @@ func WriteRawContent(w http.ResponseWriter, statusCode int, content []byte) erro
 
 // WriteJSON marshalls an object to json.
 func WriteJSON(w http.ResponseWriter, r *http.Request, statusCode int, response interface{}) error {
-	w.Header().Set(HeaderContentType, ContentTypeJSON)
+	w.Header().Set(HeaderContentType, ContentTypeApplicationJSON)
 	w.WriteHeader(statusCode)
 
 	enc := json.NewEncoder(w)
+	err := enc.Encode(response)
+	return exception.Wrap(err)
+}
+
+// WriteXML marshalls an object to json.
+func WriteXML(w http.ResponseWriter, r *http.Request, statusCode int, response interface{}) error {
+	w.Header().Set(HeaderContentType, ContentTypeXML)
+	w.WriteHeader(statusCode)
+
+	enc := xml.NewEncoder(w)
 	err := enc.Encode(response)
 	return exception.Wrap(err)
 }
@@ -93,12 +90,12 @@ func LocalIP() string {
 	return ""
 }
 
-func newHandleShim(app *App, handler ControllerAction) http.Handler {
+func newHandleShim(app *App, handler Action) http.Handler {
 	return &handleShim{action: handler, app: app}
 }
 
 type handleShim struct {
-	action ControllerAction
+	action Action
 	app    *App
 }
 

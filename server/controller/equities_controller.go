@@ -2,25 +2,25 @@ package controller
 
 import (
 	"github.com/blendlabs/go-util"
+	"github.com/blendlabs/go-web"
 	"github.com/blendlabs/spiffy"
 	"github.com/wcharczuk/chart-service/server/core"
 	"github.com/wcharczuk/chart-service/server/model"
-	"github.com/wcharczuk/go-web"
 )
 
 // Equities is the equities controller.
 type Equities struct{}
 
-func (e Equities) getAllHandler(rc *web.RequestContext) web.ControllerResult {
+func (e Equities) getAllHandler(rc *web.Ctx) web.Result {
 	var all []model.Equity
-	err := spiffy.DefaultDb().GetAll(&all)
+	err := spiffy.DB().GetAll(&all)
 	if err != nil {
 		return rc.API().InternalError(err)
 	}
-	return rc.API().JSON(all)
+	return rc.API().Result(all)
 }
 
-func (e Equities) searchHandler(rc *web.RequestContext) web.ControllerResult {
+func (e Equities) searchHandler(rc *web.Ctx) web.Result {
 	searchString, err := rc.RouteParam("query")
 	if err != nil {
 		return rc.API().BadRequest(err.Error())
@@ -29,45 +29,45 @@ func (e Equities) searchHandler(rc *web.RequestContext) web.ControllerResult {
 	if err != nil {
 		return rc.API().InternalError(err)
 	}
-	return rc.API().JSON(results)
+	return rc.API().Result(results)
 }
 
-func (e Equities) getHandler(rc *web.RequestContext) web.ControllerResult {
+func (e Equities) getHandler(rc *web.Ctx) web.Result {
 	id, err := rc.RouteParamInt("id")
 	if err != nil {
 		return rc.API().BadRequest(err.Error())
 	}
 	var equity model.Equity
-	err = spiffy.DefaultDb().GetByID(&equity, id)
+	err = spiffy.DB().GetByID(&equity, id)
 	if err != nil {
 		return rc.API().InternalError(err)
 	}
 	if equity.IsZero() {
 		return rc.API().NotFound()
 	}
-	return rc.API().JSON(equity)
+	return rc.API().Result(equity)
 }
 
-func (e Equities) createHandler(rc *web.RequestContext) web.ControllerResult {
+func (e Equities) createHandler(rc *web.Ctx) web.Result {
 	var equity model.Equity
 	err := rc.PostBodyAsJSON(&equity)
 	if err != nil {
 		return rc.API().BadRequest(err.Error())
 	}
-	err = spiffy.DefaultDb().Create(&equity)
+	err = spiffy.DB().Create(&equity)
 	if err != nil {
 		return rc.API().InternalError(err)
 	}
-	return rc.API().JSON(equity)
+	return rc.API().Result(equity)
 }
 
-func (e Equities) updateHandler(rc *web.RequestContext) web.ControllerResult {
+func (e Equities) updateHandler(rc *web.Ctx) web.Result {
 	id, err := rc.RouteParamInt("id")
 	if err != nil {
 		return rc.API().BadRequest(err.Error())
 	}
 	var reference model.Equity
-	err = spiffy.DefaultDb().GetByID(&reference, id)
+	err = spiffy.DB().GetByID(&reference, id)
 	if err != nil {
 		return rc.API().InternalError(err)
 	}
@@ -83,20 +83,20 @@ func (e Equities) updateHandler(rc *web.RequestContext) web.ControllerResult {
 
 	equity.ID = reference.ID
 
-	err = spiffy.DefaultDb().Update(&equity)
+	err = spiffy.DB().Update(&equity)
 	if err != nil {
 		return rc.API().InternalError(err)
 	}
-	return rc.API().JSON(equity)
+	return rc.API().Result(equity)
 }
 
-func (e Equities) patchHandler(rc *web.RequestContext) web.ControllerResult {
+func (e Equities) patchHandler(rc *web.Ctx) web.Result {
 	id, err := rc.RouteParamInt("id")
 	if err != nil {
 		return rc.API().BadRequest(err.Error())
 	}
 	var reference model.Equity
-	err = spiffy.DefaultDb().GetByID(&reference, id)
+	err = spiffy.DB().GetByID(&reference, id)
 	if err != nil {
 		return rc.API().InternalError(err)
 	}
@@ -115,21 +115,21 @@ func (e Equities) patchHandler(rc *web.RequestContext) web.ControllerResult {
 		return rc.API().BadRequest(err.Error())
 	}
 
-	err = spiffy.DefaultDb().Update(&reference)
+	err = spiffy.DB().Update(&reference)
 	if err != nil {
 		return rc.API().InternalError(err)
 	}
 
-	return rc.API().JSON(reference)
+	return rc.API().Result(reference)
 }
 
-func (e Equities) deleteHandler(rc *web.RequestContext) web.ControllerResult {
+func (e Equities) deleteHandler(rc *web.Ctx) web.Result {
 	id, err := rc.RouteParamInt("id")
 	if err != nil {
 		return rc.API().BadRequest(err.Error())
 	}
 	var equity model.Equity
-	err = spiffy.DefaultDb().GetByID(&equity, id)
+	err = spiffy.DB().GetByID(&equity, id)
 	if err != nil {
 		return rc.API().InternalError(err)
 	}
@@ -137,7 +137,7 @@ func (e Equities) deleteHandler(rc *web.RequestContext) web.ControllerResult {
 		return rc.API().NotFound()
 	}
 
-	err = spiffy.DefaultDb().Delete(equity)
+	err = spiffy.DB().Delete(equity)
 	if err != nil {
 		return rc.API().InternalError(err)
 	}

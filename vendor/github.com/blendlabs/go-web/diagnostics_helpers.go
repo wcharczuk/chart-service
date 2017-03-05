@@ -3,7 +3,7 @@ package web
 import "github.com/blendlabs/go-logger"
 
 // DiagnosticsRequestCompleteHandler is a handler that takes a request context.
-type DiagnosticsRequestCompleteHandler func(rc *RequestContext)
+type DiagnosticsRequestCompleteHandler func(ctx *Ctx)
 
 // NewDiagnosticsRequestCompleteHandler returns a binder for EventListener.
 func NewDiagnosticsRequestCompleteHandler(handler DiagnosticsRequestCompleteHandler) logger.EventListener {
@@ -12,17 +12,17 @@ func NewDiagnosticsRequestCompleteHandler(handler DiagnosticsRequestCompleteHand
 			return
 		}
 
-		rc, isRequestContext := state[0].(*RequestContext)
-		if !isRequestContext {
+		ctx, isCtx := state[0].(*Ctx)
+		if !isCtx {
 			return
 		}
 
-		handler(rc)
+		handler(ctx)
 	}
 }
 
 // DiagnosticsErrorHandler is a handler that takes a request context.
-type DiagnosticsErrorHandler func(rc *RequestContext, err error)
+type DiagnosticsErrorHandler func(ctx *Ctx, err error)
 
 // NewDiagnosticsErrorHandler returns a binder for EventListener.
 func NewDiagnosticsErrorHandler(handler DiagnosticsErrorHandler) logger.EventListener {
@@ -31,8 +31,8 @@ func NewDiagnosticsErrorHandler(handler DiagnosticsErrorHandler) logger.EventLis
 			return
 		}
 
-		rc, isRequestContext := state[0].(*RequestContext)
-		if !isRequestContext {
+		ctx, isCtx := state[0].(*Ctx)
+		if !isCtx {
 			return
 		}
 
@@ -41,6 +41,6 @@ func NewDiagnosticsErrorHandler(handler DiagnosticsErrorHandler) logger.EventLis
 			return
 		}
 
-		handler(rc, err)
+		handler(ctx, err)
 	}
 }

@@ -5,7 +5,7 @@ import (
 	"testing"
 
 	"github.com/blendlabs/go-assert"
-	"github.com/wcharczuk/go-web"
+	"github.com/blendlabs/go-web"
 )
 
 func TestAuthRequiredProd(t *testing.T) {
@@ -16,7 +16,7 @@ func TestAuthRequiredProd(t *testing.T) {
 	Config.authKey = "test_key"
 
 	app := web.New()
-	app.GET("/", func(rc *web.RequestContext) web.ControllerResult {
+	app.GET("/", func(rc *web.Ctx) web.Result {
 		return rc.API().OK()
 	}, AuthRequired, web.APIProviderAsDefault)
 
@@ -41,7 +41,7 @@ func TestAuthRequiredDev(t *testing.T) {
 	Config.authKey = "test_key"
 
 	app := web.New()
-	app.GET("/", func(rc *web.RequestContext) web.ControllerResult {
+	app.GET("/", func(rc *web.Ctx) web.Result {
 		return rc.API().OK()
 	}, AuthRequired, web.APIProviderAsDefault)
 

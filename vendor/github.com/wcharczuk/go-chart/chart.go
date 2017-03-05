@@ -2,6 +2,7 @@ package chart
 
 import (
 	"errors"
+	"fmt"
 	"io"
 	"math"
 
@@ -69,8 +70,12 @@ func (c Chart) GetHeight() int {
 // Render renders the chart with the given renderer to the given io.Writer.
 func (c Chart) Render(rp RendererProvider, w io.Writer) error {
 	if len(c.Series) == 0 {
-		return errors.New("Please provide at least one series")
+		return errors.New("please provide at least one series")
 	}
+	if visibleSeriesErr := c.checkHasVisibleSeries(); visibleSeriesErr != nil {
+		return visibleSeriesErr
+	}
+
 	c.YAxisSecondary.AxisType = YAxisSecondary
 
 	r, err := rp(c.GetWidth(), c.GetHeight())
@@ -97,6 +102,8 @@ func (c Chart) Render(rp RendererProvider, w io.Writer) error {
 
 	err = c.checkRanges(xr, yr, yra)
 	if err != nil {
+		// (try to) dump the raw background to the stream.
+		r.Save(w)
 		return err
 	}
 
@@ -130,6 +137,30 @@ func (c Chart) Render(rp RendererProvider, w io.Writer) error {
 	}
 
 	return r.Save(w)
+}
+
+func (c Chart) checkHasVisibleSeries() error {
+	hasVisibleSeries := false
+	var style Style
+	for _, s := range c.Series {
+		style = s.GetStyle()
+		hasVisibleSeries = hasVisibleSeries || (style.IsZero() || style.Show)
+	}
+	if !hasVisibleSeries {
+		return fmt.Errorf("must have (1) visible series; make sure if you set a style, you set .Show = true")
+	}
+	return nil
+}
+
+func (c Chart) validateSeries() error {
+	var err error
+	for _, s := range c.Series {
+		err = s.Validate()
+		if err != nil {
+			return err
+		}
+	}
+	return nil
 }
 
 func (c Chart) getRanges() (xrange, yrange, yrangeAlt Range) {
@@ -259,15 +290,32 @@ func (c Chart) getRanges() (xrange, yrange, yrangeAlt Range) {
 }
 
 func (c Chart) checkRanges(xr, yr, yra Range) error {
-	if math.IsInf(xr.GetDelta(), 0) || math.IsNaN(xr.GetDelta()) || xr.GetDelta() == 0 {
-		return errors.New("Invalid (infinite or NaN) x-range delta")
+	xDelta := xr.GetDelta()
+	if math.IsInf(xDelta, 0) {
+		return errors.New("infinite x-range delta")
 	}
-	if math.IsInf(yr.GetDelta(), 0) || math.IsNaN(yr.GetDelta()) || yr.GetDelta() == 0 {
-		return errors.New("Invalid (infinite or NaN) y-range delta")
+	if math.IsNaN(xDelta) {
+		return errors.New("nan x-range delta")
 	}
+	if xDelta == 0 {
+		return errors.New("zero x-range delta; there needs to be at least (2) values")
+	}
+
+	yDelta := yr.GetDelta()
+	if math.IsInf(yDelta, 0) {
+		return errors.New("infinite y-range delta")
+	}
+	if math.IsNaN(yDelta) {
+		return errors.New("nan y-range delta")
+	}
+
 	if c.hasSecondarySeries() {
-		if math.IsInf(yra.GetDelta(), 0) || math.IsNaN(yra.GetDelta()) || yra.GetDelta() == 0 {
-			return errors.New("Invalid (infinite or NaN) y-secondary-range delta")
+		yraDelta := yra.GetDelta()
+		if math.IsInf(yraDelta, 0) {
+			return errors.New("infinite secondary y-range delta")
+		}
+		if math.IsNaN(yraDelta) {
+			return errors.New("nan secondary y-range delta")
 		}
 	}
 
@@ -450,7 +498,7 @@ func (c Chart) styleDefaultsBackground() Style {
 	return Style{
 		FillColor:   DefaultBackgroundColor,
 		StrokeColor: DefaultBackgroundStrokeColor,
-		StrokeWidth: DefaultStrokeWidth,
+		StrokeWidth: DefaultBackgroundStrokeWidth,
 	}
 }
 
@@ -458,15 +506,16 @@ func (c Chart) styleDefaultsCanvas() Style {
 	return Style{
 		FillColor:   DefaultCanvasColor,
 		StrokeColor: DefaultCanvasStrokeColor,
-		StrokeWidth: DefaultStrokeWidth,
+		StrokeWidth: DefaultCanvasStrokeWidth,
 	}
 }
 
 func (c Chart) styleDefaultsSeries(seriesIndex int) Style {
 	strokeColor := GetDefaultColor(seriesIndex)
 	return Style{
+		DotColor:    strokeColor,
 		StrokeColor: strokeColor,
-		StrokeWidth: DefaultStrokeWidth,
+		StrokeWidth: DefaultSeriesLineWidth,
 		Font:        c.GetFont(),
 		FontSize:    DefaultFontSize,
 	}

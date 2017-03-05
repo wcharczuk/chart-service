@@ -9,7 +9,7 @@ import (
 
 func TestGetEquityByTicker(t *testing.T) {
 	assert := assert.New(t)
-	tx, err := spiffy.DefaultDb().Begin()
+	tx, err := spiffy.DB().Begin()
 	assert.Nil(err)
 	defer tx.Rollback()
 
