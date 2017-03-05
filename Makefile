@@ -4,6 +4,8 @@ BLUE_COLOR=\033[94;01m
 ERROR_COLOR=\033[31;01m
 WARN_COLOR=\033[33;01m
 
+LOG_EVENTS ?= info,warning,error,debug,db.query,db.execute,web.request,web.request.body,request
+
 test:
 	@echo "$(OK_COLOR)==> Testing$(NO_COLOR)"
 	@DATABASE_URL=postgres://localhost/stocks go test ./server/...
@@ -11,7 +13,7 @@ test:
 
 run:
 	@echo "$(OK_COLOR)==> Running$(NO_COLOR)"
-	@DATABASE_URL=postgres://localhost/stocks go run main.go
+	@LOG_EVENTS=${LOG_EVENTS} DATABASE_URL=postgres://localhost/stocks go run main.go
 
 db:
 	@echo "$(OK_COLOR)==> Wiping DB$(NO_COLOR)"
