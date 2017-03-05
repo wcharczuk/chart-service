@@ -45,6 +45,12 @@
 			"revisionTime": "2016-08-03T20:31:37Z"
 		},
 		{
+			"checksumSHA1": "KJSTHK9YtWU0B5zMRQ3Jp2OirYU=",
+			"path": "github.com/blendlabs/go-util/env",
+			"revision": "a364fa46da98dfd3e8dde4044fedef4840430681",
+			"revisionTime": "2017-02-17T01:41:03Z"
+		},
+		{
 			"checksumSHA1": "NWRT07fHBDd+IPvkkJpgQ9ubR+w=",
 			"path": "github.com/blendlabs/go-web",
 			"revision": "31523857c0fb2dd64145ee16068a40e002957ba4",
