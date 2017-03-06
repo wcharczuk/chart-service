@@ -183,11 +183,6 @@ var (
 	DashArrayDashesLarge = []int{10, 10}
 )
 
-// NewColor returns a new color.
-func NewColor(r, g, b, a uint8) drawing.Color {
-	return drawing.Color{R: r, G: g, B: b, A: a}
-}
-
 // GetDefaultColor returns a color from the default list by index.
 // NOTE: the index will wrap around (using a modulo).
 func GetDefaultColor(index int) drawing.Color {
@@ -205,6 +200,7 @@ func GetAlternateColor(index int) drawing.Color {
 var (
 	// DefaultAnnotationPadding is the padding around an annotation.
 	DefaultAnnotationPadding = Box{Top: 5, Left: 5, Right: 5, Bottom: 5}
+
 	// DefaultBackgroundPadding is the default canvas padding config.
 	DefaultBackgroundPadding = Box{Top: 5, Left: 5, Right: 5, Bottom: 5}
 )
@@ -229,3 +225,11 @@ func GetDefaultFont() (*truetype.Font, error) {
 	}
 	return _defaultFont, nil
 }
+
+const (
+	// ContentTypePNG is the png mime type.
+	ContentTypePNG = "image/png"
+
+	// ContentTypeSVG is the svg mime type.
+	ContentTypeSVG = "image/svg+xml"
+)

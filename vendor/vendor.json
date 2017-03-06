@@ -105,16 +105,16 @@
 			"revisionTime": "2016-02-09T14:37:49Z"
 		},
 		{
-			"checksumSHA1": "J3sh2kRT7P+2HGeXU/3bhGwu6uc=",
+			"checksumSHA1": "n/sBsAOUhVTNkAtvGYeMRbm3EzI=",
 			"path": "github.com/wcharczuk/go-chart",
-			"revision": "b713ff85cc7be83a7bb06d7581e0fb498c6693cf",
-			"revisionTime": "2017-03-06T00:54:40Z"
+			"revision": "66b99eb8e38fd849fe4a78262d0fac8fcd46dc71",
+			"revisionTime": "2017-03-06T07:52:13Z"
 		},
 		{
 			"checksumSHA1": "kNX8q8jmtZ1dlpvwQnmU511Wa98=",
 			"path": "github.com/wcharczuk/go-chart/drawing",
-			"revision": "b713ff85cc7be83a7bb06d7581e0fb498c6693cf",
-			"revisionTime": "2017-03-06T00:54:40Z"
+			"revision": "66b99eb8e38fd849fe4a78262d0fac8fcd46dc71",
+			"revisionTime": "2017-03-06T07:52:13Z"
 		},
 		{
 			"checksumSHA1": "7E3Y1HU/UbsQF/dxMRdjFmx9QDQ=",

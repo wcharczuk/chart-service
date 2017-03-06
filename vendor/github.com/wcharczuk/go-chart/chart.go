@@ -98,11 +98,11 @@ func (c Chart) Render(rp RendererProvider, w io.Writer) error {
 	xr, yr, yra := c.getRanges()
 	canvasBox := c.getDefaultCanvasBox()
 	xf, yf, yfa := c.getValueFormatters()
+
 	xr, yr, yra = c.setRangeDomains(canvasBox, xr, yr, yra)
 
 	err = c.checkRanges(xr, yr, yra)
 	if err != nil {
-		// (try to) dump the raw background to the stream.
 		r.Save(w)
 		return err
 	}
@@ -260,11 +260,15 @@ func (c Chart) getRanges() (xrange, yrange, yrangeAlt Range) {
 		yrange.SetMin(miny)
 		yrange.SetMax(maxy)
 
-		delta := yrange.GetDelta()
-		roundTo := Math.GetRoundToForDelta(delta)
-		rmin, rmax := Math.RoundDown(yrange.GetMin(), roundTo), Math.RoundUp(yrange.GetMax(), roundTo)
-		yrange.SetMin(rmin)
-		yrange.SetMax(rmax)
+		// only round if we're showing the axis
+		if c.YAxis.Style.Show {
+			delta := yrange.GetDelta()
+			roundTo := Math.GetRoundToForDelta(delta)
+			rmin, rmax := Math.RoundDown(yrange.GetMin(), roundTo), Math.RoundUp(yrange.GetMax(), roundTo)
+
+			yrange.SetMin(rmin)
+			yrange.SetMax(rmax)
+		}
 	}
 
 	if len(c.YAxisSecondary.Ticks) > 0 {
@@ -279,11 +283,13 @@ func (c Chart) getRanges() (xrange, yrange, yrangeAlt Range) {
 		yrangeAlt.SetMin(minya)
 		yrangeAlt.SetMax(maxya)
 
-		delta := yrangeAlt.GetDelta()
-		roundTo := Math.GetRoundToForDelta(delta)
-		rmin, rmax := Math.RoundDown(yrangeAlt.GetMin(), roundTo), Math.RoundUp(yrangeAlt.GetMax(), roundTo)
-		yrangeAlt.SetMin(rmin)
-		yrangeAlt.SetMax(rmax)
+		if c.YAxisSecondary.Style.Show {
+			delta := yrangeAlt.GetDelta()
+			roundTo := Math.GetRoundToForDelta(delta)
+			rmin, rmax := Math.RoundDown(yrangeAlt.GetMin(), roundTo), Math.RoundUp(yrangeAlt.GetMax(), roundTo)
+			yrangeAlt.SetMin(rmin)
+			yrangeAlt.SetMax(rmax)
+		}
 	}
 
 	return
@@ -308,6 +314,9 @@ func (c Chart) checkRanges(xr, yr, yra Range) error {
 	if math.IsNaN(yDelta) {
 		return errors.New("nan y-range delta")
 	}
+	if yDelta == 0 {
+		return errors.New("zero y-range delta")
+	}
 
 	if c.hasSecondarySeries() {
 		yraDelta := yra.GetDelta()
@@ -316,6 +325,9 @@ func (c Chart) checkRanges(xr, yr, yra Range) error {
 		}
 		if math.IsNaN(yraDelta) {
 			return errors.New("nan secondary y-range delta")
+		}
+		if yraDelta == 0 {
+			return errors.New("zero secondary y-range delta")
 		}
 	}
 
