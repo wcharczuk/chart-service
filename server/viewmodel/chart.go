@@ -47,6 +47,7 @@ type Chart struct {
 	AddBollingerBands           bool `query:"add_bb"`
 	AddMACD                     bool `query:"add_macd"`
 	AddLinReg                   bool `query:"add_linreg"`
+	AddPolyReg                  bool `query:"add_polyreg"`
 
 	XValueFormatter chart.ValueFormatter
 	YValueFormatter chart.ValueFormatter
@@ -55,9 +56,10 @@ type Chart struct {
 	tickerCompareData []model.EquityPrice
 
 	K        float64 `query:"k"`
+	Degree   int     `query:"degree"`
 	MAPeriod int     `query:"period"`
-	LRWindow int     `query:"lr_window"`
-	LROffset int     `query:"lr_offset"`
+	Limit    int     `query:"window"`
+	Offset   int     `query:"offset"`
 }
 
 // Parse sets the chart properties from a request context.
@@ -82,11 +84,13 @@ func (c *Chart) Parse(rc *web.Ctx) error {
 	c.AddBollingerBands = core.ReadQueryValueBool(rc, "add_bb", false)
 	c.AddMACD = core.ReadQueryValueBool(rc, "add_macd", false)
 	c.AddLinReg = core.ReadQueryValueBool(rc, "add_linreg", false)
+	c.AddPolyReg = core.ReadQueryValueBool(rc, "add_polyreg", false)
 
 	c.K = core.ReadQueryValueFloat64(rc, "k", 2.0)
+	c.Degree = core.ReadQueryValueInt(rc, "degree", 2)
 	c.MAPeriod = core.ReadQueryValueInt(rc, "period", 16)
-	c.LRWindow = core.ReadQueryValueInt(rc, "lr_window", 32)
-	c.LROffset = core.ReadQueryValueInt(rc, "lr_offset", 0)
+	c.Limit = core.ReadQueryValueInt(rc, "limit", 32)
+	c.Offset = core.ReadQueryValueInt(rc, "offset", 0)
 
 	if c.UsePercentageDifferences {
 		c.YValueFormatter = chart.PercentValueFormatter
@@ -143,16 +147,16 @@ func (c *Chart) ParsePeriod() error {
 // Validate applies some sanity check validation rules.
 func (c *Chart) Validate() error {
 	if len(c.Ticker) == 0 {
-		return errors.New("Caller did not specify a :ticker parameter, cannot continue.")
+		return errors.New("caller did not specify a :ticker parameter, cannot continue")
 	}
 	if c.AddMACD && (c.hasCompare() && !c.UsePercentageDifferences) {
-		return errors.New("Cannot add both MACD histogram and use a secondary axis for comparison.")
+		return errors.New("cannot add both MACD histogram and use a secondary axis for comparison")
 	}
 	if c.Start.IsZero() {
-		return errors.New("Data period start time is unset, cannot continue.")
+		return errors.New("data period start time is unset, cannot continue")
 	}
 	if c.End.IsZero() {
-		return errors.New("Data period end time is unset, cannot continue.")
+		return errors.New("data period end time is unset, cannot continue")
 	}
 
 	return nil
@@ -235,7 +239,7 @@ func (c *Chart) CreateChart() (chart.Chart, error) {
 			}
 		}
 	} else {
-		return chart.Chart{}, errors.New("No data!")
+		return chart.Chart{}, errors.New("no data")
 	}
 
 	yname := "Price USD"
@@ -353,6 +357,14 @@ func (c *Chart) getSeries() []chart.Series {
 		series = append(series, lrs)
 		if c.ShowLastValue {
 			series = append(series, c.getLastValueSeries(c.Ticker, lrs))
+		}
+	}
+
+	if c.AddPolyReg {
+		prs := c.getPolyRegSeries(c.Ticker, t0series)
+		series = append(series, prs)
+		if c.ShowLastValue {
+			series = append(series, c.getLastValueSeries(c.Ticker, prs))
 		}
 	}
 
@@ -537,9 +549,9 @@ func (c *Chart) getMACDLineSeries(ticker string, data []model.EquityPrice) *char
 }
 
 func (c *Chart) getLinRegSeries(ticker string, priceSeries chart.ValueProvider) *chart.LinearRegressionSeries {
-	offset := c.LROffset
+	offset := c.Offset
 	if offset == 0 {
-		offset = chart.Math.MaxInt(priceSeries.Len()-c.LRWindow, 0)
+		offset = chart.Math.MaxInt(priceSeries.Len()-c.Limit, 0)
 	}
 	return &chart.LinearRegressionSeries{
 		Name: fmt.Sprintf("%s Lin. Reg.", ticker),
@@ -551,7 +563,27 @@ func (c *Chart) getLinRegSeries(ticker string, priceSeries chart.ValueProvider) 
 		},
 		InnerSeries: priceSeries,
 		Offset:      offset,
-		Window:      c.LRWindow,
+		Limit:       c.Limit,
+	}
+}
+
+func (c *Chart) getPolyRegSeries(ticker string, priceSeries chart.ValueProvider) *chart.PolynomialRegressionSeries {
+	offset := c.Offset
+	if offset == 0 {
+		offset = chart.Math.MaxInt(priceSeries.Len()-c.Limit, 0)
+	}
+	return &chart.PolynomialRegressionSeries{
+		Name: fmt.Sprintf("%s Poly. Reg.", ticker),
+		Style: chart.Style{
+			Show:            c.AddLinReg,
+			StrokeColor:     drawing.ColorFromHex("FFA500"),
+			StrokeWidth:     2.0,
+			StrokeDashArray: []float64{5.0, 5.0},
+		},
+		InnerSeries: priceSeries,
+		Offset:      offset,
+		Limit:       c.Limit,
+		Degree:      c.Degree,
 	}
 }
 

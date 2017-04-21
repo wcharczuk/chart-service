@@ -21,6 +21,18 @@ func StyleShow() Style {
 	}
 }
 
+// StyleTextDefaults returns a style for drawing outside a
+// chart context.
+func StyleTextDefaults() Style {
+	font, _ := GetDefaultFont()
+	return Style{
+		Show:      true,
+		Font:      font,
+		FontColor: DefaultTextColor,
+		FontSize:  DefaultTitleFontSize,
+	}
+}
+
 // Style is a simple style set.
 type Style struct {
 	Show    bool
@@ -32,6 +44,9 @@ type Style struct {
 
 	DotColor drawing.Color
 	DotWidth float64
+
+	DotWidthProvider SizeProvider
+	DotColorProvider DotColorProvider
 
 	FillColor drawing.Color
 
@@ -343,6 +358,9 @@ func (s Style) InheritFrom(defaults Style) (final Style) {
 	final.DotColor = s.GetDotColor(defaults.DotColor)
 	final.DotWidth = s.GetDotWidth(defaults.DotWidth)
 
+	final.DotWidthProvider = s.DotWidthProvider
+	final.DotColorProvider = s.DotColorProvider
+
 	final.FillColor = s.GetFillColor(defaults.FillColor)
 	final.FontColor = s.GetFontColor(defaults.FontColor)
 	final.FontSize = s.GetFontSize(defaults.FontSize)
@@ -414,7 +432,7 @@ func (s Style) ShouldDrawStroke() bool {
 
 // ShouldDrawDot tells drawing functions if they should draw the dot.
 func (s Style) ShouldDrawDot() bool {
-	return !s.DotColor.IsZero() && s.DotWidth > 0
+	return (!s.DotColor.IsZero() && s.DotWidth > 0) || s.DotColorProvider != nil || s.DotWidthProvider != nil
 }
 
 // ShouldDrawFill tells drawing functions if they should draw the stroke.

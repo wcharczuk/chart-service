@@ -105,16 +105,22 @@
 			"revisionTime": "2016-02-09T14:37:49Z"
 		},
 		{
-			"checksumSHA1": "n/sBsAOUhVTNkAtvGYeMRbm3EzI=",
+			"checksumSHA1": "TyZpuReqwoCtREtNI83wOI1YBtk=",
 			"path": "github.com/wcharczuk/go-chart",
-			"revision": "66b99eb8e38fd849fe4a78262d0fac8fcd46dc71",
-			"revisionTime": "2017-03-06T07:52:13Z"
+			"revision": "64d2ef25c7c8f004aa87a52748788a65d3fadf7b",
+			"revisionTime": "2017-04-21T20:34:54Z"
 		},
 		{
-			"checksumSHA1": "kNX8q8jmtZ1dlpvwQnmU511Wa98=",
+			"checksumSHA1": "/Amn4XivPItINSALiV/uQF8ogNw=",
 			"path": "github.com/wcharczuk/go-chart/drawing",
-			"revision": "66b99eb8e38fd849fe4a78262d0fac8fcd46dc71",
-			"revisionTime": "2017-03-06T07:52:13Z"
+			"revision": "64d2ef25c7c8f004aa87a52748788a65d3fadf7b",
+			"revisionTime": "2017-04-21T20:34:54Z"
+		},
+		{
+			"checksumSHA1": "kPqs986jHunAn+grWysGPIABnQc=",
+			"path": "github.com/wcharczuk/go-chart/matrix",
+			"revision": "64d2ef25c7c8f004aa87a52748788a65d3fadf7b",
+			"revisionTime": "2017-04-21T20:34:54Z"
 		},
 		{
 			"checksumSHA1": "7E3Y1HU/UbsQF/dxMRdjFmx9QDQ=",
