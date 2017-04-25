@@ -575,7 +575,7 @@ func (c *Chart) getPolyRegSeries(ticker string, priceSeries chart.ValueProvider)
 	return &chart.PolynomialRegressionSeries{
 		Name: fmt.Sprintf("%s Poly. Reg.", ticker),
 		Style: chart.Style{
-			Show:            c.AddLinReg,
+			Show:            c.AddPolyReg,
 			StrokeColor:     drawing.ColorFromHex("FFA500"),
 			StrokeWidth:     2.0,
 			StrokeDashArray: []float64{5.0, 5.0},
