@@ -104,6 +104,12 @@ func (c *Chart) Parse(rc *web.Ctx) error {
 // ParsePeriod reads the chart period
 func (c *Chart) ParsePeriod() error {
 	switch strings.ToLower(c.ChartTimeframe) {
+	case "5y":
+		c.Start = time.Now().UTC().AddDate(-5, 0, 0)
+		c.End = time.Now().UTC()
+	case "2y":
+		c.Start = time.Now().UTC().AddDate(-2, 0, 0)
+		c.End = time.Now().UTC()
 	case "ltm":
 		c.Start = time.Now().UTC().AddDate(0, -12, 0)
 		c.End = time.Now().UTC()
