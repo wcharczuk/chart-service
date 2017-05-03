@@ -203,7 +203,7 @@ func (c *Chart) FetchPriceData() error {
 	var useLocal, useRemote bool
 
 	switch strings.ToLower(c.ChartTimeframe) {
-	case "ltm", "6m", "3m":
+	case "5y", "2y", "ltm", "6m", "3m":
 		useLocal = false
 		useRemote = true
 	case "1m", "1wk", "10d", "3d", "1d":
