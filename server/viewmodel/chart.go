@@ -48,6 +48,7 @@ type Chart struct {
 	AddMACD                     bool `query:"add_macd"`
 	AddLinReg                   bool `query:"add_linreg"`
 	AddPolyReg                  bool `query:"add_polyreg"`
+	AddCandlestick              bool `query:"add_candle"`
 
 	XValueFormatter chart.ValueFormatter
 	YValueFormatter chart.ValueFormatter

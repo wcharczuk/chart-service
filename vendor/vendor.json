@@ -27,10 +27,10 @@
 			"revisionTime": "2017-05-09T19:23:12Z"
 		},
 		{
-			"checksumSHA1": "dJk4uBzcKakFstqlqPmwSS6eM94=",
+			"checksumSHA1": "IdFLuuSExUHFYHUgSL2ilShWx5E=",
 			"path": "github.com/blendlabs/go-request",
-			"revision": "66d40b7c339dcc46d30f0304bac7440772804e76",
-			"revisionTime": "2017-02-25T22:31:11Z"
+			"revision": "4b4b3a81ba648495199088d832490ae29478d74b",
+			"revisionTime": "2017-05-09T19:29:13Z"
 		},
 		{
 			"checksumSHA1": "lyPOOsZgD8CydIR9kAKq+4q1gwI=",
@@ -69,10 +69,10 @@
 			"revisionTime": "2017-05-09T19:24:11Z"
 		},
 		{
-			"checksumSHA1": "BmT4XUaAiKDNjuK1fVxwYYygQnQ=",
+			"checksumSHA1": "dTa60xXNLOuqJyILP+uo7lEPQGo=",
 			"path": "github.com/blendlabs/spiffy/migration",
-			"revision": "b07a17b2c82e04513f5267acd38d35562bddd762",
-			"revisionTime": "2017-02-26T00:16:44Z"
+			"revision": "1290151e2d3df0a30cefaea6e6c8ec037c647ffe",
+			"revisionTime": "2017-05-09T19:24:11Z"
 		},
 		{
 			"checksumSHA1": "aJ/kX/eCUlrCJBZ26Hwh/RXzAIw=",

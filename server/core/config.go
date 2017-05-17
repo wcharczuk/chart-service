@@ -64,12 +64,12 @@ func (c *config) IsProduction() bool {
 
 // SetupDatabaseContext writes the config to spiffy.
 func SetupDatabaseContext() error {
-	err := spiffy.InitDefault(spiffy.NewConnectionFromEnvironment())
+	err := spiffy.OpenDefault(spiffy.NewConnectionFromEnvironment())
 	if err != nil {
 		return err
 	}
 
-	spiffy.DB().Connection.SetMaxIdleConns(64)
-	spiffy.DB().Connection.SetMaxOpenConns(64)
+	spiffy.Default().Connection.SetMaxIdleConns(64)
+	spiffy.Default().Connection.SetMaxOpenConns(64)
 	return nil
 }
