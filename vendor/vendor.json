@@ -123,6 +123,12 @@
 			"revisionTime": "2017-04-21T20:34:54Z"
 		},
 		{
+			"checksumSHA1": "XJZ8xjTjszuaBenrG5kB+jO1w/o=",
+			"path": "github.com/wcharczuk/go-chart/roboto",
+			"revision": "5cf4f5f0d73f0b1d5b05ee07f5beb8d0ad5f9fb9",
+			"revisionTime": "2017-05-17T02:16:26Z"
+		},
+		{
 			"checksumSHA1": "Gilm+dKq6cclR/+Xi2VjoDBdgr4=",
 			"path": "github.com/wcharczuk/go-chart/seq",
 			"revision": "5cf4f5f0d73f0b1d5b05ee07f5beb8d0ad5f9fb9",
