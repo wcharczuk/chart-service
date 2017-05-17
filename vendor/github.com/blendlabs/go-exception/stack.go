@@ -8,6 +8,11 @@ import (
 	"strings"
 )
 
+// GetStackTrace is a utility method to get the current stack trace at call time.
+func GetStackTrace() string {
+	return fmt.Sprintf("%+v", callers())
+}
+
 // Frame represents a program counter inside a stack frame.
 type Frame uintptr
 
@@ -59,7 +64,8 @@ func (f Frame) Format(s fmt.State, verb rune) {
 				io.WriteString(s, "unknown")
 			} else {
 				file, _ := fn.FileLine(pc)
-				fmt.Fprintf(s, "%s\n\t%s", fn.Name(), file)
+				fname := fn.Name()
+				fmt.Fprintf(s, "%s\n\t%s", fname, trimGOPATH(fname, file))
 			}
 		default:
 			io.WriteString(s, path.Base(f.file()))
@@ -106,7 +112,7 @@ func (s *stack) Format(st fmt.State, verb rune) {
 	switch verb {
 	case 'v':
 		switch {
-		case st.Flag('+'):
+		case st.Flag('-'), st.Flag('+'):
 			for _, pc := range *s {
 				f := Frame(pc)
 				fmt.Fprintf(st, "\n%+v", f)

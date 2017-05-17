@@ -5,6 +5,7 @@ import (
 	"math"
 
 	"github.com/wcharczuk/go-chart/matrix"
+	util "github.com/wcharczuk/go-chart/util"
 )
 
 // PolynomialRegressionSeries implements a polynomial regression over a given
@@ -17,33 +18,33 @@ type PolynomialRegressionSeries struct {
 	Limit       int
 	Offset      int
 	Degree      int
-	InnerSeries ValueProvider
+	InnerSeries ValuesProvider
 
 	coeffs []float64
 }
 
 // GetName returns the name of the time series.
-func (prs *PolynomialRegressionSeries) GetName() string {
+func (prs PolynomialRegressionSeries) GetName() string {
 	return prs.Name
 }
 
 // GetStyle returns the line style.
-func (prs *PolynomialRegressionSeries) GetStyle() Style {
+func (prs PolynomialRegressionSeries) GetStyle() Style {
 	return prs.Style
 }
 
 // GetYAxis returns which YAxis the series draws on.
-func (prs *PolynomialRegressionSeries) GetYAxis() YAxisType {
+func (prs PolynomialRegressionSeries) GetYAxis() YAxisType {
 	return prs.YAxis
 }
 
 // Len returns the number of elements in the series.
-func (prs *PolynomialRegressionSeries) Len() int {
-	return Math.MinInt(prs.GetLimit(), prs.InnerSeries.Len()-prs.GetOffset())
+func (prs PolynomialRegressionSeries) Len() int {
+	return util.Math.MinInt(prs.GetLimit(), prs.InnerSeries.Len()-prs.GetOffset())
 }
 
 // GetLimit returns the window size.
-func (prs *PolynomialRegressionSeries) GetLimit() int {
+func (prs PolynomialRegressionSeries) GetLimit() int {
 	if prs.Limit == 0 {
 		return prs.InnerSeries.Len()
 	}
@@ -51,14 +52,14 @@ func (prs *PolynomialRegressionSeries) GetLimit() int {
 }
 
 // GetEndIndex returns the effective limit end.
-func (prs *PolynomialRegressionSeries) GetEndIndex() int {
+func (prs PolynomialRegressionSeries) GetEndIndex() int {
 	windowEnd := prs.GetOffset() + prs.GetLimit()
 	innerSeriesLastIndex := prs.InnerSeries.Len() - 1
-	return Math.MinInt(windowEnd, innerSeriesLastIndex)
+	return util.Math.MinInt(windowEnd, innerSeriesLastIndex)
 }
 
 // GetOffset returns the data offset.
-func (prs *PolynomialRegressionSeries) GetOffset() int {
+func (prs PolynomialRegressionSeries) GetOffset() int {
 	if prs.Offset == 0 {
 		return 0
 	}
@@ -79,8 +80,8 @@ func (prs *PolynomialRegressionSeries) Validate() error {
 	return nil
 }
 
-// GetValue returns the series value for a given index.
-func (prs *PolynomialRegressionSeries) GetValue(index int) (x, y float64) {
+// GetValues returns the series value for a given index.
+func (prs *PolynomialRegressionSeries) GetValues(index int) (x, y float64) {
 	if prs.InnerSeries == nil || prs.InnerSeries.Len() == 0 {
 		return
 	}
@@ -94,14 +95,14 @@ func (prs *PolynomialRegressionSeries) GetValue(index int) (x, y float64) {
 	}
 
 	offset := prs.GetOffset()
-	effectiveIndex := Math.MinInt(index+offset, prs.InnerSeries.Len())
-	x, y = prs.InnerSeries.GetValue(effectiveIndex)
+	effectiveIndex := util.Math.MinInt(index+offset, prs.InnerSeries.Len())
+	x, y = prs.InnerSeries.GetValues(effectiveIndex)
 	y = prs.apply(x)
 	return
 }
 
-// GetLastValue computes the last poly regression value.
-func (prs *PolynomialRegressionSeries) GetLastValue() (x, y float64) {
+// GetLastValues computes the last poly regression value.
+func (prs *PolynomialRegressionSeries) GetLastValues() (x, y float64) {
 	if prs.InnerSeries == nil || prs.InnerSeries.Len() == 0 {
 		return
 	}
@@ -113,7 +114,7 @@ func (prs *PolynomialRegressionSeries) GetLastValue() (x, y float64) {
 		prs.coeffs = coeffs
 	}
 	endIndex := prs.GetEndIndex()
-	x, y = prs.InnerSeries.GetValue(endIndex)
+	x, y = prs.InnerSeries.GetValues(endIndex)
 	y = prs.apply(x)
 	return
 }
@@ -138,10 +139,11 @@ func (prs *PolynomialRegressionSeries) values() (xvalues, yvalues []float64) {
 	yvalues = make([]float64, endIndex-startIndex)
 
 	for index := startIndex; index < endIndex; index++ {
-		x, y := prs.InnerSeries.GetValue(index)
+		x, y := prs.InnerSeries.GetValues(index)
 		xvalues[index-startIndex] = x
 		yvalues[index-startIndex] = y
 	}
+
 	return
 }
 

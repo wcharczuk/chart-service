@@ -50,11 +50,17 @@ type Exception struct {
 
 // Format allows for conditional expansion in printf statements
 // based on the token and flags used.
+// %+v : message + stack
+// %v, %s : message
+// %t : stack
 func (e *Exception) Format(s fmt.State, verb rune) {
 	switch verb {
 	case 'v':
 		if s.Flag('+') {
 			io.WriteString(s, e.message)
+			e.stack.Format(s, verb)
+			return
+		} else if s.Flag('-') {
 			e.stack.Format(s, verb)
 			return
 		}
@@ -64,7 +70,6 @@ func (e *Exception) Format(s fmt.State, verb rune) {
 	case 'q':
 		fmt.Fprintf(s, "%q", e.message)
 	}
-
 }
 
 // MarshalJSON is a custom json marshaler.
@@ -92,6 +97,15 @@ func (e *Exception) Inner() error {
 
 // Error implements the `error` interface
 func (e *Exception) Error() string { return e.message }
+
+// Message returns just the message, it is effectively
+// an alias to .Error()
+func (e *Exception) Message() string { return e.message }
+
+// StackString returns the stack trace as a string.
+func (e *Exception) StackString() string {
+	return fmt.Sprintf("%v", e.stack)
+}
 
 // Cause wraps an exception and allows user to add a custom message (cause) to the error.
 // This is useful when we want to retain the original stack trace but also add customized
@@ -152,11 +166,6 @@ func WrapError(err error) error {
 		message: err.Error(),
 		stack:   callers(),
 	}
-}
-
-// GetStackTrace is a utility method to get the current stack trace at call time.
-func GetStackTrace() string {
-	return fmt.Sprintf("%v", callers())
 }
 
 // Is is a helper function that returns if an error is an exception.

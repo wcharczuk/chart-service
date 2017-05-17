@@ -1,6 +1,10 @@
 package chart
 
-import "math"
+import (
+	"math"
+
+	util "github.com/wcharczuk/go-chart/util"
+)
 
 var (
 	// Draw contains helpers for drawing common objects.
@@ -10,7 +14,7 @@ var (
 type draw struct{}
 
 // LineSeries draws a line series with a renderer.
-func (d draw) LineSeries(r Renderer, canvasBox Box, xrange, yrange Range, style Style, vs ValueProvider) {
+func (d draw) LineSeries(r Renderer, canvasBox Box, xrange, yrange Range, style Style, vs ValuesProvider) {
 	if vs.Len() == 0 {
 		return
 	}
@@ -18,7 +22,7 @@ func (d draw) LineSeries(r Renderer, canvasBox Box, xrange, yrange Range, style 
 	cb := canvasBox.Bottom
 	cl := canvasBox.Left
 
-	v0x, v0y := vs.GetValue(0)
+	v0x, v0y := vs.GetValues(0)
 	x0 := cl + xrange.Translate(v0x)
 	y0 := cb - yrange.Translate(v0y)
 
@@ -31,13 +35,13 @@ func (d draw) LineSeries(r Renderer, canvasBox Box, xrange, yrange Range, style 
 		style.GetFillOptions().WriteDrawingOptionsToRenderer(r)
 		r.MoveTo(x0, y0)
 		for i := 1; i < vs.Len(); i++ {
-			vx, vy = vs.GetValue(i)
+			vx, vy = vs.GetValues(i)
 			x = cl + xrange.Translate(vx)
 			y = cb - yrange.Translate(vy)
 			r.LineTo(x, y)
 		}
-		r.LineTo(x, Math.MinInt(cb, cb-yv0))
-		r.LineTo(x0, Math.MinInt(cb, cb-yv0))
+		r.LineTo(x, util.Math.MinInt(cb, cb-yv0))
+		r.LineTo(x0, util.Math.MinInt(cb, cb-yv0))
 		r.LineTo(x0, y0)
 		r.Fill()
 	}
@@ -47,7 +51,7 @@ func (d draw) LineSeries(r Renderer, canvasBox Box, xrange, yrange Range, style 
 
 		r.MoveTo(x0, y0)
 		for i := 1; i < vs.Len(); i++ {
-			vx, vy = vs.GetValue(i)
+			vx, vy = vs.GetValues(i)
 			x = cl + xrange.Translate(vx)
 			y = cb - yrange.Translate(vy)
 			r.LineTo(x, y)
@@ -60,7 +64,7 @@ func (d draw) LineSeries(r Renderer, canvasBox Box, xrange, yrange Range, style 
 
 		style.GetDotOptions().WriteDrawingOptionsToRenderer(r)
 		for i := 0; i < vs.Len(); i++ {
-			vx, vy = vs.GetValue(i)
+			vx, vy = vs.GetValues(i)
 			x = cl + xrange.Translate(vx)
 			y = cb - yrange.Translate(vy)
 
@@ -82,8 +86,8 @@ func (d draw) LineSeries(r Renderer, canvasBox Box, xrange, yrange Range, style 
 	}
 }
 
-// BoundedSeries draws a series that implements BoundedValueProvider.
-func (d draw) BoundedSeries(r Renderer, canvasBox Box, xrange, yrange Range, style Style, bbs BoundedValueProvider, drawOffsetIndexes ...int) {
+// BoundedSeries draws a series that implements BoundedValuesProvider.
+func (d draw) BoundedSeries(r Renderer, canvasBox Box, xrange, yrange Range, style Style, bbs BoundedValuesProvider, drawOffsetIndexes ...int) {
 	drawOffsetIndex := 0
 	if len(drawOffsetIndexes) > 0 {
 		drawOffsetIndex = drawOffsetIndexes[0]
@@ -92,7 +96,7 @@ func (d draw) BoundedSeries(r Renderer, canvasBox Box, xrange, yrange Range, sty
 	cb := canvasBox.Bottom
 	cl := canvasBox.Left
 
-	v0x, v0y1, v0y2 := bbs.GetBoundedValue(0)
+	v0x, v0y1, v0y2 := bbs.GetBoundedValues(0)
 	x0 := cl + xrange.Translate(v0x)
 	y0 := cb - yrange.Translate(v0y1)
 
@@ -107,7 +111,7 @@ func (d draw) BoundedSeries(r Renderer, canvasBox Box, xrange, yrange Range, sty
 	style.GetFillAndStrokeOptions().WriteToRenderer(r)
 	r.MoveTo(x0, y0)
 	for i := 1; i < bbs.Len(); i++ {
-		vx, vy1, vy2 = bbs.GetBoundedValue(i)
+		vx, vy1, vy2 = bbs.GetBoundedValues(i)
 
 		xvalues[i] = vx
 		y2values[i] = vy2
@@ -133,7 +137,7 @@ func (d draw) BoundedSeries(r Renderer, canvasBox Box, xrange, yrange Range, sty
 }
 
 // HistogramSeries draws a value provider as boxes from 0.
-func (d draw) HistogramSeries(r Renderer, canvasBox Box, xrange, yrange Range, style Style, vs ValueProvider, barWidths ...int) {
+func (d draw) HistogramSeries(r Renderer, canvasBox Box, xrange, yrange Range, style Style, vs ValuesProvider, barWidths ...int) {
 	if vs.Len() == 0 {
 		return
 	}
@@ -150,7 +154,7 @@ func (d draw) HistogramSeries(r Renderer, canvasBox Box, xrange, yrange Range, s
 
 	//foreach datapoint, draw a box.
 	for index := 0; index < seriesLength; index++ {
-		vx, vy := vs.GetValue(index)
+		vx, vy := vs.GetValues(index)
 		y0 := yrange.Translate(0)
 		x := cl + xrange.Translate(vx)
 		y := yrange.Translate(vy)
@@ -161,6 +165,65 @@ func (d draw) HistogramSeries(r Renderer, canvasBox Box, xrange, yrange Range, s
 			Right:  x + (barWidth >> 1),
 			Bottom: cb - y,
 		}, style)
+	}
+}
+
+func (d draw) CandlestickSeries(r Renderer, canvasBox Box, xrange, yrange Range, style Style, cs CandlestickSeries) {
+	if cs.Len() == 0 {
+		return
+	}
+
+	candleValues := cs.GetCandleValues()
+
+	cb := canvasBox.Bottom
+	cl := canvasBox.Left
+
+	var cv CandleValue
+	for index := 0; index < len(candleValues); index++ {
+		cv = candleValues[index]
+
+		y0 := yrange.Translate(cv.Open)
+		y1 := yrange.Translate(cv.Close)
+
+		x0 := cl + xrange.Translate(util.Time.ToFloat64(util.Date.On(util.NYSEOpen(), cv.Timestamp)))
+		x1 := cl + xrange.Translate(util.Time.ToFloat64(util.Date.On(util.NYSEClose(), cv.Timestamp)))
+
+		x := x0 + ((x1 - x0) >> 1)
+
+		// draw open / close box.
+		if cv.Open < cv.Close {
+			d.Box(r, Box{
+				Top:    cb - y0,
+				Left:   x0,
+				Right:  x1,
+				Bottom: cb - y1,
+			}, style.InheritFrom(Style{FillColor: ColorAlternateGreen}))
+		} else {
+			d.Box(r, Box{
+				Top:    cb - y1,
+				Left:   x0,
+				Right:  x1,
+				Bottom: cb - y0,
+			}, style.InheritFrom(Style{FillColor: ColorRed}))
+		}
+
+		// draw high / low t bars
+		y0 = yrange.Translate(cv.High)
+		y1 = yrange.Translate(cv.Low)
+
+		style.InheritFrom(Style{StrokeColor: DefaultStrokeColor}).WriteToRenderer(r)
+
+		r.MoveTo(x0, cb-y0)
+		r.LineTo(x1, cb-y0)
+		r.Stroke()
+
+		r.MoveTo(x, cb-y0)
+		r.LineTo(x, cb-y1)
+		r.Stroke()
+
+		r.MoveTo(x0, cb-y1)
+		r.LineTo(x1, cb-y1)
+		r.Stroke()
 	}
 }
 
@@ -251,17 +314,17 @@ func (d draw) Box(r Renderer, b Box, s Style) {
 }
 
 func (d draw) BoxRotated(r Renderer, b Box, thetaDegrees float64, s Style) {
-	d.BoxCorners(r, b.Corners().Rotate(thetaDegrees), s)
+	d.Box2d(r, b.Corners().Rotate(thetaDegrees), s)
 }
 
-func (d draw) BoxCorners(r Renderer, bc BoxCorners, s Style) {
+func (d draw) Box2d(r Renderer, bc Box2d, s Style) {
 	s.GetFillAndStrokeOptions().WriteToRenderer(r)
 	defer r.ResetStyle()
 
-	r.MoveTo(bc.TopLeft.X, bc.TopLeft.Y)
-	r.LineTo(bc.TopRight.X, bc.TopRight.Y)
-	r.LineTo(bc.BottomRight.X, bc.BottomRight.Y)
-	r.LineTo(bc.BottomLeft.X, bc.BottomLeft.Y)
+	r.MoveTo(int(bc.TopLeft.X), int(bc.TopLeft.Y))
+	r.LineTo(int(bc.TopRight.X), int(bc.TopRight.Y))
+	r.LineTo(int(bc.BottomRight.X), int(bc.BottomRight.Y))
+	r.LineTo(int(bc.BottomLeft.X), int(bc.BottomLeft.Y))
 	r.Close()
 	r.FillStroke()
 }
