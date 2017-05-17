@@ -41,7 +41,7 @@ func Init() *web.App {
 	app.Register(controller.Charts{})
 	app.Register(controller.Equities{})
 	app.Register(controller.EquityPrices{})
-	app.Register(controller.Yahoo{})
+	app.Register(controller.Provider{})
 
 	app.OnStart(func(_ *web.App) error {
 		if app.Logger().IsEnabled(logger.EventDebug) {

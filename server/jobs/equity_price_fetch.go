@@ -6,8 +6,8 @@ import (
 	"github.com/blendlabs/go-chronometer"
 	"github.com/blendlabs/go-util"
 	"github.com/blendlabs/spiffy"
+	"github.com/wcharczuk/chart-service/server/google"
 	"github.com/wcharczuk/chart-service/server/model"
-	"github.com/wcharczuk/chart-service/server/yahoo"
 )
 
 // EquityPriceFetch is the job that fetches stock data.
@@ -38,14 +38,14 @@ func (epf *EquityPriceFetch) Execute(ct *chronometer.CancellationToken) error {
 		return err
 	}
 	var stocks []model.Equity
-	err = spiffy.DB().GetAll(&stocks)
+	err = spiffy.Default().GetAll(&stocks)
 	if err != nil {
 		return err
 	}
 
 	ticks := model.Equities(stocks).Tickers()
 
-	infos, err := yahoo.GetStockPrice(ticks)
+	infos, err := google.GetCurrentPrices(ticks)
 	if err != nil {
 		return err
 	}
@@ -53,16 +53,15 @@ func (epf *EquityPriceFetch) Execute(ct *chronometer.CancellationToken) error {
 	timestamp := time.Now().UTC()
 	//create prices for infos
 	for _, i := range infos {
-		if epf.tradeDayIsValid(i.LastTradeDate, timestamp.In(epf.eastern)) {
+		if epf.tradeDayIsValid(i.Timestamp, timestamp.In(epf.eastern)) {
 			equity, err := model.GetEquityByTicker(i.Ticker)
 			if err != nil {
 				return err
 			}
-			err = spiffy.DB().Create(model.EquityPrice{
+			err = spiffy.Default().Create(model.EquityPrice{
 				EquityID:     equity.ID,
 				TimestampUTC: timestamp,
-				Price:        i.LastPrice,
-				Volume:       i.Volume,
+				Price:        i.Last,
 			})
 			if err != nil {
 				return err
@@ -77,12 +76,8 @@ func (epf *EquityPriceFetch) Schedule() chronometer.Schedule {
 	return epf
 }
 
-func (epf *EquityPriceFetch) tradeDayIsValid(lastTradeDate string, current time.Time) bool {
-	parsed, err := time.Parse(yahoo.DateFormat, lastTradeDate)
-	if err != nil {
-		return false
-	}
-	return parsed.Day() == current.Day() && parsed.Month() == current.Month() && parsed.Year() == current.Year()
+func (epf *EquityPriceFetch) tradeDayIsValid(lastTradeDate time.Time, current time.Time) bool {
+	return lastTradeDate.Day() == current.Day() && lastTradeDate.Month() == current.Month() && lastTradeDate.Year() == current.Year()
 }
 
 // GetNextRunTime gets the next runtime for the job.

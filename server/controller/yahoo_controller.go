@@ -5,25 +5,32 @@ import (
 
 	"github.com/blendlabs/go-web"
 	"github.com/wcharczuk/chart-service/server/core"
-	"github.com/wcharczuk/chart-service/server/yahoo"
+	"github.com/wcharczuk/chart-service/server/google"
 )
 
-// Yahoo is the yahoo controller.
-type Yahoo struct{}
+// Provider is the pricing provider controller.
+type Provider struct{}
 
-func (y Yahoo) getQuoteAction(rc *web.Ctx) web.Result {
+// Register registers the controllers routes with the app.
+func (p Provider) Register(app *web.App) {
+	app.GET("/api/v1/quote/:ticker", p.getQuoteAction)
+	app.GET("/api/v1/prices/:ticker", p.getPricesAction)
+	app.GET("/api/v1/prices/:ticker/:timeframe", p.getPricesAction)
+}
+
+func (p Provider) getQuoteAction(rc *web.Ctx) web.Result {
 	ticker, err := rc.RouteParam("ticker")
 	if err != nil {
 		return rc.API().BadRequest(err.Error())
 	}
-	quote, err := yahoo.GetStockPrice([]string{ticker})
+	quote, err := google.GetCurrentPrices([]string{ticker})
 	if err != nil {
 		return rc.API().InternalError(err)
 	}
 	return rc.API().Result(quote)
 }
 
-func (y Yahoo) getPricesAction(rc *web.Ctx) web.Result {
+func (p Provider) getPricesAction(rc *web.Ctx) web.Result {
 	ticker, err := rc.RouteParam("ticker")
 	if err != nil {
 		return rc.API().BadRequest(err.Error())
@@ -40,17 +47,10 @@ func (y Yahoo) getPricesAction(rc *web.Ctx) web.Result {
 		}
 	}
 
-	hist, err := yahoo.GetHistoricalPrices(ticker, from, to)
+	hist, err := google.GetHistoricalPrices(ticker, from, to)
 	if err != nil {
 		return rc.API().InternalError(err)
 	}
 
 	return rc.API().Result(hist)
-}
-
-// Register registers the controllers routes with the app.
-func (y Yahoo) Register(app *web.App) {
-	app.GET("/api/v1/yahoo.quote/:ticker", y.getQuoteAction)
-	app.GET("/api/v1/yahoo.prices/:ticker", y.getPricesAction)
-	app.GET("/api/v1/yahoo.prices/:ticker/:timeframe", y.getPricesAction)
 }

@@ -10,7 +10,7 @@ import (
 
 func TestGetEquityPricesByDate(t *testing.T) {
 	assert := assert.New(t)
-	tx, err := spiffy.DB().Begin()
+	tx, err := spiffy.Default().Begin()
 	assert.Nil(err)
 	defer tx.Rollback()
 

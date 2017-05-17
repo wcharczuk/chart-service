@@ -11,9 +11,20 @@ import (
 // Equities is the equities controller.
 type Equities struct{}
 
+// Register registers the controller.
+func (e Equities) Register(app *web.App) {
+	app.GET("/api/v1/equities", e.getAllHandler)
+	app.GET("/api/v1/equities.search/:query", e.searchHandler)
+	app.POST("/api/v1/equity", e.createHandler, core.AuthRequired, web.APIProviderAsDefault)
+	app.GET("/api/v1/equity/:id", e.getHandler)
+	app.PUT("/api/v1/equity/:id", e.updateHandler, core.AuthRequired, web.APIProviderAsDefault)
+	app.PATCH("/api/v1/equity/:id", e.patchHandler, core.AuthRequired, web.APIProviderAsDefault)
+	app.DELETE("/api/v1/equity/:id", e.deleteHandler, core.AuthRequired, web.APIProviderAsDefault)
+}
+
 func (e Equities) getAllHandler(rc *web.Ctx) web.Result {
 	var all []model.Equity
-	err := spiffy.DB().GetAll(&all)
+	err := spiffy.Default().GetAll(&all)
 	if err != nil {
 		return rc.API().InternalError(err)
 	}
@@ -38,7 +49,7 @@ func (e Equities) getHandler(rc *web.Ctx) web.Result {
 		return rc.API().BadRequest(err.Error())
 	}
 	var equity model.Equity
-	err = spiffy.DB().GetByID(&equity, id)
+	err = spiffy.Default().GetByID(&equity, id)
 	if err != nil {
 		return rc.API().InternalError(err)
 	}
@@ -54,7 +65,7 @@ func (e Equities) createHandler(rc *web.Ctx) web.Result {
 	if err != nil {
 		return rc.API().BadRequest(err.Error())
 	}
-	err = spiffy.DB().Create(&equity)
+	err = spiffy.Default().Create(&equity)
 	if err != nil {
 		return rc.API().InternalError(err)
 	}
@@ -67,7 +78,7 @@ func (e Equities) updateHandler(rc *web.Ctx) web.Result {
 		return rc.API().BadRequest(err.Error())
 	}
 	var reference model.Equity
-	err = spiffy.DB().GetByID(&reference, id)
+	err = spiffy.Default().GetByID(&reference, id)
 	if err != nil {
 		return rc.API().InternalError(err)
 	}
@@ -83,7 +94,7 @@ func (e Equities) updateHandler(rc *web.Ctx) web.Result {
 
 	equity.ID = reference.ID
 
-	err = spiffy.DB().Update(&equity)
+	err = spiffy.Default().Update(&equity)
 	if err != nil {
 		return rc.API().InternalError(err)
 	}
@@ -96,7 +107,7 @@ func (e Equities) patchHandler(rc *web.Ctx) web.Result {
 		return rc.API().BadRequest(err.Error())
 	}
 	var reference model.Equity
-	err = spiffy.DB().GetByID(&reference, id)
+	err = spiffy.Default().GetByID(&reference, id)
 	if err != nil {
 		return rc.API().InternalError(err)
 	}
@@ -115,7 +126,7 @@ func (e Equities) patchHandler(rc *web.Ctx) web.Result {
 		return rc.API().BadRequest(err.Error())
 	}
 
-	err = spiffy.DB().Update(&reference)
+	err = spiffy.Default().Update(&reference)
 	if err != nil {
 		return rc.API().InternalError(err)
 	}
@@ -129,7 +140,7 @@ func (e Equities) deleteHandler(rc *web.Ctx) web.Result {
 		return rc.API().BadRequest(err.Error())
 	}
 	var equity model.Equity
-	err = spiffy.DB().GetByID(&equity, id)
+	err = spiffy.Default().GetByID(&equity, id)
 	if err != nil {
 		return rc.API().InternalError(err)
 	}
@@ -137,20 +148,9 @@ func (e Equities) deleteHandler(rc *web.Ctx) web.Result {
 		return rc.API().NotFound()
 	}
 
-	err = spiffy.DB().Delete(equity)
+	err = spiffy.Default().Delete(equity)
 	if err != nil {
 		return rc.API().InternalError(err)
 	}
 	return rc.API().OK()
-}
-
-// Register registers the controller.
-func (e Equities) Register(app *web.App) {
-	app.GET("/api/v1/equities", e.getAllHandler)
-	app.GET("/api/v1/equities.search/:query", e.searchHandler)
-	app.POST("/api/v1/equity", e.createHandler, core.AuthRequired, web.APIProviderAsDefault)
-	app.GET("/api/v1/equity/:id", e.getHandler)
-	app.PUT("/api/v1/equity/:id", e.updateHandler, core.AuthRequired, web.APIProviderAsDefault)
-	app.PATCH("/api/v1/equity/:id", e.patchHandler, core.AuthRequired, web.APIProviderAsDefault)
-	app.DELETE("/api/v1/equity/:id", e.deleteHandler, core.AuthRequired, web.APIProviderAsDefault)
 }

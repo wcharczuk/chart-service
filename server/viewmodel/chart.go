@@ -9,10 +9,12 @@ import (
 	"github.com/blendlabs/go-util"
 	"github.com/blendlabs/go-web"
 	"github.com/wcharczuk/chart-service/server/core"
+	"github.com/wcharczuk/chart-service/server/equity"
+	"github.com/wcharczuk/chart-service/server/google"
 	"github.com/wcharczuk/chart-service/server/model"
-	"github.com/wcharczuk/chart-service/server/yahoo"
 	"github.com/wcharczuk/go-chart"
 	"github.com/wcharczuk/go-chart/drawing"
+	chartutil "github.com/wcharczuk/go-chart/util"
 )
 
 const (
@@ -33,9 +35,9 @@ type Chart struct {
 	ShouldUseDaySeries bool
 
 	Ticker                   string `route:"ticker"`
-	TickerInfo               *yahoo.StockInfo
+	TickerInfo               *equity.Quote
 	TickerCompare            string `query:"compare"`
-	TickerCompareInfo        *yahoo.StockInfo
+	TickerCompareInfo        *equity.Quote
 	UsePercentageDifferences bool `query:"format"`
 
 	ShowAxes                    bool `query:"show_axes"`
@@ -86,6 +88,7 @@ func (c *Chart) Parse(rc *web.Ctx) error {
 	c.AddMACD = core.ReadQueryValueBool(rc, "add_macd", false)
 	c.AddLinReg = core.ReadQueryValueBool(rc, "add_linreg", false)
 	c.AddPolyReg = core.ReadQueryValueBool(rc, "add_polyreg", false)
+	c.AddCandlestick = core.ReadQueryValueBool(rc, "add_candle", false)
 
 	c.K = core.ReadQueryValueFloat64(rc, "k", 2.0)
 	c.Degree = core.ReadQueryValueInt(rc, "degree", 2)
@@ -175,26 +178,26 @@ func (c *Chart) FetchTickers() error {
 	if c.hasCompare() {
 		tickers = []string{c.Ticker, c.TickerCompare}
 	}
-	stockInfos, err := yahoo.GetStockPrice(tickers)
+	quotes, err := google.GetCurrentPrices(tickers)
 	if err != nil {
 		return err
 	}
-	if len(stockInfos) == 0 {
+	if len(quotes) == 0 {
 		return fmt.Errorf("No stock info returned for: %#v", tickers)
 	}
 
-	if stockInfos[0].IsZero() {
+	if quotes[0].IsZero() {
 		return fmt.Errorf("No stock information returned for: %s", strings.ToUpper(c.Ticker))
 	}
 	c.Ticker = strings.ToUpper(c.Ticker)
-	c.TickerInfo = &stockInfos[0]
+	c.TickerInfo = &quotes[0]
 
-	if len(stockInfos) > 1 {
-		if stockInfos[1].IsZero() {
+	if len(quotes) > 1 {
+		if quotes[1].IsZero() {
 			return fmt.Errorf("No stock information returned for: %s", strings.ToUpper(c.TickerCompare))
 		}
 		c.TickerCompare = strings.ToUpper(c.TickerCompare)
-		c.TickerCompareInfo = &stockInfos[1]
+		c.TickerCompareInfo = &quotes[1]
 	}
 	return nil
 }
@@ -238,11 +241,11 @@ func (c *Chart) CreateChart() (chart.Chart, error) {
 			xrange = &chart.ContinuousRange{}
 		case "1m", "1wk", "10d", "3d", "1d":
 			xrange = &chart.MarketHoursRange{
-				Min:             model.EquityPrices(c.tickerData).First().TimestampUTC.In(chart.Date.Eastern()),
-				Max:             model.EquityPrices(c.tickerData).Last().TimestampUTC.In(chart.Date.Eastern()),
-				MarketOpen:      chart.NYSEOpen(),
-				MarketClose:     chart.NYSEClose(),
-				HolidayProvider: chart.Date.IsNYSEHoliday,
+				Min:             model.EquityPrices(c.tickerData).First().TimestampUTC.In(chartutil.Date.Eastern()),
+				Max:             model.EquityPrices(c.tickerData).Last().TimestampUTC.In(chartutil.Date.Eastern()),
+				MarketOpen:      chartutil.NYSEOpen(),
+				MarketClose:     chartutil.NYSEClose(),
+				HolidayProvider: chartutil.Date.IsNYSEHoliday,
 			}
 		}
 	} else {
@@ -409,13 +412,13 @@ func (c *Chart) getPriceSeries(ticker string, data []model.EquityPrice) chart.Ti
 	}
 }
 
-func (c *Chart) getLastValueSeries(ticker string, priceSeries chart.FullValueProvider) chart.Series {
-	lvx, lvy := priceSeries.GetLastValue()
+func (c *Chart) getLastValueSeries(ticker string, priceSeries chart.FullValuesProvider) chart.Series {
+	lvx, lvy := priceSeries.GetLastValues()
 
 	if c.UsePercentageDifferences {
-		_, v0y := priceSeries.GetValue(0)
+		_, v0y := priceSeries.GetValues(0)
 		if v0y > 0 {
-			lvy = chart.Math.PercentDifference(v0y, lvy)
+			lvy = chartutil.Math.PercentDifference(v0y, lvy)
 		}
 	}
 
@@ -448,8 +451,8 @@ func (c *Chart) getLastValueSeries(ticker string, priceSeries chart.FullValuePro
 	}
 }
 
-func (c *Chart) getBoundedLastValueSeries(ticker string, priceSeries chart.FullBoundedValueProvider) chart.Series {
-	lvx, lvy1, lvy2 := priceSeries.GetBoundedLastValue()
+func (c *Chart) getBoundedLastValueSeries(ticker string, priceSeries chart.FullBoundedValuesProvider) chart.Series {
+	lvx, lvy1, lvy2 := priceSeries.GetBoundedLastValues()
 
 	var style chart.Style
 	if s, isSeries := priceSeries.(chart.Series); isSeries {
@@ -477,7 +480,7 @@ func (c *Chart) getBoundedLastValueSeries(ticker string, priceSeries chart.FullB
 	}
 }
 
-func (c *Chart) getSMASeries(ticker string, priceSeries chart.ValueProvider) *chart.SMASeries {
+func (c *Chart) getSMASeries(ticker string, priceSeries chart.ValuesProvider) *chart.SMASeries {
 	return &chart.SMASeries{
 		Name: fmt.Sprintf("%s SMA", ticker),
 		Style: chart.Style{
@@ -490,7 +493,7 @@ func (c *Chart) getSMASeries(ticker string, priceSeries chart.ValueProvider) *ch
 	}
 }
 
-func (c *Chart) getEMASeries(ticker string, priceSeries chart.ValueProvider) *chart.EMASeries {
+func (c *Chart) getEMASeries(ticker string, priceSeries chart.ValuesProvider) *chart.EMASeries {
 	return &chart.EMASeries{
 		Name: fmt.Sprintf("%s EMA", ticker),
 		Style: chart.Style{
@@ -555,10 +558,10 @@ func (c *Chart) getMACDLineSeries(ticker string, data []model.EquityPrice) *char
 	}
 }
 
-func (c *Chart) getLinRegSeries(ticker string, priceSeries chart.ValueProvider) *chart.LinearRegressionSeries {
+func (c *Chart) getLinRegSeries(ticker string, priceSeries chart.ValuesProvider) *chart.LinearRegressionSeries {
 	offset := c.Offset
 	if offset == 0 {
-		offset = chart.Math.MaxInt(priceSeries.Len()-c.Limit, 0)
+		offset = chartutil.Math.MaxInt(priceSeries.Len()-c.Limit, 0)
 	}
 	return &chart.LinearRegressionSeries{
 		Name: fmt.Sprintf("%s Lin. Reg.", ticker),
@@ -574,10 +577,10 @@ func (c *Chart) getLinRegSeries(ticker string, priceSeries chart.ValueProvider) 
 	}
 }
 
-func (c *Chart) getPolyRegSeries(ticker string, priceSeries chart.ValueProvider) *chart.PolynomialRegressionSeries {
+func (c *Chart) getPolyRegSeries(ticker string, priceSeries chart.ValuesProvider) *chart.PolynomialRegressionSeries {
 	offset := c.Offset
 	if offset == 0 {
-		offset = chart.Math.MaxInt(priceSeries.Len()-c.Limit, 0)
+		offset = chartutil.Math.MaxInt(priceSeries.Len()-c.Limit, 0)
 	}
 	return &chart.PolynomialRegressionSeries{
 		Name: fmt.Sprintf("%s Poly. Reg.", ticker),

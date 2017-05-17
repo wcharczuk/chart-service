@@ -5,8 +5,9 @@ import (
 	"time"
 
 	"github.com/wcharczuk/chart-service/server/core"
+	"github.com/wcharczuk/chart-service/server/equity"
+	"github.com/wcharczuk/chart-service/server/google"
 	"github.com/wcharczuk/chart-service/server/model"
-	"github.com/wcharczuk/chart-service/server/yahoo"
 )
 
 const (
@@ -27,11 +28,11 @@ func GetEquityPricesByDate(ticker string, start, end time.Time, useLocalData, us
 	}
 
 	if useRemoteData {
-		hist, err := yahoo.GetHistoricalPrices(ticker, start, end)
+		hist, err := google.GetHistoricalPrices(ticker, start, end)
 		if err != nil {
 			return union, err
 		}
-		histPrices := yahoo.HistoricalPrices(hist).Prices()
+		histPrices := equity.HistoricalPrices(hist).Prices()
 		union = append(union, histPrices...)
 	}
 	sort.Sort(model.EquityPrices(union))
