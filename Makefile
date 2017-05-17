@@ -4,7 +4,7 @@ BLUE_COLOR=\033[94;01m
 ERROR_COLOR=\033[31;01m
 WARN_COLOR=\033[33;01m
 
-LOG_EVENTS ?= info,warning,error,debug,db.query,db.execute,web.request,web.request.body,request
+LOG_EVENTS ?= info,warning,error,fatal,debug,db.query,db.execute,web.request,web.request.body,request
 
 test:
 	@echo "$(OK_COLOR)==> Testing$(NO_COLOR)"

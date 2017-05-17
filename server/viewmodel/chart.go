@@ -204,25 +204,28 @@ func (c *Chart) FetchTickers() error {
 
 // FetchPriceData fetches price data.
 func (c *Chart) FetchPriceData() error {
-	var useLocal, useRemote bool
+	var useLivePricing, useHistoricalPricing bool
 
 	switch strings.ToLower(c.ChartTimeframe) {
 	case "5y", "2y", "ltm", "6m", "3m":
-		useLocal = false
-		useRemote = true
-	case "1m", "1wk", "10d", "3d", "1d":
-		useLocal = true
-		useRemote = false
+		useLivePricing = false
+		useHistoricalPricing = true
+	case "1m", "1wk":
+		useLivePricing = true
+		useHistoricalPricing = true
+	case "10d", "3d", "1d":
+		useLivePricing = true
+		useHistoricalPricing = false
 	}
 
-	data, err := GetEquityPricesByDate(c.Ticker, c.Start, c.End, useLocal, useRemote)
+	data, err := GetEquityPricesByDate(c.Ticker, c.Start, c.End, useLivePricing, useHistoricalPricing)
 	if err != nil {
 		return err
 	}
 	c.tickerData = data
 
 	if c.hasCompare() {
-		compareData, err := GetEquityPricesByDate(c.TickerCompare, c.Start, c.End, useLocal, useRemote)
+		compareData, err := GetEquityPricesByDate(c.TickerCompare, c.Start, c.End, useLivePricing, useHistoricalPricing)
 		if err != nil {
 			return err
 		}
@@ -376,6 +379,11 @@ func (c *Chart) getSeries() []chart.Series {
 		if c.ShowLastValue {
 			series = append(series, c.getLastValueSeries(c.Ticker, prs))
 		}
+	}
+
+	if c.AddCandlestick {
+		candle := c.getCandleSeries(c.Ticker)
+		series = append(series, candle)
 	}
 
 	return series
@@ -594,6 +602,29 @@ func (c *Chart) getPolyRegSeries(ticker string, priceSeries chart.ValuesProvider
 		Offset:      offset,
 		Limit:       c.Limit,
 		Degree:      c.Degree,
+	}
+}
+
+func (c *Chart) getCandleSeries(ticker string) *chart.CandlestickSeries {
+	var candleValues []chart.CandleValue
+	for _, price := range c.tickerData {
+		if price.IsHistorical {
+			candleValues = append(candleValues, chart.CandleValue{
+				Timestamp: price.TimestampUTC.In(chartutil.Date.Eastern()),
+				Open:      price.Open,
+				Close:     price.Close,
+				High:      price.High,
+				Low:       price.Low,
+			})
+		}
+	}
+
+	return &chart.CandlestickSeries{
+		Name: fmt.Sprintf("%s Candlestick", ticker),
+		Style: chart.Style{
+			Show: c.AddCandlestick,
+		},
+		CandleValues: candleValues,
 	}
 }
 

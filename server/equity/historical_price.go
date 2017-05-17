@@ -44,9 +44,15 @@ func (hp HistoricalPrices) Prices() (prices []model.EquityPrice) {
 	prices = make([]model.EquityPrice, len(hp))
 	for i := 0; i < len(hp); i++ {
 		prices[i] = model.EquityPrice{
+			IsHistorical: true,
 			TimestampUTC: hp[i].Date,
 			Price:        hp[i].Close,
 			Volume:       hp[i].Volume,
+
+			Open:  hp[i].Open,
+			Close: hp[i].Close,
+			High:  hp[i].High,
+			Low:   hp[i].Low,
 		}
 	}
 

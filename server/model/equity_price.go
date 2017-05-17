@@ -18,6 +18,12 @@ type EquityPrice struct {
 	TimestampUTC time.Time `json:"timestamp_utc" db:"timestamp_utc"`
 	Price        float64   `json:"price" db:"price"`
 	Volume       int64     `json:"volume" db:"volume"`
+
+	IsHistorical bool    `json:"is_historical" db:"-"`
+	Open         float64 `json:"open" db:"-"`
+	Close        float64 `json:"close" db:"-"`
+	High         float64 `json:"high" db:"-"`
+	Low          float64 `json:"low" db:"-"`
 }
 
 // TableName returns the mapped tablename.
