@@ -68,29 +68,44 @@ func GetHistoricalPrices(ticker string, start, end time.Time) (prices []equity.H
 			return
 		}
 
-		price.Open, err = strconv.ParseFloat(pieces[1], 64)
-		if err != nil {
-			return
+		if pieces[1] != "-" {
+			price.Open, err = strconv.ParseFloat(pieces[1], 64)
+			if err != nil {
+				println("error with:", pieces[1])
+				return
+			}
 		}
 
-		price.High, err = strconv.ParseFloat(pieces[2], 64)
-		if err != nil {
-			return
+		if pieces[2] != "-" {
+			price.High, err = strconv.ParseFloat(pieces[2], 64)
+			if err != nil {
+				println("error with:", pieces[2])
+				return
+			}
 		}
 
-		price.Low, err = strconv.ParseFloat(pieces[3], 64)
-		if err != nil {
-			return
+		if pieces[3] != "-" {
+			price.Low, err = strconv.ParseFloat(pieces[3], 64)
+			if err != nil {
+				println("error with:", pieces[3])
+				return
+			}
 		}
 
-		price.Close, err = strconv.ParseFloat(pieces[4], 64)
-		if err != nil {
-			return
+		if pieces[4] != "-" {
+			price.Close, err = strconv.ParseFloat(pieces[4], 64)
+			if err != nil {
+				println("error with:", pieces[4])
+				return
+			}
 		}
 
-		price.Volume, err = strconv.ParseInt(pieces[5], 10, 64)
-		if err != nil {
-			return
+		if pieces[5] != "-" {
+			price.Volume, err = strconv.ParseInt(pieces[5], 10, 64)
+			if err != nil {
+				println("error with:", pieces[5])
+				return
+			}
 		}
 		prices = append(prices, price)
 	}
